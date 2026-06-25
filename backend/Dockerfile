@@ -7,5 +7,5 @@ COPY prisma ./prisma
 RUN npm install
 COPY . .
 RUN npx prisma generate && npm run build
-EXPOSE 3000
-CMD npx prisma db push --accept-data-loss && npx prisma db seed && node dist/main.js
+EXPOSE 8080
+CMD npx prisma db push --accept-data-loss && npx prisma db seed && node dist/src/main.js
