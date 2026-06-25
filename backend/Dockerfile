@@ -1,21 +1,11 @@
-# ---- Build stage ----
-FROM node:20-slim AS builder
+# ---- Igreja360 backend ----
+FROM node:20-slim
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
 COPY prisma ./prisma
-RUN npm ci
+RUN npm install
 COPY . .
 RUN npx prisma generate && npm run build
-
-# ---- Runtime stage ----
-FROM node:20-slim AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
-COPY package*.json ./
-COPY prisma ./prisma
-RUN npm ci --omit=dev && npx prisma generate
-COPY --from=builder /app/dist ./dist
-EXPOSE 3000
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+EXPOSE 8080
+CMD npx prisma db push --accept-data-loss && npx prisma db seed && node dist/src/main.js
