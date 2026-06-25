@@ -1,39 +1,36 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, UserCheck, Network, Wallet } from 'lucide-react';
+import Link from 'next/link';
+import { Users, UserCheck, UserPlus, UserMinus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/PageHeader';
 import { api } from '@/lib/api';
-import { formatCurrency } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
+import { MemberStats, STATUS_LABELS, STATUS_VARIANTS } from '@/lib/members';
 
-interface Metrics {
-  totalMembers: number;
-  activeMembers: number;
-  activeCells: number;
-  monthBalance: number;
-}
-
-const EMPTY: Metrics = {
-  totalMembers: 0,
-  activeMembers: 0,
-  activeCells: 0,
-  monthBalance: 0,
+const EMPTY: MemberStats = {
+  total: 0,
+  active: 0,
+  visitors: 0,
+  inactive: 0,
+  recent: [],
 };
 
 export default function DashboardPage(): React.ReactElement {
-  const [metrics, setMetrics] = useState<Metrics>(EMPTY);
+  const [stats, setStats] = useState<MemberStats>(EMPTY);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     api
-      .get<Metrics>('/dashboard/metrics')
+      .get<MemberStats>('/members/stats')
       .then(({ data }) => {
-        if (mounted) setMetrics(data);
+        if (mounted) setStats(data);
       })
       .catch(() => {
-        /* endpoint da Fase 2 — mantém zero state */
+        /* mantém zero state em caso de erro */
       })
       .finally(() => {
         if (mounted) setReady(true);
@@ -44,22 +41,15 @@ export default function DashboardPage(): React.ReactElement {
   }, []);
 
   const cards = [
-    { label: 'Total de membros', value: metrics.totalMembers, icon: Users },
-    { label: 'Membros ativos', value: metrics.activeMembers, icon: UserCheck },
-    { label: 'Células ativas', value: metrics.activeCells, icon: Network },
-    {
-      label: 'Saldo do mês',
-      value: formatCurrency(metrics.monthBalance),
-      icon: Wallet,
-    },
+    { label: 'Total de membros', value: stats.total, icon: Users },
+    { label: 'Membros ativos', value: stats.active, icon: UserCheck },
+    { label: 'Visitantes', value: stats.visitors, icon: UserPlus },
+    { label: 'Inativos', value: stats.inactive, icon: UserMinus },
   ];
 
   return (
     <div>
-      <PageHeader
-        title="Dashboard"
-        description="Visão geral da sua igreja."
-      />
+      <PageHeader title="Dashboard" description="Visão geral da sua igreja." />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => {
@@ -85,10 +75,44 @@ export default function DashboardPage(): React.ReactElement {
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Crescimento de membros</CardTitle>
+            <CardTitle>Membros recentes</CardTitle>
           </CardHeader>
-          <CardContent className="flex h-48 items-center justify-center text-sm text-slate-400">
-            Gráfico disponível após a implementação do módulo Membros (Fase 2).
+          <CardContent>
+            {!ready ? (
+              <p className="py-8 text-center text-sm text-slate-400">
+                Carregando...
+              </p>
+            ) : stats.recent.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-400">
+                Nenhum membro cadastrado ainda.
+              </p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {stats.recent.map((m) => (
+                  <li
+                    key={m.id}
+                    className="flex items-center justify-between py-3"
+                  >
+                    <div>
+                      <Link
+                        href={`/members/${m.id}`}
+                        className="text-sm font-medium text-slate-900 hover:text-indigo-600"
+                      >
+                        {m.name}
+                      </Link>
+                      <p className="text-xs text-slate-500">
+                        {m.joinedAt
+                          ? `Entrada em ${formatDate(m.joinedAt)}`
+                          : `Cadastrado em ${formatDate(m.createdAt)}`}
+                      </p>
+                    </div>
+                    <Badge variant={STATUS_VARIANTS[m.status]}>
+                      {STATUS_LABELS[m.status]}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -96,7 +120,7 @@ export default function DashboardPage(): React.ReactElement {
             <CardTitle>Próximos eventos</CardTitle>
           </CardHeader>
           <CardContent className="flex h-48 items-center justify-center text-sm text-slate-400">
-            Nenhum evento carregado.
+            Disponível após o módulo de Eventos (Fase 4).
           </CardContent>
         </Card>
       </div>
