@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Church {
+  id             String          @id @default(cuid())
+  name           String
+  slug           String          @unique
+  logo           String?
+  address        String?
+  phone          String?
+  email          String?
+  site           String?
+  denomination   String?
+  serviceHours   String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  users          User[]
+  members        Member[]
+  cells          Cell[]
+  events         Event[]
+  transactions   Transaction[]
+  campaigns      Campaign[]
+  communications Communication[]
+  prayers        Prayer[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  churchId     String
+  church       Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(MEMBER)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([churchId])
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  PASTOR
+  SECRETARY
+  TREASURER
+  LEADER
+  MEMBER
+}
+
+model Member {
+  id        String       @id @default(cuid())
+  churchId  String
+  church    Church       @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  name      String
+  email     String?
+  phone     String?
+  cpf       String?
+  birthDate DateTime?
+  address   String?
+  city      String?
+  photo     String?
+  status    MemberStatus @default(ACTIVE)
+  role      MemberRole?
+  cellId    String?
+  cell      Cell?        @relation(fields: [cellId], references: [id], onDelete: SetNull)
+  joinedAt  DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([churchId])
+  @@index([cellId])
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  VISITOR
+  TRANSFERRED
+  DECEASED
+}
+
+enum MemberRole {
+  DEACON
+  ELDER
+  EVANGELIST
+  PASTOR
+  WORKER
+  MEMBER
+}
+
+model Cell {
+  id           String        @id @default(cuid())
+  churchId     String
+  church       Church        @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  name         String
+  leaderId     String?
+  coLeaderId   String?
+  dayOfWeek    String?
+  time         String?
+  address      String?
+  neighborhood String?
+  capacity     Int?
+  active       Boolean       @default(true)
+  members      Member[]
+  meetings     CellMeeting[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([churchId])
+}
+
+model CellMeeting {
+  id        String   @id @default(cuid())
+  cellId    String
+  cell      Cell     @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  date      DateTime
+  theme     String?
+  attendees Int?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([cellId])
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  churchId    String
+  church      Church          @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  type        TransactionType
+  category    String
+  description String?
+  amount      Decimal         @db.Decimal(12, 2)
+  date        DateTime
+  createdBy   String?
+  createdAt   DateTime        @default(now())
+
+  @@index([churchId])
+  @@index([date])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  churchId    String
+  church      Church    @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  date        DateTime
+  endDate     DateTime?
+  location    String?
+  capacity    Int?
+  type        String?
+  photo       String?
+  createdAt   DateTime  @default(now())
+
+  @@index([churchId])
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  churchId    String
+  church      Church         @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  type        String
+  status      CampaignStatus @default(ACTIVE)
+  goal        Decimal?       @db.Decimal(12, 2)
+  current     Decimal?       @db.Decimal(12, 2)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime       @default(now())
+
+  @@index([churchId])
+}
+
+enum CampaignStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+model Communication {
+  id        String   @id @default(cuid())
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  type      String   @default("NOTICE")
+  authorId  String?
+  createdAt DateTime @default(now())
+
+  @@index([churchId])
+}
+
+model Prayer {
+  id          String       @id @default(cuid())
+  churchId    String
+  church      Church       @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  memberId    String?
+  title       String
+  description String?
+  status      PrayerStatus @default(ACTIVE)
+  visibility  String       @default("PUBLIC")
+  createdAt   DateTime     @default(now())
+
+  @@index([churchId])
+}
+
+enum PrayerStatus {
+  ACTIVE
+  ANSWERED
+  ARCHIVED
+}

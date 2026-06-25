@@ -1,0 +1,66 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  Users,
+  Network,
+  Wallet,
+  Calendar,
+  Megaphone,
+  MessageSquare,
+  HandHeart,
+  FileText,
+  Settings,
+  Church,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const items = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/members', label: 'Membros', icon: Users },
+  { href: '/cells', label: 'Células', icon: Network },
+  { href: '/financial', label: 'Financeiro', icon: Wallet },
+  { href: '/events', label: 'Eventos', icon: Calendar },
+  { href: '/campaigns', label: 'Campanhas', icon: Megaphone },
+  { href: '/communications', label: 'Comunicações', icon: MessageSquare },
+  { href: '/prayers', label: 'Orações', icon: HandHeart },
+  { href: '/reports', label: 'Relatórios', icon: FileText },
+  { href: '/settings', label: 'Configurações', icon: Settings },
+];
+
+export function Sidebar(): React.ReactElement {
+  const pathname = usePathname();
+
+  return (
+    <nav className="flex h-full w-64 flex-col bg-slate-900 text-slate-100">
+      <div className="flex items-center gap-2 px-6 py-5 text-xl font-bold">
+        <Church className="h-6 w-6 text-indigo-400" />
+        Igreja360
+      </div>
+      <ul className="flex-1 space-y-1 px-3">
+        {items.map((item) => {
+          const active =
+            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const Icon = item.icon;
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100',
+                  active &&
+                    'border-indigo-400 bg-slate-800 font-medium text-slate-100',
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
