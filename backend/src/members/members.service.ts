@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import * as QRCode from 'qrcode';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
@@ -76,6 +77,7 @@ export class MembersService {
         phone: dto.phone?.trim() || null,
         cpf: dto.cpf?.trim() || null,
         birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+        baptismDate: dto.baptismDate ? new Date(dto.baptismDate) : null,
         address: dto.address?.trim() || null,
         city: dto.city?.trim() || null,
         status: dto.status ?? 'ACTIVE',
@@ -97,6 +99,8 @@ export class MembersService {
     if (dto.cpf !== undefined) data.cpf = dto.cpf?.trim() || null;
     if (dto.birthDate !== undefined)
       data.birthDate = dto.birthDate ? new Date(dto.birthDate) : null;
+    if (dto.baptismDate !== undefined)
+      data.baptismDate = dto.baptismDate ? new Date(dto.baptismDate) : null;
     if (dto.address !== undefined) data.address = dto.address?.trim() || null;
     if (dto.city !== undefined) data.city = dto.city?.trim() || null;
     if (dto.status !== undefined) data.status = dto.status;
@@ -119,6 +123,30 @@ export class MembersService {
     await this.findOne(churchId, id);
     await this.prisma.member.delete({ where: { id } });
     return { success: true };
+  }
+
+  async card(churchId: string, id: string) {
+    const member = await this.findOne(churchId, id);
+    const church = await this.prisma.church.findUnique({
+      where: { id: churchId },
+      select: {
+        id: true,
+        name: true,
+        logo: true,
+        denomination: true,
+        phone: true,
+        address: true,
+      },
+    });
+
+    const payload = `IGREJA360|${churchId}|${member.id}|${member.name}`;
+    const qrCode = await QRCode.toDataURL(payload, {
+      margin: 1,
+      width: 240,
+      color: { dark: '#0f172a', light: '#ffffff' },
+    });
+
+    return { member, church, qrCode };
   }
 
   async stats(churchId: string) {

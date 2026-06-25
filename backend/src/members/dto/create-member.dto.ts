@@ -34,6 +34,10 @@ export class CreateMemberDto {
   birthDate?: string;
 
   @IsOptional()
+  @IsISO8601({}, { message: 'Data de batismo inválida.' })
+  baptismDate?: string;
+
+  @IsOptional()
   @IsString()
   @MaxLength(200, { message: 'Endereço muito longo.' })
   address?: string;

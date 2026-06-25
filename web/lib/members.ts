@@ -20,8 +20,10 @@ export interface Member {
   phone: string | null;
   cpf: string | null;
   birthDate: string | null;
+  baptismDate: string | null;
   address: string | null;
   city: string | null;
+  photo: string | null;
   status: MemberStatus;
   role: MemberRole | null;
   cellId: string | null;
@@ -37,6 +39,21 @@ export interface PaginatedMembers {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface MemberCardChurch {
+  id: string;
+  name: string;
+  logo: string | null;
+  denomination: string | null;
+  phone: string | null;
+  address: string | null;
+}
+
+export interface MemberCardData {
+  member: Member;
+  church: MemberCardChurch | null;
+  qrCode: string;
 }
 
 export interface MemberStats {

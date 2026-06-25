@@ -64,6 +64,7 @@ model Member {
   phone     String?
   cpf       String?
   birthDate DateTime?
+  baptismDate DateTime?
   address   String?
   city      String?
   photo     String?

@@ -35,6 +35,11 @@ export class MembersController {
     return this.membersService.findAll(user.churchId, query);
   }
 
+  @Get(':id/card')
+  card(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.membersService.card(user.churchId, id);
+  }
+
   @Get(':id')
   findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.membersService.findOne(user.churchId, id);

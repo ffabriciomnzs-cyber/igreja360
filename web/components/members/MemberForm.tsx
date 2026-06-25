@@ -28,6 +28,7 @@ interface FormState {
   phone: string;
   cpf: string;
   birthDate: string;
+  baptismDate: string;
   address: string;
   city: string;
   status: string;
@@ -50,6 +51,7 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
     phone: member?.phone ?? '',
     cpf: member?.cpf ?? '',
     birthDate: isoToDateInput(member?.birthDate ?? null),
+    baptismDate: isoToDateInput(member?.baptismDate ?? null),
     address: member?.address ?? '',
     city: member?.city ?? '',
     status: member?.status ?? 'ACTIVE',
@@ -78,6 +80,9 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
       phone: form.phone.trim() || undefined,
       cpf: form.cpf.trim() || undefined,
       birthDate: form.birthDate ? new Date(form.birthDate).toISOString() : undefined,
+      baptismDate: form.baptismDate
+        ? new Date(form.baptismDate).toISOString()
+        : undefined,
       address: form.address.trim() || undefined,
       city: form.city.trim() || undefined,
       status: form.status,
@@ -160,6 +165,16 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
                 type="date"
                 value={form.birthDate}
                 onChange={(e) => update('birthDate', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="baptismDate">Data de batismo</Label>
+              <Input
+                id="baptismDate"
+                type="date"
+                value={form.baptismDate}
+                onChange={(e) => update('baptismDate', e.target.value)}
               />
             </div>
 

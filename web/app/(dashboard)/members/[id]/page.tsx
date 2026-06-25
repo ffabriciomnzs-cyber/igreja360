@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, Pencil } from 'lucide-react';
+import { ArrowLeft, Loader2, Pencil, IdCard } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -100,12 +100,20 @@ export default function MemberDetailPage(): React.ReactElement {
         title={member.name}
         description="Detalhes do membro."
         action={
-          <Link href={`/members/${member.id}/edit`}>
-            <Button>
-              <Pencil className="h-4 w-4" />
-              Editar
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/members/${member.id}/card`}>
+              <Button variant="outline">
+                <IdCard className="h-4 w-4" />
+                Carteirinha
+              </Button>
+            </Link>
+            <Link href={`/members/${member.id}/edit`}>
+              <Button>
+                <Pencil className="h-4 w-4" />
+                Editar
+              </Button>
+            </Link>
+          </div>
         }
       />
 
@@ -121,6 +129,10 @@ export default function MemberDetailPage(): React.ReactElement {
             <Field
               label="Nascimento"
               value={member.birthDate ? formatDate(member.birthDate) : null}
+            />
+            <Field
+              label="Batismo"
+              value={member.baptismDate ? formatDate(member.baptismDate) : null}
             />
             <Field label="Cidade" value={member.city} />
             <Field
