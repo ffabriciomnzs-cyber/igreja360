@@ -12,6 +12,17 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
+export function formatDateTime(value: string | Date): string {
+  const d = new Date(value);
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d);
+}
+
 export function formatDate(value: string | Date): string {
   // Usa a parte de data (YYYY-MM-DD) sem conversão de fuso, evitando
   // o deslocamento de um dia em datas salvas em UTC (nascimento, batismo, etc.).
