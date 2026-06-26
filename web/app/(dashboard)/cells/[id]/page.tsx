@@ -9,6 +9,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  X,
   Users,
   CalendarDays,
 } from 'lucide-react';
@@ -18,11 +19,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { api, extractApiError } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { CellDetail } from '@/lib/cells';
-import { STATUS_LABELS, STATUS_VARIANTS } from '@/lib/members';
+import {
+  Member,
+  PaginatedMembers,
+  STATUS_LABELS,
+  STATUS_VARIANTS,
+} from '@/lib/members';
 
 function Field({
   label,
@@ -53,6 +60,11 @@ export default function CellDetailPage(): React.ReactElement {
   const [savingMeeting, setSavingMeeting] = useState(false);
   const [meetingError, setMeetingError] = useState<string | null>(null);
 
+  const [allMembers, setAllMembers] = useState<Member[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState('');
+  const [memberBusy, setMemberBusy] = useState(false);
+  const [memberError, setMemberError] = useState<string | null>(null);
+
   const load = useCallback(async (): Promise<void> => {
     try {
       const { data } = await api.get<CellDetail>(`/cells/${params.id}`);
@@ -64,9 +76,51 @@ export default function CellDetailPage(): React.ReactElement {
     }
   }, [params.id]);
 
+  const loadMembers = useCallback(async (): Promise<void> => {
+    try {
+      const { data } = await api.get<PaginatedMembers>('/members', {
+        params: { limit: 100 },
+      });
+      setAllMembers(data.data);
+    } catch {
+      /* lista de membros para vínculo é opcional */
+    }
+  }, []);
+
   useEffect(() => {
     void load();
-  }, [load]);
+    void loadMembers();
+  }, [load, loadMembers]);
+
+  async function handleAddMember(): Promise<void> {
+    if (!selectedMemberId) return;
+    setMemberBusy(true);
+    setMemberError(null);
+    try {
+      await api.post(`/cells/${params.id}/members`, {
+        memberId: selectedMemberId,
+      });
+      setSelectedMemberId('');
+      await load();
+    } catch (err) {
+      setMemberError(extractApiError(err));
+    } finally {
+      setMemberBusy(false);
+    }
+  }
+
+  async function handleRemoveMember(memberId: string): Promise<void> {
+    setMemberBusy(true);
+    setMemberError(null);
+    try {
+      await api.delete(`/cells/${params.id}/members/${memberId}`);
+      await load();
+    } catch (err) {
+      setMemberError(extractApiError(err));
+    } finally {
+      setMemberBusy(false);
+    }
+  }
 
   async function handleAddMeeting(e: React.FormEvent): Promise<void> {
     e.preventDefault();
@@ -192,26 +246,73 @@ export default function CellDetailPage(): React.ReactElement {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-3 flex items-center gap-2">
+              <Select
+                value={selectedMemberId}
+                onChange={(e) => setSelectedMemberId(e.target.value)}
+                className="flex-1"
+              >
+                <option value="">Adicionar membro...</option>
+                {allMembers
+                  .filter(
+                    (m) => !cell.members.some((cm) => cm.id === m.id),
+                  )
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+              </Select>
+              <Button
+                size="icon"
+                onClick={handleAddMember}
+                disabled={!selectedMemberId || memberBusy}
+                title="Adicionar à célula"
+              >
+                {memberBusy ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+
+            {memberError && (
+              <div className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {memberError}
+              </div>
+            )}
+
             {cell.members.length === 0 ? (
               <p className="py-4 text-center text-sm text-slate-400">
-                Nenhum membro vinculado. Vincule membros pela edição do membro.
+                Nenhum membro vinculado ainda.
               </p>
             ) : (
               <ul className="divide-y divide-border">
                 {cell.members.map((m) => (
                   <li
                     key={m.id}
-                    className="flex items-center justify-between py-2"
+                    className="flex items-center justify-between gap-2 py-2"
                   >
                     <Link
                       href={`/members/${m.id}`}
-                      className="text-sm font-medium text-slate-800 hover:text-indigo-600"
+                      className="flex-1 truncate text-sm font-medium text-slate-800 hover:text-indigo-600"
                     >
                       {m.name}
                     </Link>
                     <Badge variant={STATUS_VARIANTS[m.status]}>
                       {STATUS_LABELS[m.status]}
                     </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Remover da célula"
+                      onClick={() => handleRemoveMember(m.id)}
+                      disabled={memberBusy}
+                      className="h-7 w-7"
+                    >
+                      <X className="h-4 w-4 text-red-500" />
+                    </Button>
                   </li>
                 ))}
               </ul>

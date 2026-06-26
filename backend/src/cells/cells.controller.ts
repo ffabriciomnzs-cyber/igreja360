@@ -15,6 +15,7 @@ import { CreateCellDto } from './dto/create-cell.dto';
 import { UpdateCellDto } from './dto/update-cell.dto';
 import { QueryCellsDto } from './dto/query-cells.dto';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
+import { AddMemberDto } from './dto/add-member.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -69,6 +70,26 @@ export class CellsController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.PASTOR)
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.cellsService.remove(user.churchId, id);
+  }
+
+  @Post(':id/members')
+  @Roles(...MANAGE_ROLES)
+  addMember(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: AddMemberDto,
+  ) {
+    return this.cellsService.addMember(user.churchId, id, dto.memberId);
+  }
+
+  @Delete(':id/members/:memberId')
+  @Roles(...MANAGE_ROLES)
+  removeMember(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Param('memberId') memberId: string,
+  ) {
+    return this.cellsService.removeMember(user.churchId, id, memberId);
   }
 
   @Post(':id/meetings')

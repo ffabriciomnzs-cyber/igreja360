@@ -165,6 +165,36 @@ export class CellsService {
     return { success: true };
   }
 
+  async addMember(churchId: string, cellId: string, memberId: string) {
+    await this.findOne(churchId, cellId);
+    const member = await this.prisma.member.findFirst({
+      where: { id: memberId, churchId },
+    });
+    if (!member) {
+      throw new NotFoundException('Membro não encontrado.');
+    }
+    await this.prisma.member.update({
+      where: { id: memberId },
+      data: { cellId },
+    });
+    return { success: true };
+  }
+
+  async removeMember(churchId: string, cellId: string, memberId: string) {
+    await this.findOne(churchId, cellId);
+    const member = await this.prisma.member.findFirst({
+      where: { id: memberId, churchId, cellId },
+    });
+    if (!member) {
+      throw new NotFoundException('Membro não encontrado nesta célula.');
+    }
+    await this.prisma.member.update({
+      where: { id: memberId },
+      data: { cellId: null },
+    });
+    return { success: true };
+  }
+
   async stats(churchId: string) {
     const [total, active, membersInCells] = await this.prisma.$transaction([
       this.prisma.cell.count({ where: { churchId } }),
