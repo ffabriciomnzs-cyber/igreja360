@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { MembersModule } from './members/members.module';
 import { CellsModule } from './cells/cells.module';
 import { FinancialModule } from './financial/financial.module';
+import { EventsModule } from './events/events.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -15,6 +16,7 @@ import { HealthController } from './health.controller';
     MembersModule,
     CellsModule,
     FinancialModule,
+    EventsModule,
   ],
   controllers: [HealthController],
 })
