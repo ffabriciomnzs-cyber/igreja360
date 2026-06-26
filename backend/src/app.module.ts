@@ -6,6 +6,11 @@ import { MembersModule } from './members/members.module';
 import { CellsModule } from './cells/cells.module';
 import { FinancialModule } from './financial/financial.module';
 import { EventsModule } from './events/events.module';
+import { CampaignsModule } from './campaigns/campaigns.module';
+import { CommunicationsModule } from './communications/communications.module';
+import { PrayersModule } from './prayers/prayers.module';
+import { ReportsModule } from './reports/reports.module';
+import { SettingsModule } from './settings/settings.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -17,6 +22,11 @@ import { HealthController } from './health.controller';
     CellsModule,
     FinancialModule,
     EventsModule,
+    CampaignsModule,
+    CommunicationsModule,
+    PrayersModule,
+    ReportsModule,
+    SettingsModule,
   ],
   controllers: [HealthController],
 })
