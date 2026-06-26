@@ -34,9 +34,9 @@ export function Sidebar(): React.ReactElement {
   const pathname = usePathname();
 
   return (
-    <nav className="flex h-full w-64 flex-col bg-slate-900 text-slate-100">
+    <nav className="flex h-full w-64 flex-col bg-blue-100 text-blue-900">
       <div className="flex items-center gap-2 px-6 py-5 text-xl font-bold">
-        <Church className="h-6 w-6 text-indigo-400" />
+        <Church className="h-6 w-6 text-blue-600" />
         Igreja360
       </div>
       <ul className="flex-1 space-y-1 px-3">
@@ -49,9 +49,9 @@ export function Sidebar(): React.ReactElement {
               <Link
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100',
+                  'flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm text-blue-900/60 transition-colors hover:bg-blue-200 hover:text-blue-900',
                   active &&
-                    'border-indigo-400 bg-slate-800 font-medium text-slate-100',
+                    'border-blue-600 bg-blue-200 font-medium text-blue-900',
                 )}
               >
                 <Icon className="h-4 w-4" />
