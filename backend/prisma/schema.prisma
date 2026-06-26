@@ -28,6 +28,7 @@ model Church {
   campaigns      Campaign[]
   communications Communication[]
   prayers        Prayer[]
+  worshipServices WorshipService[]
 }
 
 model User {
@@ -223,4 +224,54 @@ enum PrayerStatus {
   ACTIVE
   ANSWERED
   ARCHIVED
+}
+
+model WorshipService {
+  id           String               @id @default(cuid())
+  churchId     String
+  church       Church               @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  title        String
+  date         DateTime
+  theme        String?
+  bibleRef     String?
+  notes        String?
+  status       WorshipStatus        @default(PLANNED)
+  items        WorshipItem[]
+  participants WorshipParticipant[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([churchId])
+  @@index([date])
+}
+
+model WorshipItem {
+  id          String         @id @default(cuid())
+  serviceId   String
+  service     WorshipService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  order       Int            @default(0)
+  title       String
+  responsible String?
+  durationMin Int?
+  notes       String?
+
+  @@index([serviceId])
+}
+
+model WorshipParticipant {
+  id        String         @id @default(cuid())
+  serviceId String
+  service   WorshipService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  memberId  String?
+  name      String
+  role      String
+  notes     String?
+
+  @@index([serviceId])
+}
+
+enum WorshipStatus {
+  PLANNED
+  DONE
+  CANCELED
 }

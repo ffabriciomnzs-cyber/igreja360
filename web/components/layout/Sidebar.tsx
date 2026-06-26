@@ -14,6 +14,8 @@ import {
   FileText,
   Settings,
   Church,
+  BookOpen,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +28,8 @@ const items = [
   { href: '/campaigns', label: 'Campanhas', icon: Megaphone },
   { href: '/communications', label: 'Comunicações', icon: MessageSquare },
   { href: '/prayers', label: 'Orações', icon: HandHeart },
+  { href: '/worship', label: 'Cultos', icon: ClipboardList },
+  { href: '/bible', label: 'Bíblia', icon: BookOpen },
   { href: '/reports', label: 'Relatórios', icon: FileText },
   { href: '/settings', label: 'Configurações', icon: Settings },
 ];
