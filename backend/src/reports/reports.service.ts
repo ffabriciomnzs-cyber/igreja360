@@ -73,6 +73,7 @@ export class ReportsService {
         by: ['category', 'type'],
         where: { churchId },
         _sum: { amount: true },
+        orderBy: { category: 'asc' },
       }),
     ]);
 
@@ -85,7 +86,7 @@ export class ReportsService {
       .map((c) => ({
         category: c.category,
         type: c.type,
-        amount: Number(c._sum.amount ?? 0),
+        amount: Number(c._sum?.amount ?? 0),
       }))
       .sort((a, b) => b.amount - a.amount);
 
