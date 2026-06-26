@@ -53,7 +53,6 @@ export interface MemberCardChurch {
 export interface MemberCardData {
   member: Member;
   church: MemberCardChurch | null;
-  qrCode: string;
 }
 
 export interface MemberStats {

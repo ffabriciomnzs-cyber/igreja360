@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import * as QRCode from 'qrcode';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
@@ -80,6 +79,7 @@ export class MembersService {
         baptismDate: dto.baptismDate ? new Date(dto.baptismDate) : null,
         address: dto.address?.trim() || null,
         city: dto.city?.trim() || null,
+        photo: dto.photo || null,
         status: dto.status ?? 'ACTIVE',
         role: dto.role ?? null,
         cellId: dto.cellId || null,
@@ -103,6 +103,7 @@ export class MembersService {
       data.baptismDate = dto.baptismDate ? new Date(dto.baptismDate) : null;
     if (dto.address !== undefined) data.address = dto.address?.trim() || null;
     if (dto.city !== undefined) data.city = dto.city?.trim() || null;
+    if (dto.photo !== undefined) data.photo = dto.photo || null;
     if (dto.status !== undefined) data.status = dto.status;
     if (dto.role !== undefined) data.role = dto.role ?? null;
     if (dto.cellId !== undefined)
@@ -139,14 +140,7 @@ export class MembersService {
       },
     });
 
-    const payload = `IGREJA360|${churchId}|${member.id}|${member.name}`;
-    const qrCode = await QRCode.toDataURL(payload, {
-      margin: 1,
-      width: 240,
-      color: { dark: '#0f172a', light: '#ffffff' },
-    });
-
-    return { member, church, qrCode };
+    return { member, church };
   }
 
   async stats(churchId: string) {

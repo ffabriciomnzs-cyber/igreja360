@@ -48,6 +48,10 @@ export class CreateMemberDto {
   city?: string;
 
   @IsOptional()
+  @IsString()
+  photo?: string;
+
+  @IsOptional()
   @IsEnum(MemberStatus, { message: 'Status inválido.' })
   status?: MemberStatus;
 

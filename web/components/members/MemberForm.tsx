@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,45 @@ function isoToDateInput(value: string | null): string {
   return value.slice(0, 10);
 }
 
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+async function fileToCompressedDataUrl(
+  file: File,
+  max = 400,
+  quality = 0.8,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Não foi possível processar a imagem.'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('Imagem inválida.'));
+      img.src = reader.result as string;
+    };
+    reader.onerror = () => reject(new Error('Falha ao ler o arquivo.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function MemberForm({ member }: MemberFormProps): React.ReactElement {
   const router = useRouter();
   const editing = Boolean(member);
@@ -58,11 +97,33 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
     role: member?.role ?? '',
     joinedAt: isoToDateInput(member?.joinedAt ?? null),
   });
+  const [photo, setPhoto] = useState<string>(member?.photo ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function update<K extends keyof FormState>(key: K, value: string): void {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handlePhotoChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('Selecione um arquivo de imagem.');
+      return;
+    }
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file);
+      setPhoto(dataUrl);
+      setError(null);
+    } catch {
+      setError('Não foi possível carregar a imagem.');
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   }
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
@@ -85,6 +146,7 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
         : undefined,
       address: form.address.trim() || undefined,
       city: form.city.trim() || undefined,
+      photo,
       status: form.status,
       role: form.role || undefined,
       joinedAt: form.joinedAt ? new Date(form.joinedAt).toISOString() : undefined,
@@ -114,6 +176,56 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
               {error}
             </div>
           )}
+
+          <div className="flex items-center gap-4">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-50 text-xl font-bold text-indigo-600 ring-1 ring-slate-200">
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photo}
+                  alt="Foto do membro"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                initials(form.name || '?')
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label>Foto do membro</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhotoChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  {photo ? 'Trocar foto' : 'Enviar foto'}
+                </Button>
+                {photo && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPhoto('')}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                    Remover
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-slate-400">
+                JPG ou PNG. A imagem é reduzida automaticamente.
+              </p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -72,7 +71,7 @@ export default function MemberCardPage(): React.ReactElement {
     );
   }
 
-  const { member, church, qrCode } = data;
+  const { member, church } = data;
   const churchName = church?.name ?? 'Igreja360';
 
   return (
@@ -133,13 +132,11 @@ export default function MemberCardPage(): React.ReactElement {
           <div className="flex gap-4 px-6 py-5">
             <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-indigo-50 text-2xl font-bold text-indigo-600">
               {member.photo ? (
-                <Image
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
                   src={member.photo}
                   alt={member.name}
-                  width={96}
-                  height={96}
                   className="h-full w-full object-cover"
-                  unoptimized
                 />
               ) : (
                 initials(member.name)
@@ -177,19 +174,18 @@ export default function MemberCardPage(): React.ReactElement {
             </div>
           </div>
 
-          {/* Rodapé com QR */}
-          <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50 px-6 py-4">
-            <div className="text-[10px] leading-relaxed text-slate-500">
-              <p className="font-semibold text-slate-700">ID {member.id.slice(0, 8).toUpperCase()}</p>
+          {/* Rodapé */}
+          <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50 px-6 py-4 text-[10px] leading-relaxed text-slate-500">
+            <div>
+              <p className="font-semibold text-slate-700">
+                ID {member.id.slice(0, 8).toUpperCase()}
+              </p>
               {member.cpf && <p>CPF {member.cpf}</p>}
-              {church?.phone && <p>{church.phone}</p>}
             </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={qrCode}
-              alt="QR Code de verificação"
-              className="h-20 w-20 rounded-md bg-white p-1 ring-1 ring-slate-200"
-            />
+            <div className="text-right">
+              {church?.phone && <p>{church.phone}</p>}
+              {church?.address && <p>{church.address}</p>}
+            </div>
           </div>
         </div>
       </div>
