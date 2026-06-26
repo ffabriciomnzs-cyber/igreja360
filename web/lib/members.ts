@@ -63,6 +63,19 @@ export interface MemberStats {
   recent: Member[];
 }
 
+export interface MemberBirthday {
+  id: string;
+  name: string;
+  birthDate: string;
+  status: MemberStatus;
+}
+
+export interface MemberGrowthPoint {
+  key: string;
+  label: string;
+  count: number;
+}
+
 export const STATUS_LABELS: Record<MemberStatus, string> = {
   ACTIVE: 'Ativo',
   INACTIVE: 'Inativo',

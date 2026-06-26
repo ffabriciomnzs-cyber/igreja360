@@ -30,6 +30,16 @@ export class MembersController {
     return this.membersService.stats(user.churchId);
   }
 
+  @Get('birthdays')
+  birthdays(@CurrentUser() user: AuthUser) {
+    return this.membersService.birthdays(user.churchId);
+  }
+
+  @Get('growth')
+  growth(@CurrentUser() user: AuthUser) {
+    return this.membersService.growth(user.churchId);
+  }
+
   @Get()
   findAll(@CurrentUser() user: AuthUser, @Query() query: QueryMembersDto) {
     return this.membersService.findAll(user.churchId, query);

@@ -160,4 +160,61 @@ export class MembersService {
 
     return { total, active, visitors, inactive, recent };
   }
+
+  // Aniversariantes do mês corrente (usa partes UTC para não deslocar a data).
+  async birthdays(churchId: string) {
+    const members = await this.prisma.member.findMany({
+      where: { churchId, birthDate: { not: null } },
+      select: { id: true, name: true, birthDate: true, status: true },
+    });
+
+    const currentMonth = new Date().getUTCMonth();
+
+    return members
+      .filter((m) => m.birthDate && m.birthDate.getUTCMonth() === currentMonth)
+      .sort((a, b) => a.birthDate!.getUTCDate() - b.birthDate!.getUTCDate())
+      .map((m) => ({
+        id: m.id,
+        name: m.name,
+        birthDate: m.birthDate,
+        status: m.status,
+      }));
+  }
+
+  // Novos membros por mês nos últimos 6 meses (por joinedAt, ou createdAt).
+  async growth(churchId: string) {
+    const members = await this.prisma.member.findMany({
+      where: { churchId },
+      select: { joinedAt: true, createdAt: true },
+    });
+
+    const labels = [
+      'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+      'jul', 'ago', 'set', 'out', 'nov', 'dez',
+    ];
+    const now = new Date();
+    const buckets = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (5 - i), 1),
+      );
+      const month = d.getUTCMonth();
+      return {
+        key: `${d.getUTCFullYear()}-${String(month + 1).padStart(2, '0')}`,
+        label: labels[month],
+        count: 0,
+      };
+    });
+    const indexByKey = new Map(buckets.map((b, i) => [b.key, i]));
+
+    for (const m of members) {
+      const ref = m.joinedAt ?? m.createdAt;
+      const key = `${ref.getUTCFullYear()}-${String(
+        ref.getUTCMonth() + 1,
+      ).padStart(2, '0')}`;
+      const idx = indexByKey.get(key);
+      if (idx !== undefined) buckets[idx].count += 1;
+    }
+
+    return buckets;
+  }
 }
