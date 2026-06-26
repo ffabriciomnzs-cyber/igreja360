@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Upload, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import {
   STATUS_LABELS,
   STATUS_OPTIONS,
 } from '@/lib/members';
+import { Cell, PaginatedCells } from '@/lib/cells';
 
 interface MemberFormProps {
   member?: Member;
@@ -33,6 +34,7 @@ interface FormState {
   city: string;
   status: string;
   role: string;
+  cellId: string;
   joinedAt: string;
 }
 
@@ -95,12 +97,29 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
     city: member?.city ?? '',
     status: member?.status ?? 'ACTIVE',
     role: member?.role ?? '',
+    cellId: member?.cellId ?? '',
     joinedAt: isoToDateInput(member?.joinedAt ?? null),
   });
   const [photo, setPhoto] = useState<string>(member?.photo ?? '');
+  const [cells, setCells] = useState<Cell[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get<PaginatedCells>('/cells', { params: { limit: 100 } })
+      .then(({ data }) => {
+        if (mounted) setCells(data.data);
+      })
+      .catch(() => {
+        /* seleção de célula é opcional */
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   function update<K extends keyof FormState>(key: K, value: string): void {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -149,6 +168,7 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
       photo,
       status: form.status,
       role: form.role || undefined,
+      cellId: form.cellId,
       joinedAt: form.joinedAt ? new Date(form.joinedAt).toISOString() : undefined,
     };
 
@@ -316,6 +336,22 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
                 {ROLE_OPTIONS.map((r) => (
                   <option key={r} value={r}>
                     {ROLE_LABELS[r]}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cellId">Célula</Label>
+              <Select
+                id="cellId"
+                value={form.cellId}
+                onChange={(e) => update('cellId', e.target.value)}
+              >
+                <option value="">Sem célula</option>
+                {cells.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
                   </option>
                 ))}
               </Select>
