@@ -146,13 +146,13 @@ export function WorshipForm({
   async function generateWithAi(): Promise<void> {
     setError(null);
     if (title.trim().length < 2) {
-      setError('Informe um título antes de gerar sugestões com IA.');
+      setError('Informe um título antes de gerar a sugestão.');
       return;
     }
     if (
       (items.length > 0 || participants.length > 0) &&
       !confirm(
-        'A IA vai substituir a ordem do culto e os participantes atuais. Continuar?',
+        'A sugestão vai substituir a ordem do culto e os participantes atuais. Continuar?',
       )
     ) {
       return;
@@ -253,14 +253,14 @@ export function WorshipForm({
         </div>
       )}
 
-      {/* Assistente de IA */}
+      {/* Gerador de sugestão */}
       <div className="flex flex-col gap-3 rounded-lg border border-indigo-200 bg-indigo-50 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-2">
           <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600" />
           <p className="text-sm text-indigo-900">
-            Preencha o <strong>título</strong> (e opcionalmente o tema) e deixe a
-            IA sugerir o tema, o texto-base, a ordem do culto e as funções a
-            escalar.
+            Preencha o <strong>título</strong> (e opcionalmente o tema) e gere
+            uma sugestão automática de tema, texto-base, ordem do culto e
+            funções a escalar.
           </p>
         </div>
         <Button
@@ -274,7 +274,7 @@ export function WorshipForm({
           ) : (
             <Sparkles className="h-4 w-4" />
           )}
-          {generating ? 'Gerando...' : 'Gerar com IA'}
+          {generating ? 'Gerando...' : 'Gerar sugestão'}
         </Button>
       </div>
 
