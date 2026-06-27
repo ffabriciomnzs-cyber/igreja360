@@ -10,6 +10,7 @@ import {
   ArrowDown,
   ListOrdered,
   UserPlus,
+  Sparkles,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,6 +86,7 @@ export function WorshipForm({
   const [memberNames, setMemberNames] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     api
@@ -127,6 +129,62 @@ export function WorshipForm({
     );
   const removeParticipant = (i: number) =>
     setParticipants((prev) => prev.filter((_, idx) => idx !== i));
+
+  interface AiSuggestion {
+    theme: string;
+    bibleRef: string;
+    summary: string;
+    items: {
+      title: string;
+      responsible: string;
+      durationMin: number;
+      notes: string;
+    }[];
+    participantRoles: string[];
+  }
+
+  async function generateWithAi(): Promise<void> {
+    setError(null);
+    if (title.trim().length < 2) {
+      setError('Informe um título antes de gerar sugestões com IA.');
+      return;
+    }
+    if (
+      (items.length > 0 || participants.length > 0) &&
+      !confirm(
+        'A IA vai substituir a ordem do culto e os participantes atuais. Continuar?',
+      )
+    ) {
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const { data } = await api.post<AiSuggestion>('/worship/assist', {
+        title: title.trim(),
+        theme: theme.trim() || undefined,
+        bibleRef: bibleRef.trim() || undefined,
+      });
+      if (data.theme) setTheme(data.theme);
+      if (data.bibleRef) setBibleRef(data.bibleRef);
+      if (data.summary && !notes.trim()) setNotes(data.summary);
+      setItems(
+        data.items.map((i) => ({
+          title: i.title ?? '',
+          responsible: i.responsible ?? '',
+          durationMin: i.durationMin != null ? String(i.durationMin) : '',
+          notes: i.notes ?? '',
+        })),
+      );
+      setParticipants(
+        data.participantRoles.map((role) => ({ name: '', role, notes: '' })),
+      );
+    } catch (err) {
+      setError(extractApiError(err));
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
@@ -194,6 +252,31 @@ export function WorshipForm({
           {error}
         </div>
       )}
+
+      {/* Assistente de IA */}
+      <div className="flex flex-col gap-3 rounded-lg border border-indigo-200 bg-indigo-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-2">
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600" />
+          <p className="text-sm text-indigo-900">
+            Preencha o <strong>título</strong> (e opcionalmente o tema) e deixe a
+            IA sugerir o tema, o texto-base, a ordem do culto e as funções a
+            escalar.
+          </p>
+        </div>
+        <Button
+          type="button"
+          onClick={generateWithAi}
+          disabled={generating}
+          className="shrink-0 bg-indigo-600 hover:bg-indigo-700"
+        >
+          {generating ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4" />
+          )}
+          {generating ? 'Gerando...' : 'Gerar com IA'}
+        </Button>
+      </div>
 
       {/* Dados do culto */}
       <Card>

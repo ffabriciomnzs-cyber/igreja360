@@ -11,9 +11,11 @@ import {
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { WorshipService } from './worship.service';
+import { WorshipAiService } from './worship-ai.service';
 import { CreateWorshipDto } from './dto/create-worship.dto';
 import { UpdateWorshipDto } from './dto/update-worship.dto';
 import { QueryWorshipDto } from './dto/query-worship.dto';
+import { SuggestWorshipDto } from './dto/suggest-worship.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -30,11 +32,20 @@ const MANAGE_ROLES = [
 @Controller('worship')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class WorshipController {
-  constructor(private readonly worshipService: WorshipService) {}
+  constructor(
+    private readonly worshipService: WorshipService,
+    private readonly worshipAiService: WorshipAiService,
+  ) {}
 
   @Get('stats')
   stats(@CurrentUser() user: AuthUser) {
     return this.worshipService.stats(user.churchId);
+  }
+
+  @Post('assist')
+  @Roles(...MANAGE_ROLES)
+  assist(@Body() dto: SuggestWorshipDto) {
+    return this.worshipAiService.suggest(dto);
   }
 
   @Get()
