@@ -79,6 +79,9 @@ export class MembersService {
         baptismDate: dto.baptismDate ? new Date(dto.baptismDate) : null,
         address: dto.address?.trim() || null,
         city: dto.city?.trim() || null,
+        rg: dto.rg?.trim() || null,
+        maritalStatus: dto.maritalStatus?.trim() || null,
+        profession: dto.profession?.trim() || null,
         photo: dto.photo || null,
         status: dto.status ?? 'ACTIVE',
         role: dto.role ?? null,
@@ -87,6 +90,45 @@ export class MembersService {
       },
       include: memberInclude,
     });
+  }
+
+  // Importação em massa (ex.: planilha). Ignora linhas sem nome válido.
+  async importMany(churchId: string, rows: CreateMemberDto[]) {
+    const toDate = (v?: string): Date | null => {
+      if (!v) return null;
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    const data = rows
+      .filter((r) => typeof r.name === 'string' && r.name.trim().length >= 2)
+      .map((r) => ({
+        churchId,
+        name: r.name.trim(),
+        email:
+          r.email && r.email.includes('@')
+            ? r.email.toLowerCase().trim()
+            : null,
+        phone: r.phone?.trim() || null,
+        cpf: r.cpf?.trim() || null,
+        birthDate: toDate(r.birthDate),
+        baptismDate: toDate(r.baptismDate),
+        address: r.address?.trim() || null,
+        city: r.city?.trim() || null,
+        rg: r.rg?.trim() || null,
+        maritalStatus: r.maritalStatus?.trim() || null,
+        profession: r.profession?.trim() || null,
+        status: r.status ?? 'ACTIVE',
+        role: r.role ?? null,
+        joinedAt: new Date(),
+      }));
+
+    let created = 0;
+    if (data.length > 0) {
+      const result = await this.prisma.member.createMany({ data });
+      created = result.count;
+    }
+    return { total: rows.length, created, skipped: rows.length - data.length };
   }
 
   async update(churchId: string, id: string, dto: UpdateMemberDto) {
@@ -103,6 +145,11 @@ export class MembersService {
       data.baptismDate = dto.baptismDate ? new Date(dto.baptismDate) : null;
     if (dto.address !== undefined) data.address = dto.address?.trim() || null;
     if (dto.city !== undefined) data.city = dto.city?.trim() || null;
+    if (dto.rg !== undefined) data.rg = dto.rg?.trim() || null;
+    if (dto.maritalStatus !== undefined)
+      data.maritalStatus = dto.maritalStatus?.trim() || null;
+    if (dto.profession !== undefined)
+      data.profession = dto.profession?.trim() || null;
     if (dto.photo !== undefined) data.photo = dto.photo || null;
     if (dto.status !== undefined) data.status = dto.status;
     if (dto.role !== undefined) data.role = dto.role ?? null;

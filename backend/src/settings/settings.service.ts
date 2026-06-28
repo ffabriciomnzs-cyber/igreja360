@@ -13,6 +13,7 @@ const churchSelect = {
   id: true,
   name: true,
   slug: true,
+  logo: true,
   denomination: true,
   address: true,
   phone: true,
@@ -37,6 +38,7 @@ export class SettingsService {
   async updateChurch(churchId: string, dto: UpdateChurchDto) {
     const data: Prisma.ChurchUpdateInput = {};
     if (dto.name !== undefined) data.name = dto.name.trim();
+    if (dto.logo !== undefined) data.logo = dto.logo || null;
     if (dto.denomination !== undefined)
       data.denomination = dto.denomination?.trim() || null;
     if (dto.address !== undefined) data.address = dto.address?.trim() || null;

@@ -23,6 +23,9 @@ export interface Member {
   baptismDate: string | null;
   address: string | null;
   city: string | null;
+  rg: string | null;
+  maritalStatus: string | null;
+  profession: string | null;
   photo: string | null;
   status: MemberStatus;
   role: MemberRole | null;

@@ -10,6 +10,7 @@ import {
   Trash2,
   Eye,
   Users,
+  Upload,
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -88,12 +89,20 @@ export default function MembersPage(): React.ReactElement {
         title="Membros"
         description="Cadastro e gestão dos membros da igreja."
         action={
-          <Link href="/members/new">
-            <Button>
-              <Plus className="h-4 w-4" />
-              Novo membro
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/members/import">
+              <Button variant="outline">
+                <Upload className="h-4 w-4" />
+                Importar
+              </Button>
+            </Link>
+            <Link href="/members/new">
+              <Button>
+                <Plus className="h-4 w-4" />
+                Novo membro
+              </Button>
+            </Link>
+          </div>
         }
       />
 

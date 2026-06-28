@@ -14,6 +14,7 @@ import { MembersService } from './members.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { QueryMembersDto } from './dto/query-members.dto';
+import { ImportMembersDto } from './dto/import-members.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -65,6 +66,18 @@ export class MembersController {
   )
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateMemberDto) {
     return this.membersService.create(user.churchId, dto);
+  }
+
+  @Post('import')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.PASTOR,
+    UserRole.SECRETARY,
+    UserRole.LEADER,
+  )
+  import(@CurrentUser() user: AuthUser, @Body() dto: ImportMembersDto) {
+    return this.membersService.importMany(user.churchId, dto.members);
   }
 
   @Patch(':id')

@@ -49,6 +49,21 @@ export class CreateMemberDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(20, { message: 'RG inválido.' })
+  rg?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40, { message: 'Estado civil inválido.' })
+  maritalStatus?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80, { message: 'Profissão inválida.' })
+  profession?: string;
+
+  @IsOptional()
+  @IsString()
   photo?: string;
 
   @IsOptional()

@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { api } from '@/lib/api';
+import { ChurchSettings } from '@/lib/settings';
 import {
   LayoutDashboard,
   Users,
@@ -36,12 +39,35 @@ const items = [
 
 export function Sidebar(): React.ReactElement {
   const pathname = usePathname();
+  const [church, setChurch] = useState<ChurchSettings | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get<ChurchSettings>('/settings/church')
+      .then(({ data }) => {
+        if (mounted) setChurch(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <nav className="flex h-full w-64 flex-col bg-blue-100 text-blue-900">
       <div className="flex items-center gap-2 px-6 py-5 text-xl font-bold">
-        <Church className="h-6 w-6 text-blue-600" />
-        Igreja360
+        {church?.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={church.logo}
+            alt="Logo"
+            className="h-8 w-8 shrink-0 rounded object-contain"
+          />
+        ) : (
+          <Church className="h-6 w-6 shrink-0 text-blue-600" />
+        )}
+        <span className="truncate">{church?.name || 'Igreja360'}</span>
       </div>
       <ul className="flex-1 space-y-1 px-3">
         {items.map((item) => {

@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Loader2, Upload, Trash2, Church as ChurchIcon } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { api, extractApiError } from '@/lib/api';
+import { fileToCompressedDataUrl } from '@/lib/image';
 import { ChurchSettings } from '@/lib/settings';
 
 export default function SettingsPage(): React.ReactElement {
@@ -23,9 +24,11 @@ export default function SettingsPage(): React.ReactElement {
     serviceHours: '',
     address: '',
   });
+  const [logo, setLogo] = useState<string>('');
   const [savingChurch, setSavingChurch] = useState(false);
   const [churchMsg, setChurchMsg] = useState<string | null>(null);
   const [churchErr, setChurchErr] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [pwd, setPwd] = useState({ currentPassword: '', newPassword: '' });
   const [savingPwd, setSavingPwd] = useState(false);
@@ -39,6 +42,7 @@ export default function SettingsPage(): React.ReactElement {
       .then(({ data }) => {
         if (!mounted) return;
         setChurch(data);
+        setLogo(data.logo ?? '');
         setForm({
           name: data.name ?? '',
           denomination: data.denomination ?? '',
@@ -60,6 +64,25 @@ export default function SettingsPage(): React.ReactElement {
     };
   }, []);
 
+  async function handleLogo(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setChurchErr('Selecione um arquivo de imagem.');
+      return;
+    }
+    try {
+      setLogo(await fileToCompressedDataUrl(file, 256));
+      setChurchErr(null);
+    } catch {
+      setChurchErr('Não foi possível carregar a imagem.');
+    } finally {
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  }
+
   async function saveChurch(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     setChurchMsg(null);
@@ -68,6 +91,7 @@ export default function SettingsPage(): React.ReactElement {
     try {
       await api.patch('/settings/church', {
         name: form.name.trim(),
+        logo,
         denomination: form.denomination.trim() || undefined,
         phone: form.phone.trim() || undefined,
         email: form.email.trim() || undefined,
@@ -138,6 +162,56 @@ export default function SettingsPage(): React.ReactElement {
                   {churchErr}
                 </div>
               )}
+              <div className="space-y-2">
+                <Label>Logo da igreja</Label>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-border bg-slate-50">
+                    {logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={logo}
+                        alt="Logo"
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <ChurchIcon className="h-7 w-7 text-slate-300" />
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleLogo}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => logoInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4" />
+                      Enviar logo
+                    </Button>
+                    {logo && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setLogo('')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Remover
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Aparece no menu lateral. Use PNG ou JPG quadrado.
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="name">Nome da igreja *</Label>

@@ -32,6 +32,9 @@ interface FormState {
   baptismDate: string;
   address: string;
   city: string;
+  rg: string;
+  maritalStatus: string;
+  profession: string;
   status: string;
   role: string;
   cellId: string;
@@ -95,6 +98,9 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
     baptismDate: isoToDateInput(member?.baptismDate ?? null),
     address: member?.address ?? '',
     city: member?.city ?? '',
+    rg: member?.rg ?? '',
+    maritalStatus: member?.maritalStatus ?? '',
+    profession: member?.profession ?? '',
     status: member?.status ?? 'ACTIVE',
     role: member?.role ?? '',
     cellId: member?.cellId ?? '',
@@ -165,6 +171,9 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
         : undefined,
       address: form.address.trim() || undefined,
       city: form.city.trim() || undefined,
+      rg: form.rg.trim() || undefined,
+      maritalStatus: form.maritalStatus.trim() || undefined,
+      profession: form.profession.trim() || undefined,
       photo,
       status: form.status,
       role: form.role || undefined,
@@ -364,6 +373,34 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
                 value={form.city}
                 onChange={(e) => update('city', e.target.value)}
                 placeholder="São Paulo"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="rg">RG</Label>
+              <Input
+                id="rg"
+                value={form.rg}
+                onChange={(e) => update('rg', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maritalStatus">Estado civil</Label>
+              <Input
+                id="maritalStatus"
+                value={form.maritalStatus}
+                onChange={(e) => update('maritalStatus', e.target.value)}
+                placeholder="Solteiro(a), Casado(a)..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profession">Profissão</Label>
+              <Input
+                id="profession"
+                value={form.profession}
+                onChange={(e) => update('profession', e.target.value)}
               />
             </div>
 

@@ -68,6 +68,9 @@ model Member {
   baptismDate DateTime?
   address   String?
   city      String?
+  rg            String?
+  maritalStatus String?
+  profession    String?
   photo     String?
   status    MemberStatus @default(ACTIVE)
   role      MemberRole?
