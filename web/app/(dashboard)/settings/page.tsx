@@ -100,6 +100,8 @@ export default function SettingsPage(): React.ReactElement {
         address: form.address.trim() || undefined,
       });
       setChurchMsg('Dados da igreja atualizados com sucesso.');
+      // Atualiza o menu lateral na hora (sem precisar recarregar a página).
+      window.dispatchEvent(new Event('igreja360:church-updated'));
     } catch (err) {
       setChurchErr(extractApiError(err));
     } finally {

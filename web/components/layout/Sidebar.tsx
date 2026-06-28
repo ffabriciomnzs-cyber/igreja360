@@ -43,14 +43,19 @@ export function Sidebar(): React.ReactElement {
 
   useEffect(() => {
     let mounted = true;
-    api
-      .get<ChurchSettings>('/settings/church')
-      .then(({ data }) => {
-        if (mounted) setChurch(data);
-      })
-      .catch(() => undefined);
+    const load = () =>
+      api
+        .get<ChurchSettings>('/settings/church')
+        .then(({ data }) => {
+          if (mounted) setChurch(data);
+        })
+        .catch(() => undefined);
+    load();
+    // Recarrega quando a igreja é atualizada nas Configurações.
+    window.addEventListener('igreja360:church-updated', load);
     return () => {
       mounted = false;
+      window.removeEventListener('igreja360:church-updated', load);
     };
   }, []);
 
