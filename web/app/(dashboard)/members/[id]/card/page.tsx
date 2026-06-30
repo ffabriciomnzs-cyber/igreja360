@@ -114,6 +114,10 @@ export default function MemberCardPage(): React.ReactElement {
         <div
           id="carteirinha"
           className="w-[420px] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200"
+          style={{
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact',
+          }}
         >
           {/* Cabeçalho com identidade da igreja */}
           <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-indigo-600 to-indigo-800 px-6 py-5 text-white">
