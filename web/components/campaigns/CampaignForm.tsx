@@ -31,6 +31,24 @@ function dateInput(value: string | null): string {
   return value ? value.slice(0, 10) : '';
 }
 
+// Interpreta valor em formato brasileiro: ponto = milhar, vírgula = centavos.
+// "25.000" -> 25000 | "25.000,50" -> 25000.5 | "25,50" -> 25.5
+function parseMoney(raw: string): number | undefined {
+  const s = raw.replace(/[R$\s]/g, '');
+  if (!s) return undefined;
+  const normalized = s.includes(',')
+    ? s.replace(/\./g, '').replace(',', '.')
+    : s.replace(/\./g, '');
+  const n = Number(normalized);
+  return isNaN(n) ? undefined : n;
+}
+
+// Formata um número para o campo (pt-BR), sem casas decimais desnecessárias.
+function moneyInput(value: number | null | undefined): string {
+  if (value == null) return '';
+  return value.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+}
+
 export function CampaignForm({
   campaign,
 }: CampaignFormProps): React.ReactElement {
@@ -41,8 +59,9 @@ export function CampaignForm({
     title: campaign?.title ?? '',
     type: campaign?.type ?? 'Financeira',
     status: campaign?.status ?? 'ACTIVE',
-    goal: campaign?.goal != null ? String(Number(campaign.goal)) : '',
-    current: campaign?.current != null ? String(Number(campaign.current)) : '',
+    goal: campaign?.goal != null ? moneyInput(Number(campaign.goal)) : '',
+    current:
+      campaign?.current != null ? moneyInput(Number(campaign.current)) : '',
     startDate: dateInput(campaign?.startDate ?? null),
     endDate: dateInput(campaign?.endDate ?? null),
     description: campaign?.description ?? '',
@@ -65,8 +84,8 @@ export function CampaignForm({
       title: form.title.trim(),
       type: form.type,
       status: form.status,
-      goal: form.goal ? Number(form.goal) : undefined,
-      current: form.current ? Number(form.current) : undefined,
+      goal: parseMoney(form.goal),
+      current: parseMoney(form.current),
       startDate: form.startDate
         ? new Date(form.startDate).toISOString()
         : undefined,
@@ -138,25 +157,41 @@ export function CampaignForm({
               <Label htmlFor="goal">Meta (R$)</Label>
               <Input
                 id="goal"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 value={form.goal}
                 onChange={(e) => update('goal', e.target.value)}
-                placeholder="0,00"
+                placeholder="Ex.: 25.000,00"
               />
+              {parseMoney(form.goal) !== undefined && (
+                <p className="text-xs text-slate-400">
+                  ={' '}
+                  {parseMoney(form.goal)!.toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
+                  })}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="current">Arrecadado (R$)</Label>
               <Input
                 id="current"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 value={form.current}
                 onChange={(e) => update('current', e.target.value)}
-                placeholder="0,00"
+                placeholder="Ex.: 1.500,00"
               />
+              {parseMoney(form.current) !== undefined && (
+                <p className="text-xs text-slate-400">
+                  ={' '}
+                  {parseMoney(form.current)!.toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
+                  })}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="startDate">Início</Label>
