@@ -116,15 +116,27 @@ export default function MemberCardPage(): React.ReactElement {
           className="w-[420px] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200"
         >
           {/* Cabeçalho com identidade da igreja */}
-          <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 px-6 py-5 text-white">
-            <p className="text-[11px] font-medium uppercase tracking-widest text-indigo-200">
-              Carteirinha de Membro
-            </p>
-            <h2 className="mt-0.5 text-lg font-bold leading-tight">
-              {churchName}
-            </h2>
-            {church?.denomination && (
-              <p className="text-xs text-indigo-200">{church.denomination}</p>
+          <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-indigo-600 to-indigo-800 px-6 py-5 text-white">
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-widest text-indigo-200">
+                Carteirinha de Membro
+              </p>
+              <h2 className="mt-0.5 truncate text-lg font-bold leading-tight">
+                {churchName}
+              </h2>
+              {church?.denomination && (
+                <p className="text-xs text-indigo-200">{church.denomination}</p>
+              )}
+            </div>
+            {church?.logo && (
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/90 p-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={church.logo}
+                  alt="Logo"
+                  className="h-full w-full object-contain"
+                />
+              </div>
             )}
           </div>
 
