@@ -19,6 +19,7 @@ import {
   Church,
   BookOpen,
   ClipboardList,
+  Radio,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ const items = [
   { href: '/prayers', label: 'Orações', icon: HandHeart },
   { href: '/worship', label: 'Cultos', icon: ClipboardList },
   { href: '/bible', label: 'Bíblia', icon: BookOpen },
+  { href: '/radio', label: 'Rádio', icon: Radio },
   { href: '/reports', label: 'Relatórios', icon: FileText },
   { href: '/settings', label: 'Configurações', icon: Settings },
 ];
