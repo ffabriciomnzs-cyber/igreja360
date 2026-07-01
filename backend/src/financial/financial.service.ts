@@ -115,9 +115,14 @@ export class FinancialService {
   }
 
   async stats(churchId: string) {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    // Mês corrente no fuso do Brasil (UTC-3), não no fuso do servidor (UTC).
+    const br = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const monthStart = new Date(
+      Date.UTC(br.getUTCFullYear(), br.getUTCMonth(), 1, 3, 0, 0),
+    );
+    const monthEnd = new Date(
+      Date.UTC(br.getUTCFullYear(), br.getUTCMonth() + 1, 1, 3, 0, 0) - 1,
+    );
 
     const [income, expense, monthIncome, monthExpense] =
       await this.prisma.$transaction([

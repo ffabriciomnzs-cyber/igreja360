@@ -30,14 +30,13 @@ export class ReportsService {
 
   async overview(churchId: string) {
     const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    // Mês corrente no fuso do Brasil (UTC-3), não no fuso do servidor (UTC).
+    const br = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const monthStart = new Date(
+      Date.UTC(br.getUTCFullYear(), br.getUTCMonth(), 1, 3, 0, 0),
+    );
     const monthEnd = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0,
-      23,
-      59,
-      59,
+      Date.UTC(br.getUTCFullYear(), br.getUTCMonth() + 1, 1, 3, 0, 0) - 1,
     );
 
     const [
@@ -364,9 +363,11 @@ export class ReportsService {
 
   async cashflow(churchId: string, months = 12) {
     const span = Math.min(Math.max(months, 1), 24);
-    const now = new Date();
+    // Meses no fuso do Brasil (UTC-3): desloca as datas em -3h antes de agrupar.
+    const OFFSET = 3 * 60 * 60 * 1000;
+    const brNow = new Date(Date.now() - OFFSET);
     const start = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (span - 1), 1),
+      Date.UTC(brNow.getUTCFullYear(), brNow.getUTCMonth() - (span - 1), 1),
     );
 
     const transactions = await this.prisma.transaction.findMany({
@@ -376,7 +377,11 @@ export class ReportsService {
 
     const buckets = Array.from({ length: span }, (_, i) => {
       const d = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (span - 1) + i, 1),
+        Date.UTC(
+          brNow.getUTCFullYear(),
+          brNow.getUTCMonth() - (span - 1) + i,
+          1,
+        ),
       );
       const month = d.getUTCMonth();
       return {
@@ -390,8 +395,9 @@ export class ReportsService {
     const indexByKey = new Map(buckets.map((b, i) => [b.key, i]));
 
     for (const t of transactions) {
-      const key = `${t.date.getUTCFullYear()}-${String(
-        t.date.getUTCMonth() + 1,
+      const d = new Date(t.date.getTime() - OFFSET);
+      const key = `${d.getUTCFullYear()}-${String(
+        d.getUTCMonth() + 1,
       ).padStart(2, '0')}`;
       const idx = indexByKey.get(key);
       if (idx === undefined) continue;
