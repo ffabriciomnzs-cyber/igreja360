@@ -16,6 +16,7 @@ import {
   Landmark,
   Megaphone,
   AlertCircle,
+  BookOpen,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ import {
 import { PaginatedEvents, Event } from '@/lib/events';
 import { FinancialStats } from '@/lib/financial';
 import { Campaign } from '@/lib/campaigns';
+import { verseOfDay } from '@/lib/verse-of-day';
 
 const EMPTY_STATS: MemberStats = {
   total: 0,
@@ -121,6 +123,7 @@ export default function DashboardPage(): React.ReactElement {
     };
   }, []);
 
+  const verse = verseOfDay();
   const firstName = user?.name?.split(' ')[0] ?? '';
   const today = new Intl.DateTimeFormat('pt-BR', {
     weekday: 'long',
@@ -173,6 +176,26 @@ export default function DashboardPage(): React.ReactElement {
           {firstName ? `Olá, ${firstName} 👋` : 'Dashboard'}
         </h1>
         <p className="mt-1 text-sm capitalize text-slate-500">{today}</p>
+      </div>
+
+      {/* Palavra do dia */}
+      <div className="mb-6 rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-white p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white">
+            <BookOpen className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+              Palavra do dia
+            </p>
+            <p className="mt-1 italic leading-relaxed text-slate-700">
+              “{verse.text}”
+            </p>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              {verse.ref}
+            </p>
+          </div>
+        </div>
       </div>
 
       {error && (
