@@ -8,4 +8,6 @@ RUN npm install
 COPY . .
 RUN npx prisma generate && npm run build
 EXPOSE 8080
-CMD npx prisma db push --accept-data-loss && npx prisma db seed && node dist/src/main.js
+# Aplica o schema e sobe a API. O seed NÃO roda no boot (era desnecessário e
+# deixava cada partida lenta); rode manualmente uma vez, se precisar popular.
+CMD npx prisma db push --accept-data-loss && node dist/src/main.js
