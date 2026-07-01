@@ -13,6 +13,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Wallet,
+  Landmark,
   Megaphone,
   AlertCircle,
 } from 'lucide-react';
@@ -217,7 +218,7 @@ export default function DashboardPage(): React.ReactElement {
 
       {/* Resumo financeiro do mês (somente papéis autorizados) */}
       {user && FINANCE_ROLES.includes(user.role) && (
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardContent className="flex items-center justify-between p-6">
               <div>
@@ -273,6 +274,30 @@ export default function DashboardPage(): React.ReactElement {
               </div>
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
                 <Wallet className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="flex items-center justify-between p-6">
+              <div>
+                <p className="text-sm text-slate-500">Saldo geral</p>
+                {ready ? (
+                  <p
+                    className={cn(
+                      'mt-1 text-xl font-bold',
+                      (finance?.balance ?? 0) >= 0
+                        ? 'text-slate-900'
+                        : 'text-red-600',
+                    )}
+                  >
+                    {formatCurrency(finance?.balance ?? 0)}
+                  </p>
+                ) : (
+                  <Skeleton className="mt-2 h-6 w-24" />
+                )}
+              </div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                <Landmark className="h-5 w-5" />
               </div>
             </CardContent>
           </Card>
