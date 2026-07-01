@@ -2,6 +2,7 @@
 
 import { LogOut } from 'lucide-react';
 import { AuthUser, ROLE_LABELS } from '@/lib/auth';
+import { RadioPlayer } from './RadioPlayer';
 
 interface HeaderProps {
   user: AuthUser;
@@ -17,7 +18,8 @@ export function Header({ user, onLogout }: HeaderProps): React.ReactElement {
     .toUpperCase();
 
   return (
-    <header className="flex items-center justify-end gap-4 border-b border-border bg-white px-6 py-3">
+    <header className="flex items-center justify-between gap-4 border-b border-border bg-white px-6 py-3">
+      <RadioPlayer />
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
           {initials}
