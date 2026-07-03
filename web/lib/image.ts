@@ -20,7 +20,13 @@ export async function fileToCompressedDataUrl(
           return;
         }
         ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        // PNG preserva transparência (logos); demais formatos viram JPEG
+        // comprimido (fotos). Sem isso, o fundo transparente ficaria preto.
+        const dataUrl =
+          file.type === 'image/png'
+            ? canvas.toDataURL('image/png')
+            : canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
       };
       img.onerror = () => reject(new Error('Imagem inválida.'));
       img.src = reader.result as string;
