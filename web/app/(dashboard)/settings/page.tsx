@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { api, extractApiError } from '@/lib/api';
 import { fileToCompressedDataUrl } from '@/lib/image';
+import { getStoredUser, updateStoredUser } from '@/lib/auth';
 import { ChurchSettings } from '@/lib/settings';
 
 export default function SettingsPage(): React.ReactElement {
@@ -29,6 +30,11 @@ export default function SettingsPage(): React.ReactElement {
   const [churchMsg, setChurchMsg] = useState<string | null>(null);
   const [churchErr, setChurchErr] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const [profile, setProfile] = useState({ name: '', email: '' });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileMsg, setProfileMsg] = useState<string | null>(null);
+  const [profileErr, setProfileErr] = useState<string | null>(null);
 
   const [pwd, setPwd] = useState({ currentPassword: '', newPassword: '' });
   const [savingPwd, setSavingPwd] = useState(false);
@@ -63,6 +69,38 @@ export default function SettingsPage(): React.ReactElement {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const u = getStoredUser();
+    if (u) setProfile({ name: u.name ?? '', email: u.email ?? '' });
+  }, []);
+
+  async function saveProfile(e: React.FormEvent): Promise<void> {
+    e.preventDefault();
+    setProfileMsg(null);
+    setProfileErr(null);
+    if (profile.name.trim().length < 2) {
+      setProfileErr('Informe o nome.');
+      return;
+    }
+    setSavingProfile(true);
+    try {
+      await api.patch('/settings/profile', {
+        name: profile.name.trim(),
+        email: profile.email.trim() || undefined,
+      });
+      updateStoredUser({
+        name: profile.name.trim(),
+        email: profile.email.trim(),
+      });
+      window.dispatchEvent(new Event('igreja360:user-updated'));
+      setProfileMsg('Seus dados foram atualizados.');
+    } catch (err) {
+      setProfileErr(extractApiError(err));
+    } finally {
+      setSavingProfile(false);
+    }
+  }
 
   async function handleLogo(
     e: React.ChangeEvent<HTMLInputElement>,
@@ -294,6 +332,51 @@ export default function SettingsPage(): React.ReactElement {
                   Salvar
                 </Button>
               </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Meus dados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={saveProfile} className="space-y-4">
+              {profileMsg && (
+                <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {profileMsg}
+                </div>
+              )}
+              {profileErr && (
+                <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {profileErr}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="profileName">Seu nome *</Label>
+                <Input
+                  id="profileName"
+                  value={profile.name}
+                  onChange={(e) =>
+                    setProfile((p) => ({ ...p, name: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profileEmail">Seu e-mail (login)</Label>
+                <Input
+                  id="profileEmail"
+                  type="email"
+                  value={profile.email}
+                  onChange={(e) =>
+                    setProfile((p) => ({ ...p, email: e.target.value }))
+                  }
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={savingProfile}>
+                {savingProfile && <Loader2 className="h-4 w-4 animate-spin" />}
+                Salvar dados
+              </Button>
             </form>
           </CardContent>
         </Card>

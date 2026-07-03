@@ -28,6 +28,10 @@ export function useAuth(): UseAuth {
   useEffect(() => {
     setUser(getStoredUser());
     setLoading(false);
+    const onUserUpdated = (): void => setUser(getStoredUser());
+    window.addEventListener('igreja360:user-updated', onUserUpdated);
+    return () =>
+      window.removeEventListener('igreja360:user-updated', onUserUpdated);
   }, []);
 
   const login = useCallback(

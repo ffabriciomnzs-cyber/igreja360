@@ -52,6 +52,16 @@ export function updateTokens(accessToken: string, refreshToken: string): void {
   window.localStorage.setItem(REFRESH_KEY, refreshToken);
 }
 
+export function updateStoredUser(patch: Partial<AuthUser>): void {
+  if (!isBrowser()) return;
+  const current = getStoredUser();
+  if (!current) return;
+  window.localStorage.setItem(
+    USER_KEY,
+    JSON.stringify({ ...current, ...patch }),
+  );
+}
+
 export function clearSession(): void {
   if (!isBrowser()) return;
   window.localStorage.removeItem(ACCESS_KEY);

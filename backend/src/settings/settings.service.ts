@@ -8,6 +8,7 @@ import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateChurchDto } from './dto/update-church.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 const churchSelect = {
   id: true,
@@ -68,5 +69,33 @@ export class SettingsService {
       data: { passwordHash },
     });
     return { success: true };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const data: Prisma.UserUpdateInput = {};
+    if (dto.name !== undefined) data.name = dto.name.trim();
+    if (dto.email !== undefined) data.email = dto.email.toLowerCase().trim();
+
+    try {
+      return await this.prisma.user.update({
+        where: { id: userId },
+        data,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          churchId: true,
+        },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new BadRequestException('Este e-mail já está em uso.');
+      }
+      throw err;
+    }
   }
 }
