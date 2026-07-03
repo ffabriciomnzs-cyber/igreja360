@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { api, extractApiError } from '@/lib/api';
-import { fileToCompressedDataUrl } from '@/lib/image';
+import { fileToCompressedDataUrl, removeDarkBackground } from '@/lib/image';
 import { getStoredUser, updateStoredUser } from '@/lib/auth';
 import { ChurchSettings } from '@/lib/settings';
 
@@ -314,21 +314,39 @@ export default function SettingsPage(): React.ReactElement {
                       Enviar logo
                     </Button>
                     {cardLogo && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setCardLogo('')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Remover
-                      </Button>
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              setCardLogo(await removeDarkBackground(cardLogo));
+                              setChurchErr(null);
+                            } catch {
+                              setChurchErr('Não foi possível remover o fundo.');
+                            }
+                          }}
+                        >
+                          Deixar fundo transparente
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCardLogo('')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remover
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
                 <p className="text-xs text-slate-400">
-                  Aparece só na carteirinha de membro (sobre o fundo roxo). Se
-                  vazia, usa a logo principal. Prévia com fundo roxo acima.
+                  Aparece só na carteirinha (sobre o fundo roxo). Se a imagem
+                  tiver fundo preto, clique em &quot;Deixar fundo
+                  transparente&quot;. Se vazia, usa a logo principal.
                 </p>
               </div>
 
