@@ -19,6 +19,10 @@ export class UpdateChurchDto {
 
   @IsOptional()
   @IsString()
+  cardLogo?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(80)
   denomination?: string;
 

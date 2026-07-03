@@ -15,6 +15,7 @@ const churchSelect = {
   name: true,
   slug: true,
   logo: true,
+  cardLogo: true,
   denomination: true,
   address: true,
   phone: true,
@@ -40,6 +41,7 @@ export class SettingsService {
     const data: Prisma.ChurchUpdateInput = {};
     if (dto.name !== undefined) data.name = dto.name.trim();
     if (dto.logo !== undefined) data.logo = dto.logo || null;
+    if (dto.cardLogo !== undefined) data.cardLogo = dto.cardLogo || null;
     if (dto.denomination !== undefined)
       data.denomination = dto.denomination?.trim() || null;
     if (dto.address !== undefined) data.address = dto.address?.trim() || null;

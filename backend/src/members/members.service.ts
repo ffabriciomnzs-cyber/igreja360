@@ -181,6 +181,7 @@ export class MembersService {
         id: true,
         name: true,
         logo: true,
+        cardLogo: true,
         denomination: true,
         phone: true,
         address: true,

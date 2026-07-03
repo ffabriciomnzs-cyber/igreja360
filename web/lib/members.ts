@@ -48,6 +48,7 @@ export interface MemberCardChurch {
   id: string;
   name: string;
   logo: string | null;
+  cardLogo: string | null;
   denomination: string | null;
   phone: string | null;
   address: string | null;

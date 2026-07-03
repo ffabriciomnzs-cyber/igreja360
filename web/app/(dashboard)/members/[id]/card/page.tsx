@@ -132,12 +132,12 @@ export default function MemberCardPage(): React.ReactElement {
                 <p className="text-xs text-indigo-200">{church.denomination}</p>
               )}
             </div>
-            {church?.logo && (
+            {(church?.cardLogo || church?.logo) && (
               <div className="flex h-16 w-16 shrink-0 items-center justify-center">
-                {/* Logo direto sobre o roxo (ideal para logo branco). */}
+                {/* Logo específico da carteirinha (se houver), senão o principal. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={church.logo}
+                  src={church.cardLogo || church.logo || ''}
                   alt="Logo"
                   className="h-full w-full object-contain"
                 />

@@ -3,6 +3,7 @@ export interface ChurchSettings {
   name: string;
   slug: string;
   logo: string | null;
+  cardLogo: string | null;
   denomination: string | null;
   address: string | null;
   phone: string | null;

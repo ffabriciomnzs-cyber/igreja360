@@ -27,10 +27,12 @@ export default function SettingsPage(): React.ReactElement {
     address: '',
   });
   const [logo, setLogo] = useState<string>('');
+  const [cardLogo, setCardLogo] = useState<string>('');
   const [savingChurch, setSavingChurch] = useState(false);
   const [churchMsg, setChurchMsg] = useState<string | null>(null);
   const [churchErr, setChurchErr] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const cardLogoInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState({ name: '', email: '', gender: '' });
   const [savingProfile, setSavingProfile] = useState(false);
@@ -50,6 +52,7 @@ export default function SettingsPage(): React.ReactElement {
         if (!mounted) return;
         setChurch(data);
         setLogo(data.logo ?? '');
+        setCardLogo(data.cardLogo ?? '');
         setForm({
           name: data.name ?? '',
           denomination: data.denomination ?? '',
@@ -127,6 +130,25 @@ export default function SettingsPage(): React.ReactElement {
     }
   }
 
+  async function handleCardLogo(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setChurchErr('Selecione um arquivo de imagem.');
+      return;
+    }
+    try {
+      setCardLogo(await fileToCompressedDataUrl(file, 256));
+      setChurchErr(null);
+    } catch {
+      setChurchErr('Não foi possível carregar a imagem.');
+    } finally {
+      if (cardLogoInputRef.current) cardLogoInputRef.current.value = '';
+    }
+  }
+
   async function saveChurch(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     setChurchMsg(null);
@@ -136,6 +158,7 @@ export default function SettingsPage(): React.ReactElement {
       await api.patch('/settings/church', {
         name: form.name.trim(),
         logo,
+        cardLogo,
         denomination: form.denomination.trim() || undefined,
         phone: form.phone.trim() || undefined,
         email: form.email.trim() || undefined,
@@ -255,6 +278,57 @@ export default function SettingsPage(): React.ReactElement {
                 </div>
                 <p className="text-xs text-slate-400">
                   Aparece no menu lateral. Use PNG ou JPG quadrado.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Logo da carteirinha</Label>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg bg-indigo-700 p-1">
+                    {cardLogo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={cardLogo}
+                        alt="Logo da carteirinha"
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <ChurchIcon className="h-7 w-7 text-white/40" />
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      ref={cardLogoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleCardLogo}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => cardLogoInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4" />
+                      Enviar logo
+                    </Button>
+                    {cardLogo && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCardLogo('')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Remover
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Aparece só na carteirinha de membro (sobre o fundo roxo). Se
+                  vazia, usa a logo principal. Prévia com fundo roxo acima.
                 </p>
               </div>
 

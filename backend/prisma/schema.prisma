@@ -12,6 +12,7 @@ model Church {
   name           String
   slug           String          @unique
   logo           String?
+  cardLogo       String?
   address        String?
   phone          String?
   email          String?
