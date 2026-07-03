@@ -87,12 +87,8 @@ export default function SettingsPage(): React.ReactElement {
     try {
       await api.patch('/settings/profile', {
         name: profile.name.trim(),
-        email: profile.email.trim() || undefined,
       });
-      updateStoredUser({
-        name: profile.name.trim(),
-        email: profile.email.trim(),
-      });
+      updateStoredUser({ name: profile.name.trim() });
       window.dispatchEvent(new Event('igreja360:user-updated'));
       setProfileMsg('Seus dados foram atualizados.');
     } catch (err) {
@@ -362,17 +358,9 @@ export default function SettingsPage(): React.ReactElement {
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="profileEmail">Seu e-mail (login)</Label>
-                <Input
-                  id="profileEmail"
-                  type="email"
-                  value={profile.email}
-                  onChange={(e) =>
-                    setProfile((p) => ({ ...p, email: e.target.value }))
-                  }
-                />
-              </div>
+              <p className="text-xs text-slate-400">
+                O e-mail de login é gerenciado pelo administrador em Usuários.
+              </p>
               <Button type="submit" className="w-full" disabled={savingProfile}>
                 {savingProfile && <Loader2 className="h-4 w-4 animate-spin" />}
                 Salvar dados

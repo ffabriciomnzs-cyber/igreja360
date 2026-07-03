@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { api } from '@/lib/api';
 import { ChurchSettings } from '@/lib/settings';
+import { getStoredUser } from '@/lib/auth';
 import {
   LayoutDashboard,
   Users,
@@ -19,10 +20,20 @@ import {
   Church,
   BookOpen,
   ClipboardList,
+  UserCog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const items = [
+const ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'PASTOR'];
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  adminOnly?: boolean;
+}
+
+const items: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/members', label: 'Membros', icon: Users },
   { href: '/cells', label: 'Células', icon: Network },
@@ -34,12 +45,19 @@ const items = [
   { href: '/worship', label: 'Cultos', icon: ClipboardList },
   { href: '/bible', label: 'Bíblia', icon: BookOpen },
   { href: '/reports', label: 'Relatórios', icon: FileText },
+  { href: '/users', label: 'Usuários', icon: UserCog, adminOnly: true },
   { href: '/settings', label: 'Configurações', icon: Settings },
 ];
 
 export function Sidebar(): React.ReactElement {
   const pathname = usePathname();
   const [church, setChurch] = useState<ChurchSettings | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const role = getStoredUser()?.role ?? '';
+    setIsAdmin(ADMIN_ROLES.includes(role));
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -75,7 +93,9 @@ export function Sidebar(): React.ReactElement {
         <span className="truncate">{church?.name || 'Igreja360'}</span>
       </div>
       <ul className="flex-1 space-y-1 px-3">
-        {items.map((item) => {
+        {items
+          .filter((item) => !item.adminOnly || isAdmin)
+          .map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
