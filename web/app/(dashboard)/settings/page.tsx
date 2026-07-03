@@ -121,7 +121,7 @@ export default function SettingsPage(): React.ReactElement {
       return;
     }
     try {
-      setLogo(await fileToCompressedDataUrl(file, 256));
+      setLogo(await fileToCompressedDataUrl(file, 256, 0.8, true));
       setChurchErr(null);
     } catch {
       setChurchErr('Não foi possível carregar a imagem.');
@@ -140,7 +140,7 @@ export default function SettingsPage(): React.ReactElement {
       return;
     }
     try {
-      setCardLogo(await fileToCompressedDataUrl(file, 256));
+      setCardLogo(await fileToCompressedDataUrl(file, 256, 0.8, true));
       setChurchErr(null);
     } catch {
       setChurchErr('Não foi possível carregar a imagem.');

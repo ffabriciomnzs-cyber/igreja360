@@ -2,6 +2,8 @@ export async function fileToCompressedDataUrl(
   file: File,
   max = 800,
   quality = 0.8,
+  // Força saída PNG (mantém transparência) — use para logos.
+  png = false,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -23,7 +25,7 @@ export async function fileToCompressedDataUrl(
         // PNG preserva transparência (logos); demais formatos viram JPEG
         // comprimido (fotos). Sem isso, o fundo transparente ficaria preto.
         const dataUrl =
-          file.type === 'image/png'
+          png || file.type === 'image/png'
             ? canvas.toDataURL('image/png')
             : canvas.toDataURL('image/jpeg', quality);
         resolve(dataUrl);
