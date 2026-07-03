@@ -133,7 +133,8 @@ export default function MemberCardPage(): React.ReactElement {
               )}
             </div>
             {church?.logo && (
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/90 p-1">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center">
+                {/* Logo direto sobre o roxo (ideal para logo branco). */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={church.logo}
