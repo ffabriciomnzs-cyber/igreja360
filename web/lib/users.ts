@@ -3,6 +3,7 @@ export interface ManagedUser {
   name: string;
   email: string;
   role: string;
+  gender: 'MALE' | 'FEMALE' | null;
   active: boolean;
   createdAt: string;
 }

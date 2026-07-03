@@ -10,13 +10,14 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { api, extractApiError } from '@/lib/api';
-import { ROLE_LABELS, getStoredUser } from '@/lib/auth';
+import { roleLabel, getStoredUser } from '@/lib/auth';
 import { ManagedUser, USER_ROLE_OPTIONS } from '@/lib/users';
 
 interface FormState {
   name: string;
   email: string;
   role: string;
+  gender: string;
   password: string;
   active: boolean;
 }
@@ -25,6 +26,7 @@ const EMPTY_FORM: FormState = {
   name: '',
   email: '',
   role: 'MEMBER',
+  gender: '',
   password: '',
   active: true,
 };
@@ -68,6 +70,7 @@ export default function UsersPage(): React.ReactElement {
       name: u.name,
       email: u.email,
       role: u.role,
+      gender: u.gender ?? '',
       password: '',
       active: u.active,
     });
@@ -98,6 +101,7 @@ export default function UsersPage(): React.ReactElement {
           name: form.name.trim(),
           email: form.email.trim(),
           role: form.role,
+          gender: form.gender || undefined,
           active: form.active,
           password: form.password.trim() || undefined,
         });
@@ -106,6 +110,7 @@ export default function UsersPage(): React.ReactElement {
           name: form.name.trim(),
           email: form.email.trim(),
           role: form.role,
+          gender: form.gender || undefined,
           password: form.password,
         });
       }
@@ -187,9 +192,23 @@ export default function UsersPage(): React.ReactElement {
                   >
                     {USER_ROLE_OPTIONS.map((r) => (
                       <option key={r} value={r}>
-                        {ROLE_LABELS[r] ?? r}
+                        {roleLabel(r)}
                       </option>
                     ))}
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ugender">Sexo</Label>
+                  <Select
+                    id="ugender"
+                    value={form.gender}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, gender: e.target.value }))
+                    }
+                  >
+                    <option value="">Não informar</option>
+                    <option value="MALE">Masculino</option>
+                    <option value="FEMALE">Feminino</option>
                   </Select>
                 </div>
                 <div className="space-y-2">
@@ -291,7 +310,7 @@ export default function UsersPage(): React.ReactElement {
                     <td className="px-4 py-3 text-slate-600">{u.email}</td>
                     <td className="px-4 py-3">
                       <Badge variant="default">
-                        {ROLE_LABELS[u.role] ?? u.role}
+                        {roleLabel(u.role, u.gender)}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">

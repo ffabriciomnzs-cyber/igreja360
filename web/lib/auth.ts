@@ -1,8 +1,11 @@
+export type Gender = 'MALE' | 'FEMALE';
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
   role: string;
+  gender?: Gender | null;
   churchId: string;
 }
 
@@ -78,3 +81,39 @@ export const ROLE_LABELS: Record<string, string> = {
   LEADER: 'Líder',
   MEMBER: 'Membro',
 };
+
+const ROLE_LABELS_MALE: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Administrador',
+  PASTOR: 'Pastor',
+  SECRETARY: 'Secretário',
+  TREASURER: 'Tesoureiro',
+  LEADER: 'Líder',
+  MEMBER: 'Membro',
+};
+
+const ROLE_LABELS_FEMALE: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Administradora',
+  PASTOR: 'Pastora',
+  SECRETARY: 'Secretária',
+  TREASURER: 'Tesoureira',
+  LEADER: 'Líder',
+  MEMBER: 'Membro',
+};
+
+export const GENDER_LABELS: Record<string, string> = {
+  MALE: 'Masculino',
+  FEMALE: 'Feminino',
+};
+
+// Rótulo do papel flexionado pelo sexo (quando informado).
+export function roleLabel(role: string, gender?: Gender | null): string {
+  if (gender === 'FEMALE') {
+    return ROLE_LABELS_FEMALE[role] ?? ROLE_LABELS[role] ?? role;
+  }
+  if (gender === 'MALE') {
+    return ROLE_LABELS_MALE[role] ?? ROLE_LABELS[role] ?? role;
+  }
+  return ROLE_LABELS[role] ?? role;
+}

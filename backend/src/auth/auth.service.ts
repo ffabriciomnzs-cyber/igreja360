@@ -44,6 +44,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
+      gender: user.gender,
       churchId: user.churchId,
     };
 
@@ -73,6 +74,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
+      gender: user.gender,
       churchId: user.churchId,
     });
   }
@@ -89,6 +91,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
+      gender: user.gender,
       churchId: user.churchId,
     };
   }

@@ -1,11 +1,12 @@
 import {
   IsEmail,
   IsEnum,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import { Gender, UserRole } from '@prisma/client';
 
 export class CreateUserDto {
   @IsString({ message: 'O nome é obrigatório.' })
@@ -23,4 +24,8 @@ export class CreateUserDto {
 
   @IsEnum(UserRole, { message: 'Papel inválido.' })
   role!: UserRole;
+
+  @IsOptional()
+  @IsEnum(Gender, { message: 'Sexo inválido.' })
+  gender?: Gender;
 }

@@ -14,6 +14,7 @@ const userSelect = {
   name: true,
   email: true,
   role: true,
+  gender: true,
   active: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
@@ -52,6 +53,7 @@ export class UsersService {
           email: dto.email.toLowerCase().trim(),
           passwordHash,
           role: dto.role,
+          gender: dto.gender ?? null,
         },
         select: userSelect,
       });
@@ -69,6 +71,7 @@ export class UsersService {
     if (dto.name !== undefined) data.name = dto.name.trim();
     if (dto.email !== undefined) data.email = dto.email.toLowerCase().trim();
     if (dto.role !== undefined) data.role = dto.role;
+    if (dto.gender !== undefined) data.gender = dto.gender ?? null;
     if (dto.active !== undefined) data.active = dto.active;
     if (dto.password) data.passwordHash = await bcrypt.hash(dto.password, 10);
 

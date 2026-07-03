@@ -1,7 +1,7 @@
 'use client';
 
 import { LogOut } from 'lucide-react';
-import { AuthUser, ROLE_LABELS } from '@/lib/auth';
+import { AuthUser, roleLabel } from '@/lib/auth';
 import { RadioPlayer } from './RadioPlayer';
 
 interface HeaderProps {
@@ -27,7 +27,7 @@ export function Header({ user, onLogout }: HeaderProps): React.ReactElement {
         <div className="text-right leading-tight">
           <p className="text-sm font-medium text-slate-900">{user.name}</p>
           <p className="text-xs text-slate-500">
-            {ROLE_LABELS[user.role] ?? user.role}
+            {roleLabel(user.role, user.gender)}
           </p>
         </div>
       </div>

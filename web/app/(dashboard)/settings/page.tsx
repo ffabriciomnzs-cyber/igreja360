@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { api, extractApiError } from '@/lib/api';
 import { fileToCompressedDataUrl } from '@/lib/image';
@@ -31,7 +32,7 @@ export default function SettingsPage(): React.ReactElement {
   const [churchErr, setChurchErr] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  const [profile, setProfile] = useState({ name: '', email: '' });
+  const [profile, setProfile] = useState({ name: '', email: '', gender: '' });
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState<string | null>(null);
   const [profileErr, setProfileErr] = useState<string | null>(null);
@@ -72,7 +73,12 @@ export default function SettingsPage(): React.ReactElement {
 
   useEffect(() => {
     const u = getStoredUser();
-    if (u) setProfile({ name: u.name ?? '', email: u.email ?? '' });
+    if (u)
+      setProfile({
+        name: u.name ?? '',
+        email: u.email ?? '',
+        gender: u.gender ?? '',
+      });
   }, []);
 
   async function saveProfile(e: React.FormEvent): Promise<void> {
@@ -87,8 +93,12 @@ export default function SettingsPage(): React.ReactElement {
     try {
       await api.patch('/settings/profile', {
         name: profile.name.trim(),
+        gender: profile.gender || undefined,
       });
-      updateStoredUser({ name: profile.name.trim() });
+      updateStoredUser({
+        name: profile.name.trim(),
+        gender: (profile.gender || null) as 'MALE' | 'FEMALE' | null,
+      });
       window.dispatchEvent(new Event('igreja360:user-updated'));
       setProfileMsg('Seus dados foram atualizados.');
     } catch (err) {
@@ -357,6 +367,23 @@ export default function SettingsPage(): React.ReactElement {
                     setProfile((p) => ({ ...p, name: e.target.value }))
                   }
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profileGender">Sexo</Label>
+                <Select
+                  id="profileGender"
+                  value={profile.gender}
+                  onChange={(e) =>
+                    setProfile((p) => ({ ...p, gender: e.target.value }))
+                  }
+                >
+                  <option value="">Não informar</option>
+                  <option value="MALE">Masculino</option>
+                  <option value="FEMALE">Feminino</option>
+                </Select>
+                <p className="text-xs text-slate-400">
+                  Usado para tratar você corretamente (ex.: Pastor/Pastora).
+                </p>
               </div>
               <p className="text-xs text-slate-400">
                 O e-mail de login é gerenciado pelo administrador em Usuários.

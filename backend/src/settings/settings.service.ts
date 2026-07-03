@@ -74,11 +74,19 @@ export class SettingsService {
   async updateProfile(userId: string, dto: UpdateProfileDto) {
     const data: Prisma.UserUpdateInput = {};
     if (dto.name !== undefined) data.name = dto.name.trim();
+    if (dto.gender !== undefined) data.gender = dto.gender ?? null;
 
     return this.prisma.user.update({
       where: { id: userId },
       data,
-      select: { id: true, name: true, email: true, role: true, churchId: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        gender: true,
+        churchId: true,
+      },
     });
   }
 }
