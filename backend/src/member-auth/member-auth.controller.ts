@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +20,11 @@ export class MemberAuthController {
     private readonly memberAuth: MemberAuthService,
     private readonly portal: PortalService,
   ) {}
+
+  @Get('church/:slug')
+  churchInfo(@Param('slug') slug: string) {
+    return this.memberAuth.churchInfo(slug);
+  }
 
   @Post('register')
   register(@Body() dto: MemberRegisterDto) {

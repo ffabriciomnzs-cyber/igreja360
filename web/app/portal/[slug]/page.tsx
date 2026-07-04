@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Loader2, Church, CheckCircle2 } from 'lucide-react';
 import {
@@ -25,6 +25,23 @@ export default function PortalLoginPage(): React.ReactElement {
 
   const [login, setLogin] = useState({ email: '', password: '' });
   const [reg, setReg] = useState({ name: '', email: '', password: '' });
+
+  const [church, setChurch] = useState<{
+    name: string;
+    logo: string | null;
+    cardLogo: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    memberApi
+      .get<{ name: string; logo: string | null; cardLogo: string | null }>(
+        `/member-auth/church/${slug}`,
+      )
+      .then(({ data }) => setChurch(data))
+      .catch(() => undefined);
+  }, [slug]);
+
+  const churchLogo = church?.cardLogo || church?.logo || null;
 
   async function handleLogin(e: React.FormEvent): Promise<void> {
     e.preventDefault();
@@ -96,10 +113,21 @@ export default function PortalLoginPage(): React.ReactElement {
       {/* Card */}
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-6 flex flex-col items-center text-center text-white">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
-            <Church className="h-7 w-7" />
-          </div>
-          <h1 className="text-2xl font-bold">Portal do Membro</h1>
+          {churchLogo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={churchLogo}
+              alt={church?.name ?? 'Logo'}
+              className="mb-3 h-28 w-28 object-contain"
+            />
+          ) : (
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
+              <Church className="h-7 w-7" />
+            </div>
+          )}
+          <h1 className="text-2xl font-bold">
+            {church?.name || 'Portal do Membro'}
+          </h1>
           <p className="mt-1 text-sm text-white/70">
             Acompanhe cultos, eventos e campanhas da sua igreja.
           </p>

@@ -26,6 +26,16 @@ export class MemberAuthService {
     return church;
   }
 
+  // Dados públicos da igreja para a tela de login (logo/nome).
+  async churchInfo(slug: string) {
+    const church = await this.prisma.church.findUnique({
+      where: { slug: slug.trim() },
+      select: { name: true, logo: true, cardLogo: true, denomination: true },
+    });
+    if (!church) throw new NotFoundException('Igreja não encontrada.');
+    return church;
+  }
+
   async register(dto: MemberRegisterDto) {
     const church = await this.churchBySlug(dto.slug.trim());
     const email = dto.email.toLowerCase().trim();
