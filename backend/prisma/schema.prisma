@@ -53,6 +53,13 @@ enum Gender {
   FEMALE
 }
 
+enum PortalStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum UserRole {
   SUPER_ADMIN
   ADMIN
@@ -79,6 +86,8 @@ model Member {
   maritalStatus String?
   profession    String?
   photo     String?
+  passwordHash String?
+  portalStatus PortalStatus @default(NONE)
   status    MemberStatus @default(ACTIVE)
   role      MemberRole?
   cellId    String?

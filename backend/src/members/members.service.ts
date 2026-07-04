@@ -173,6 +173,35 @@ export class MembersService {
     return { success: true };
   }
 
+  // === Portal do membro: solicitações de acesso ===
+
+  async portalPending(churchId: string) {
+    return this.prisma.member.findMany({
+      where: { churchId, portalStatus: 'PENDING' },
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async setPortalStatus(
+    churchId: string,
+    id: string,
+    status: 'APPROVED' | 'REJECTED',
+  ) {
+    await this.findOne(churchId, id);
+    await this.prisma.member.update({
+      where: { id },
+      data: { portalStatus: status },
+    });
+    return { success: true, status };
+  }
+
   async card(churchId: string, id: string) {
     const member = await this.findOne(churchId, id);
     const church = await this.prisma.church.findUnique({

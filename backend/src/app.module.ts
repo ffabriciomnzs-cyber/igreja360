@@ -13,6 +13,7 @@ import { ReportsModule } from './reports/reports.module';
 import { SettingsModule } from './settings/settings.module';
 import { WorshipModule } from './worship/worship.module';
 import { UsersModule } from './users/users.module';
+import { MemberAuthModule } from './member-auth/member-auth.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -31,6 +32,7 @@ import { HealthController } from './health.controller';
     SettingsModule,
     WorshipModule,
     UsersModule,
+    MemberAuthModule,
   ],
   controllers: [HealthController],
 })

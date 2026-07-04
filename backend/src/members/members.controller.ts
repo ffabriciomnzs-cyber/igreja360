@@ -46,6 +46,39 @@ export class MembersController {
     return this.membersService.findAll(user.churchId, query);
   }
 
+  @Get('portal/pending')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.PASTOR,
+    UserRole.SECRETARY,
+  )
+  portalPending(@CurrentUser() user: AuthUser) {
+    return this.membersService.portalPending(user.churchId);
+  }
+
+  @Post(':id/portal/approve')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.PASTOR,
+    UserRole.SECRETARY,
+  )
+  approvePortal(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.membersService.setPortalStatus(user.churchId, id, 'APPROVED');
+  }
+
+  @Post(':id/portal/reject')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.PASTOR,
+    UserRole.SECRETARY,
+  )
+  rejectPortal(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.membersService.setPortalStatus(user.churchId, id, 'REJECTED');
+  }
+
   @Get(':id/card')
   card(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.membersService.card(user.churchId, id);
