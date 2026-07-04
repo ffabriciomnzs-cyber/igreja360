@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/utils';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'PASTOR'];
+const REQUEST_ROLES = ['SUPER_ADMIN', 'ADMIN', 'PASTOR', 'SECRETARY'];
 
 interface NavItem {
   href: string;
@@ -53,10 +54,33 @@ export function Sidebar(): React.ReactElement {
   const pathname = usePathname();
   const [church, setChurch] = useState<ChurchSettings | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState(0);
 
   useEffect(() => {
     const role = getStoredUser()?.role ?? '';
     setIsAdmin(ADMIN_ROLES.includes(role));
+  }, []);
+
+  // Contador de solicitações de acesso ao portal (badge no item Membros).
+  useEffect(() => {
+    const role = getStoredUser()?.role ?? '';
+    if (!REQUEST_ROLES.includes(role)) return;
+    let mounted = true;
+    const load = () =>
+      api
+        .get<unknown[]>('/members/portal/pending')
+        .then(({ data }) => {
+          if (mounted) setPendingRequests(Array.isArray(data) ? data.length : 0);
+        })
+        .catch(() => undefined);
+    load();
+    const timer = setInterval(load, 60000);
+    window.addEventListener('igreja360:portal-requests-updated', load);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+      window.removeEventListener('igreja360:portal-requests-updated', load);
+    };
   }, []);
 
   useEffect(() => {
@@ -110,7 +134,12 @@ export function Sidebar(): React.ReactElement {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {item.label}
+                <span>{item.label}</span>
+                {item.href === '/members' && pendingRequests > 0 && (
+                  <span className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                    {pendingRequests}
+                  </span>
+                )}
               </Link>
             </li>
           );

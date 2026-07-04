@@ -40,6 +40,16 @@ export default function MembersPage(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingRequests, setPendingRequests] = useState(0);
+
+  useEffect(() => {
+    api
+      .get<unknown[]>('/members/portal/pending')
+      .then(({ data }) =>
+        setPendingRequests(Array.isArray(data) ? data.length : 0),
+      )
+      .catch(() => undefined);
+  }, []);
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -92,9 +102,14 @@ export default function MembersPage(): React.ReactElement {
         action={
           <div className="flex flex-wrap gap-2">
             <Link href="/members/portal-requests">
-              <Button variant="outline">
+              <Button variant="outline" className="relative">
                 <UserCheck className="h-4 w-4" />
                 Solicitações
+                {pendingRequests > 0 && (
+                  <span className="absolute -right-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                    {pendingRequests}
+                  </span>
+                )}
               </Button>
             </Link>
             <Link href="/members/import">

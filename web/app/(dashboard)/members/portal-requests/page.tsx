@@ -41,6 +41,7 @@ export default function PortalRequestsPage(): React.ReactElement {
     try {
       await api.post(`/members/${id}/portal/${action}`);
       setRows((prev) => prev.filter((r) => r.id !== id));
+      window.dispatchEvent(new Event('igreja360:portal-requests-updated'));
     } catch (err) {
       setError(extractApiError(err));
     } finally {
