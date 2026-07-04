@@ -21,6 +21,7 @@ import {
   BookOpen,
   ClipboardList,
   UserCog,
+  Coffee,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -44,6 +45,7 @@ const items: NavItem[] = [
   { href: '/communications', label: 'Comunicações', icon: MessageSquare },
   { href: '/prayers', label: 'Orações', icon: HandHeart },
   { href: '/worship', label: 'Cultos', icon: ClipboardList },
+  { href: '/devotional', label: 'Devocional', icon: Coffee, adminOnly: true },
   { href: '/bible', label: 'Bíblia', icon: BookOpen },
   { href: '/reports', label: 'Relatórios', icon: FileText },
   { href: '/users', label: 'Usuários', icon: UserCog, adminOnly: true },

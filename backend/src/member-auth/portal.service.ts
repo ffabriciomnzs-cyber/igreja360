@@ -13,13 +13,25 @@ export class PortalService {
 
   async devotional(churchId: string, memberId: string) {
     const day = brToday();
-    const [count, mine] = await this.prisma.$transaction([
+    const [count, mine, content] = await this.prisma.$transaction([
       this.prisma.devotionalPrayer.count({ where: { churchId, day } }),
       this.prisma.devotionalPrayer.findUnique({
         where: { memberId_day: { memberId, day } },
       }),
+      this.prisma.devotional.findUnique({
+        where: { churchId_date: { churchId, date: day } },
+        select: {
+          title: true,
+          verseRef: true,
+          verseText: true,
+          reflection: true,
+          songTitle: true,
+          songUrl: true,
+          image: true,
+        },
+      }),
     ]);
-    return { day, count, joined: mine !== null };
+    return { day, count, joined: mine !== null, content };
   }
 
   async togglePray(churchId: string, memberId: string) {

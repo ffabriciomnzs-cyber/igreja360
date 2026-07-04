@@ -14,6 +14,7 @@ import { SettingsModule } from './settings/settings.module';
 import { WorshipModule } from './worship/worship.module';
 import { UsersModule } from './users/users.module';
 import { MemberAuthModule } from './member-auth/member-auth.module';
+import { DevotionalsModule } from './devotionals/devotionals.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -33,6 +34,7 @@ import { HealthController } from './health.controller';
     WorshipModule,
     UsersModule,
     MemberAuthModule,
+    DevotionalsModule,
   ],
   controllers: [HealthController],
 })
