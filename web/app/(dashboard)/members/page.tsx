@@ -11,6 +11,7 @@ import {
   Eye,
   Users,
   Upload,
+  UserCheck,
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -89,7 +90,13 @@ export default function MembersPage(): React.ReactElement {
         title="Membros"
         description="Cadastro e gestão dos membros da igreja."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Link href="/members/portal-requests">
+              <Button variant="outline">
+                <UserCheck className="h-4 w-4" />
+                Solicitações
+              </Button>
+            </Link>
             <Link href="/members/import">
               <Button variant="outline">
                 <Upload className="h-4 w-4" />
