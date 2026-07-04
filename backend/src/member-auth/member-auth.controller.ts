@@ -48,4 +48,17 @@ export class MemberAuthController {
   me(@CurrentMember() member: MemberPrincipal) {
     return this.portal.me(member.id);
   }
+
+  @Get('devotional')
+  @UseGuards(MemberJwtGuard)
+  devotional(@CurrentMember() member: MemberPrincipal) {
+    return this.portal.devotional(member.churchId, member.id);
+  }
+
+  @Post('devotional/pray')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  pray(@CurrentMember() member: MemberPrincipal) {
+    return this.portal.togglePray(member.churchId, member.id);
+  }
 }

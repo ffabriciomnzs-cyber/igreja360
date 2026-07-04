@@ -60,6 +60,17 @@ enum PortalStatus {
   REJECTED
 }
 
+model DevotionalPrayer {
+  id        String   @id @default(cuid())
+  churchId  String
+  memberId  String
+  day       String
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, day])
+  @@index([churchId, day])
+}
+
 enum UserRole {
   SUPER_ADMIN
   ADMIN

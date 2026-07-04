@@ -1,9 +1,44 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
+function brToday(): string {
+  const br = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${br.getUTCFullYear()}-${pad(br.getUTCMonth() + 1)}-${pad(br.getUTCDate())}`;
+}
+
 @Injectable()
 export class PortalService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async devotional(churchId: string, memberId: string) {
+    const day = brToday();
+    const [count, mine] = await this.prisma.$transaction([
+      this.prisma.devotionalPrayer.count({ where: { churchId, day } }),
+      this.prisma.devotionalPrayer.findUnique({
+        where: { memberId_day: { memberId, day } },
+      }),
+    ]);
+    return { day, count, joined: mine !== null };
+  }
+
+  async togglePray(churchId: string, memberId: string) {
+    const day = brToday();
+    const existing = await this.prisma.devotionalPrayer.findUnique({
+      where: { memberId_day: { memberId, day } },
+    });
+    if (existing) {
+      await this.prisma.devotionalPrayer.delete({ where: { id: existing.id } });
+    } else {
+      await this.prisma.devotionalPrayer.create({
+        data: { churchId, memberId, day },
+      });
+    }
+    const count = await this.prisma.devotionalPrayer.count({
+      where: { churchId, day },
+    });
+    return { day, count, joined: !existing };
+  }
 
   async home(churchId: string) {
     const now = new Date();
