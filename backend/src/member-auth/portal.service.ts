@@ -199,6 +199,99 @@ export class PortalService {
     return { day, count, joined: !existing };
   }
 
+  async plans(churchId: string, memberId: string) {
+    const [plans, progress] = await this.prisma.$transaction([
+      this.prisma.devotionalPlan.findMany({
+        where: { churchId, active: true },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          cover: true,
+          _count: { select: { days: true } },
+        },
+      }),
+      this.prisma.devotionalPlanProgress.groupBy({
+        by: ['planId'],
+        where: { memberId },
+        _count: true,
+        orderBy: { planId: 'asc' },
+      }),
+    ]);
+    const doneByPlan = new Map(progress.map((p) => [p.planId, p._count]));
+    return plans.map((p) => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      cover: p.cover,
+      totalDays: p._count.days,
+      completedDays: doneByPlan.get(p.id) ?? 0,
+    }));
+  }
+
+  async plan(churchId: string, memberId: string, planId: string) {
+    const plan = await this.prisma.devotionalPlan.findFirst({
+      where: { id: planId, churchId, active: true },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        cover: true,
+        days: {
+          orderBy: { dayNumber: 'asc' },
+          select: {
+            dayNumber: true,
+            title: true,
+            verseRef: true,
+            verseText: true,
+            reflection: true,
+          },
+        },
+      },
+    });
+    if (!plan) throw new NotFoundException('Plano não encontrado.');
+    const progress = await this.prisma.devotionalPlanProgress.findMany({
+      where: { memberId, planId },
+      select: { dayNumber: true },
+    });
+    return { ...plan, completed: progress.map((p) => p.dayNumber) };
+  }
+
+  async togglePlanDay(
+    churchId: string,
+    memberId: string,
+    planId: string,
+    dayNumber: number,
+  ) {
+    // Garante que o plano é da igreja do membro.
+    const day = await this.prisma.devotionalPlanDay.findFirst({
+      where: { planId, dayNumber, plan: { churchId } },
+      select: { id: true },
+    });
+    if (!day) throw new NotFoundException('Dia do plano não encontrado.');
+
+    const existing = await this.prisma.devotionalPlanProgress.findUnique({
+      where: {
+        memberId_planId_dayNumber: { memberId, planId, dayNumber },
+      },
+    });
+    if (existing) {
+      await this.prisma.devotionalPlanProgress.delete({
+        where: { id: existing.id },
+      });
+    } else {
+      await this.prisma.devotionalPlanProgress.create({
+        data: { churchId, memberId, planId, dayNumber },
+      });
+    }
+    const progress = await this.prisma.devotionalPlanProgress.findMany({
+      where: { memberId, planId },
+      select: { dayNumber: true },
+    });
+    return { completed: progress.map((p) => p.dayNumber) };
+  }
+
   async home(churchId: string) {
     const now = new Date();
     const [worship, events, campaigns] = await this.prisma.$transaction([

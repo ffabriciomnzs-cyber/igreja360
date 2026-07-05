@@ -126,6 +126,46 @@ model DevotionalReaction {
   @@index([churchId, day])
 }
 
+model DevotionalPlan {
+  id          String              @id @default(cuid())
+  churchId    String
+  title       String
+  description String?
+  cover       String?
+  active      Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  days        DevotionalPlanDay[]
+
+  @@index([churchId])
+}
+
+model DevotionalPlanDay {
+  id         String         @id @default(cuid())
+  planId     String
+  plan       DevotionalPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  dayNumber  Int
+  title      String?
+  verseRef   String?
+  verseText  String?
+  reflection String
+
+  @@unique([planId, dayNumber])
+  @@index([planId])
+}
+
+model DevotionalPlanProgress {
+  id        String   @id @default(cuid())
+  churchId  String
+  memberId  String
+  planId    String
+  dayNumber Int
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, planId, dayNumber])
+  @@index([memberId, planId])
+}
+
 enum UserRole {
   SUPER_ADMIN
   ADMIN

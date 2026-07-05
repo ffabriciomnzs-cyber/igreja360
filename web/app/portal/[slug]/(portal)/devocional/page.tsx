@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   Loader2,
   HandHeart,
@@ -10,6 +12,8 @@ import {
   Check,
   Flame,
   NotebookPen,
+  Layers,
+  ChevronRight,
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
 import { verseOfDay } from '@/lib/verse-of-day';
@@ -60,7 +64,18 @@ function shiftDay(day: string, delta: number): string {
   return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
 }
 
+interface PlanSummary {
+  id: string;
+  title: string;
+  description: string | null;
+  cover: string | null;
+  totalDays: number;
+  completedDays: number;
+}
+
 export default function DevocionalPage(): React.ReactElement {
+  const params = useParams();
+  const slug = String(params.slug);
   const fallback = verseOfDay();
   const today = new Intl.DateTimeFormat('pt-BR', {
     weekday: 'long',
@@ -91,6 +106,8 @@ export default function DevocionalPage(): React.ReactElement {
   const [genImage, setGenImage] = useState('');
   const genBlobRef = useRef<Blob | null>(null);
 
+  const [plans, setPlans] = useState<PlanSummary[]>([]);
+
   const verseRef = content?.verseRef || fallback.ref;
   const verseText = content?.verseText || fallback.text;
   const reflection = content?.reflection || null;
@@ -117,6 +134,19 @@ export default function DevocionalPage(): React.ReactElement {
       .finally(() => {
         if (mounted) setLoading(false);
       });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    memberApi
+      .get<PlanSummary[]>('/member-auth/plans')
+      .then(({ data }) => {
+        if (mounted) setPlans(data);
+      })
+      .catch(() => undefined);
     return () => {
       mounted = false;
     };
@@ -344,6 +374,13 @@ export default function DevocionalPage(): React.ReactElement {
         <BookOpen className="h-6 w-6 text-indigo-200" />
         <p className="mt-3 text-lg font-medium leading-relaxed">“{verseText}”</p>
         <p className="mt-2 text-sm text-indigo-200">{verseRef}</p>
+        <Link
+          href={`/portal/${slug}/biblia?ref=${encodeURIComponent(verseRef)}`}
+          className="mt-3 inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25"
+        >
+          <BookOpen className="h-3.5 w-3.5" />
+          Ler na Bíblia
+        </Link>
       </div>
 
       {/* Reflexão */}
@@ -408,6 +445,59 @@ export default function DevocionalPage(): React.ReactElement {
             </p>
           </div>
         </a>
+      )}
+
+      {/* Planos de leitura */}
+      {plans.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-indigo-600" />
+            <p className="text-sm font-semibold text-slate-800">
+              Planos de leitura
+            </p>
+          </div>
+          {plans.map((p) => {
+            const pct =
+              p.totalDays > 0
+                ? Math.round((p.completedDays / p.totalDays) * 100)
+                : 0;
+            return (
+              <Link
+                key={p.id}
+                href={`/portal/${slug}/planos/${p.id}`}
+                className="flex items-center gap-3 rounded-xl border border-border bg-white p-3 hover:bg-slate-50"
+              >
+                {p.cover ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={p.cover}
+                    alt={p.title}
+                    className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                    <Layers className="h-6 w-6" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-slate-900">
+                    {p.title}
+                  </p>
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-indigo-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {p.completedDays}/{p.totalDays} dias
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
+              </Link>
+            );
+          })}
+        </div>
       )}
 
       {/* Diário / anotações */}

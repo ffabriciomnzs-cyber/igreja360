@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { Home, BookOpen, Baby, Radio, LogOut } from 'lucide-react';
+import { Home, BookOpen, BookMarked, Baby, Radio, LogOut } from 'lucide-react';
 import {
   memberApi,
   getMemberToken,
@@ -60,6 +60,7 @@ export default function PortalLayout({
   const nav = [
     { href: `${base}/inicio`, label: 'Início', icon: Home },
     { href: `${base}/devocional`, label: 'Devocional', icon: BookOpen },
+    { href: `${base}/biblia`, label: 'Bíblia', icon: BookMarked },
     { href: `${base}/kids`, label: 'Kids', icon: Baby },
     { href: `${base}/radio`, label: 'Rádio', icon: Radio },
   ];

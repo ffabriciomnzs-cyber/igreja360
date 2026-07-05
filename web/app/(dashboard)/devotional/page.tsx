@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Upload, Trash2, Coffee } from 'lucide-react';
+import Link from 'next/link';
+import { Loader2, Upload, Trash2, Coffee, Layers } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -138,6 +139,16 @@ export default function DevotionalAdminPage(): React.ReactElement {
         title="Devocional"
         description="Prepare o devocional diário (estilo Café com Deus Pai) para os membros."
       />
+
+      <div className="mb-4">
+        <Link
+          href="/devotional/planos"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+        >
+          <Layers className="h-4 w-4" />
+          Planos de leitura (séries temáticas)
+        </Link>
+      </div>
 
       <Card>
         <CardHeader>

@@ -90,4 +90,32 @@ export class MemberAuthController {
   ) {
     return this.portal.react(member.churchId, member.id, dto.type);
   }
+
+  @Get('plans')
+  @UseGuards(MemberJwtGuard)
+  plans(@CurrentMember() member: MemberPrincipal) {
+    return this.portal.plans(member.churchId, member.id);
+  }
+
+  @Get('plans/:id')
+  @UseGuards(MemberJwtGuard)
+  plan(@CurrentMember() member: MemberPrincipal, @Param('id') id: string) {
+    return this.portal.plan(member.churchId, member.id, id);
+  }
+
+  @Post('plans/:id/day/:dayNumber')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  planDay(
+    @CurrentMember() member: MemberPrincipal,
+    @Param('id') id: string,
+    @Param('dayNumber') dayNumber: string,
+  ) {
+    return this.portal.togglePlanDay(
+      member.churchId,
+      member.id,
+      id,
+      Number(dayNumber),
+    );
+  }
 }
