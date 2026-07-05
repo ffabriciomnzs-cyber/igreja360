@@ -11,6 +11,8 @@ import { MemberAuthService } from './member-auth.service';
 import { PortalService } from './portal.service';
 import { MemberRegisterDto } from './dto/member-register.dto';
 import { MemberLoginDto } from './dto/member-login.dto';
+import { DevotionalNoteDto } from './dto/devotional-note.dto';
+import { DevotionalReactDto } from './dto/devotional-react.dto';
 import { MemberJwtGuard, MemberPrincipal } from './member-jwt.guard';
 import { CurrentMember } from './current-member.decorator';
 
@@ -60,5 +62,32 @@ export class MemberAuthController {
   @UseGuards(MemberJwtGuard)
   pray(@CurrentMember() member: MemberPrincipal) {
     return this.portal.togglePray(member.churchId, member.id);
+  }
+
+  @Post('devotional/complete')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  complete(@CurrentMember() member: MemberPrincipal) {
+    return this.portal.complete(member.churchId, member.id);
+  }
+
+  @Post('devotional/note')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  note(
+    @CurrentMember() member: MemberPrincipal,
+    @Body() dto: DevotionalNoteDto,
+  ) {
+    return this.portal.saveNote(member.churchId, member.id, dto.text ?? '');
+  }
+
+  @Post('devotional/react')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  react(
+    @CurrentMember() member: MemberPrincipal,
+    @Body() dto: DevotionalReactDto,
+  ) {
+    return this.portal.react(member.churchId, member.id, dto.type);
   }
 }

@@ -7,31 +7,178 @@ function brToday(): string {
   return `${br.getUTCFullYear()}-${pad(br.getUTCMonth() + 1)}-${pad(br.getUTCDate())}`;
 }
 
+// Soma/subtrai dias de uma data 'YYYY-MM-DD'.
+function shiftDay(day: string, delta: number): string {
+  const [y, m, d] = day.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + delta));
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
+}
+
+// Dias seguidos concluídos até hoje (conta hoje se já concluiu; senão até ontem).
+function computeStreak(days: Set<string>, today: string): number {
+  let cursor = days.has(today) ? today : shiftDay(today, -1);
+  let streak = 0;
+  while (days.has(cursor)) {
+    streak++;
+    cursor = shiftDay(cursor, -1);
+  }
+  return streak;
+}
+
+// Dias concluídos nos últimos 35 dias (para o mini-calendário).
+function recentHistory(days: Set<string>, today: string): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < 35; i++) {
+    const d = shiftDay(today, -i);
+    if (days.has(d)) out.push(d);
+  }
+  return out;
+}
+
 @Injectable()
 export class PortalService {
   constructor(private readonly prisma: PrismaService) {}
 
   async devotional(churchId: string, memberId: string) {
     const day = brToday();
-    const [count, mine, content] = await this.prisma.$transaction([
-      this.prisma.devotionalPrayer.count({ where: { churchId, day } }),
-      this.prisma.devotionalPrayer.findUnique({
-        where: { memberId_day: { memberId, day } },
-      }),
-      this.prisma.devotional.findUnique({
-        where: { churchId_date: { churchId, date: day } },
-        select: {
-          title: true,
-          verseRef: true,
-          verseText: true,
-          reflection: true,
-          songTitle: true,
-          songUrl: true,
-          image: true,
-        },
-      }),
-    ]);
-    return { day, count, joined: mine !== null, content };
+    const [
+      count,
+      mine,
+      content,
+      note,
+      myReaction,
+      reactionRows,
+      completions,
+      church,
+    ] = await this.prisma.$transaction([
+        this.prisma.devotionalPrayer.count({ where: { churchId, day } }),
+        this.prisma.devotionalPrayer.findUnique({
+          where: { memberId_day: { memberId, day } },
+        }),
+        this.prisma.devotional.findUnique({
+          where: { churchId_date: { churchId, date: day } },
+          select: {
+            title: true,
+            verseRef: true,
+            verseText: true,
+            reflection: true,
+            songTitle: true,
+            songUrl: true,
+            image: true,
+          },
+        }),
+        this.prisma.devotionalNote.findUnique({
+          where: { memberId_day: { memberId, day } },
+          select: { text: true },
+        }),
+        this.prisma.devotionalReaction.findUnique({
+          where: { memberId_day: { memberId, day } },
+          select: { type: true },
+        }),
+        this.prisma.devotionalReaction.groupBy({
+          by: ['type'],
+          where: { churchId, day },
+          _count: true,
+          orderBy: { type: 'asc' },
+        }),
+        this.prisma.devotionalCompletion.findMany({
+          where: { memberId },
+          select: { day: true },
+          orderBy: { day: 'desc' },
+          take: 400,
+        }),
+        this.prisma.church.findUnique({
+          where: { id: churchId },
+          select: { name: true },
+        }),
+      ]);
+
+    const completedDays = new Set(completions.map((c) => c.day));
+    const reactions = Object.fromEntries(
+      reactionRows.map((r) => [r.type, r._count]),
+    );
+
+    return {
+      day,
+      count,
+      joined: mine !== null,
+      content,
+      completed: completedDays.has(day),
+      streak: computeStreak(completedDays, day),
+      history: recentHistory(completedDays, day),
+      note: note?.text ?? null,
+      reactions,
+      myReaction: myReaction?.type ?? null,
+      churchName: church?.name ?? null,
+    };
+  }
+
+  async complete(churchId: string, memberId: string) {
+    const day = brToday();
+    await this.prisma.devotionalCompletion.upsert({
+      where: { memberId_day: { memberId, day } },
+      create: { churchId, memberId, day },
+      update: {},
+    });
+    const completions = await this.prisma.devotionalCompletion.findMany({
+      where: { memberId },
+      select: { day: true },
+      orderBy: { day: 'desc' },
+      take: 400,
+    });
+    const set = new Set(completions.map((c) => c.day));
+    return {
+      completed: true,
+      streak: computeStreak(set, day),
+      history: recentHistory(set, day),
+    };
+  }
+
+  async saveNote(churchId: string, memberId: string, text: string) {
+    const day = brToday();
+    const clean = (text ?? '').trim();
+    if (!clean) {
+      await this.prisma.devotionalNote.deleteMany({ where: { memberId, day } });
+      return { note: null };
+    }
+    await this.prisma.devotionalNote.upsert({
+      where: { memberId_day: { memberId, day } },
+      create: { churchId, memberId, day, text: clean },
+      update: { text: clean },
+    });
+    return { note: clean };
+  }
+
+  async react(churchId: string, memberId: string, type: string) {
+    const day = brToday();
+    const existing = await this.prisma.devotionalReaction.findUnique({
+      where: { memberId_day: { memberId, day } },
+    });
+    let mine: string | null = type;
+    if (existing && existing.type === type) {
+      await this.prisma.devotionalReaction.delete({
+        where: { id: existing.id },
+      });
+      mine = null;
+    } else if (existing) {
+      await this.prisma.devotionalReaction.update({
+        where: { id: existing.id },
+        data: { type },
+      });
+    } else {
+      await this.prisma.devotionalReaction.create({
+        data: { churchId, memberId, day, type },
+      });
+    }
+    const rows = await this.prisma.devotionalReaction.groupBy({
+      by: ['type'],
+      where: { churchId, day },
+      _count: true,
+      orderBy: { type: 'asc' },
+    });
+    const reactions = Object.fromEntries(rows.map((r) => [r.type, r._count]));
+    return { reactions, myReaction: mine };
   }
 
   async togglePray(churchId: string, memberId: string) {

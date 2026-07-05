@@ -1,9 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Loader2, HandHeart, BookOpen, Music, Share2 } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Loader2,
+  HandHeart,
+  BookOpen,
+  Music,
+  Share2,
+  Check,
+  Flame,
+  NotebookPen,
+} from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
 import { verseOfDay } from '@/lib/verse-of-day';
+import { generateVerseImage } from '@/lib/verse-image';
 
 interface DevotionalContent {
   title: string | null;
@@ -19,6 +29,35 @@ interface DevotionalResponse {
   count: number;
   joined: boolean;
   content: DevotionalContent | null;
+  completed: boolean;
+  streak: number;
+  history: string[];
+  note: string | null;
+  reactions: Record<string, number>;
+  myReaction: string | null;
+  churchName: string | null;
+}
+
+const REACTIONS: { type: string; emoji: string; label: string }[] = [
+  { type: 'amem', emoji: '🙏', label: 'Amém' },
+  { type: 'heart', emoji: '❤️', label: 'Amei' },
+  { type: 'praise', emoji: '🙌', label: 'Glória' },
+  { type: 'fire', emoji: '🔥', label: 'Avivamento' },
+];
+
+const WEEKDAY = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+function brTodayStr(): string {
+  const br = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${br.getUTCFullYear()}-${pad(br.getUTCMonth() + 1)}-${pad(br.getUTCDate())}`;
+}
+
+function shiftDay(day: string, delta: number): string {
+  const [y, m, d] = day.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + delta));
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
 }
 
 export default function DevocionalPage(): React.ReactElement {
@@ -35,6 +74,27 @@ export default function DevocionalPage(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [completed, setCompleted] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [history, setHistory] = useState<string[]>([]);
+  const [completing, setCompleting] = useState(false);
+
+  const [reactions, setReactions] = useState<Record<string, number>>({});
+  const [myReaction, setMyReaction] = useState<string | null>(null);
+
+  const [note, setNote] = useState('');
+  const [savedNote, setSavedNote] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+
+  const [churchName, setChurchName] = useState('');
+  const [genImage, setGenImage] = useState('');
+  const genBlobRef = useRef<Blob | null>(null);
+
+  const verseRef = content?.verseRef || fallback.ref;
+  const verseText = content?.verseText || fallback.text;
+  const reflection = content?.reflection || null;
+
   useEffect(() => {
     let mounted = true;
     memberApi
@@ -44,6 +104,14 @@ export default function DevocionalPage(): React.ReactElement {
         setContent(data.content);
         setCount(data.count);
         setJoined(data.joined);
+        setCompleted(data.completed);
+        setStreak(data.streak);
+        setHistory(data.history ?? []);
+        setReactions(data.reactions ?? {});
+        setMyReaction(data.myReaction);
+        setNote(data.note ?? '');
+        setSavedNote(data.note ?? '');
+        setChurchName(data.churchName ?? '');
       })
       .catch(() => undefined)
       .finally(() => {
@@ -54,13 +122,34 @@ export default function DevocionalPage(): React.ReactElement {
     };
   }, []);
 
+  // Gera a imagem do versículo quando o devocional não traz imagem própria.
+  useEffect(() => {
+    if (loading) return;
+    if (content?.image) return;
+    let mounted = true;
+    generateVerseImage({
+      verseText,
+      verseRef,
+      title: content?.title || undefined,
+      footer: churchName || 'Igreja360',
+    })
+      .then(({ dataUrl, blob }) => {
+        if (!mounted) return;
+        setGenImage(dataUrl);
+        genBlobRef.current = blob;
+      })
+      .catch(() => undefined);
+    return () => {
+      mounted = false;
+    };
+  }, [loading, content, verseText, verseRef, churchName]);
+
   async function togglePray(): Promise<void> {
     setSaving(true);
     try {
-      const { data } = await memberApi.post<{
-        count: number;
-        joined: boolean;
-      }>('/member-auth/devotional/pray');
+      const { data } = await memberApi.post<{ count: number; joined: boolean }>(
+        '/member-auth/devotional/pray',
+      );
       setCount(data.count);
       setJoined(data.joined);
     } catch {
@@ -70,11 +159,57 @@ export default function DevocionalPage(): React.ReactElement {
     }
   }
 
-  const verseRef = content?.verseRef || fallback.ref;
-  const verseText = content?.verseText || fallback.text;
-  const reflection = content?.reflection || null;
+  async function complete(): Promise<void> {
+    if (completed) return;
+    setCompleting(true);
+    try {
+      const { data } = await memberApi.post<{
+        completed: boolean;
+        streak: number;
+        history: string[];
+      }>('/member-auth/devotional/complete');
+      setCompleted(data.completed);
+      setStreak(data.streak);
+      setHistory(data.history ?? []);
+    } catch {
+      /* ignora */
+    } finally {
+      setCompleting(false);
+    }
+  }
 
-  async function share(): Promise<void> {
+  async function react(type: string): Promise<void> {
+    try {
+      const { data } = await memberApi.post<{
+        reactions: Record<string, number>;
+        myReaction: string | null;
+      }>('/member-auth/devotional/react', { type });
+      setReactions(data.reactions ?? {});
+      setMyReaction(data.myReaction);
+    } catch {
+      /* ignora */
+    }
+  }
+
+  async function saveNote(): Promise<void> {
+    setNoteSaving(true);
+    setNoteSaved(false);
+    try {
+      const { data } = await memberApi.post<{ note: string | null }>(
+        '/member-auth/devotional/note',
+        { text: note },
+      );
+      setSavedNote(data.note ?? '');
+      setNoteSaved(true);
+      setTimeout(() => setNoteSaved(false), 2500);
+    } catch {
+      /* ignora */
+    } finally {
+      setNoteSaving(false);
+    }
+  }
+
+  const share = useCallback(async (): Promise<void> => {
     const parts = [
       content?.title || 'Devocional do dia',
       '',
@@ -84,17 +219,23 @@ export default function DevocionalPage(): React.ReactElement {
     const text = parts.join('\n');
 
     const data: ShareData = { title: 'Devocional', text };
-    if (content?.image) {
-      try {
+    try {
+      let file: File | null = null;
+      if (content?.image) {
         const blob = await (await fetch(content.image)).blob();
-        const file = new File([blob], 'devocional.jpg', { type: blob.type });
-        if (navigator.canShare?.({ files: [file] })) {
-          (data as ShareData & { files: File[] }).files = [file];
-        }
-      } catch {
-        /* segue sem imagem */
+        file = new File([blob], 'devocional.jpg', { type: blob.type });
+      } else if (genBlobRef.current) {
+        file = new File([genBlobRef.current], 'devocional.jpg', {
+          type: 'image/jpeg',
+        });
       }
+      if (file && navigator.canShare?.({ files: [file] })) {
+        (data as ShareData & { files: File[] }).files = [file];
+      }
+    } catch {
+      /* segue sem imagem */
     }
+
     if (navigator.share) {
       try {
         await navigator.share(data);
@@ -109,7 +250,12 @@ export default function DevocionalPage(): React.ReactElement {
         /* ignora */
       }
     }
-  }
+  }, [content, verseText, verseRef, reflection]);
+
+  const shareImage = content?.image || genImage;
+  const historySet = new Set(history);
+  const todayStr = brTodayStr();
+  const last7 = Array.from({ length: 7 }, (_, i) => shiftDay(todayStr, i - 6));
 
   if (loading) {
     return (
@@ -129,11 +275,65 @@ export default function DevocionalPage(): React.ReactElement {
         <p className="text-sm capitalize text-slate-500">{today}</p>
       </div>
 
-      {/* Imagem compartilhável (se houver) */}
-      {content?.image && (
+      {/* Sequência + histórico da semana */}
+      <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-5 text-white shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Flame className="h-8 w-8 text-amber-100" />
+            <div>
+              <p className="text-3xl font-bold leading-none">{streak}</p>
+              <p className="text-xs text-amber-100">
+                {streak === 1 ? 'dia seguido' : 'dias seguidos'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={complete}
+            disabled={completed || completing}
+            className={`flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
+              completed
+                ? 'bg-white/20 text-white'
+                : 'bg-white text-orange-600 hover:bg-amber-50'
+            }`}
+          >
+            {completing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : completed ? (
+              <Check className="h-4 w-4" />
+            ) : null}
+            {completed ? 'Concluído hoje' : 'Marcar como concluído'}
+          </button>
+        </div>
+        <div className="mt-4 flex justify-between">
+          {last7.map((day) => {
+            const done = historySet.has(day);
+            const isToday = day === todayStr;
+            const weekday = WEEKDAY[new Date(`${day}T12:00:00Z`).getUTCDay()];
+            return (
+              <div key={day} className="flex flex-col items-center gap-1.5">
+                <span className="text-[10px] text-amber-100">{weekday}</span>
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs ${
+                    done
+                      ? 'bg-white text-orange-600'
+                      : isToday
+                        ? 'border-2 border-white/70 text-white'
+                        : 'bg-white/15 text-white/60'
+                  }`}
+                >
+                  {done ? '✓' : ''}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Imagem para compartilhar (própria ou gerada) */}
+      {shareImage && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={content.image}
+          src={shareImage}
           alt="Devocional"
           className="w-full rounded-2xl object-cover shadow"
         />
@@ -142,26 +342,51 @@ export default function DevocionalPage(): React.ReactElement {
       {/* Versículo */}
       <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 p-6 text-white shadow-lg">
         <BookOpen className="h-6 w-6 text-indigo-200" />
-        <p className="mt-3 text-lg font-medium leading-relaxed">
-          “{verseText}”
-        </p>
+        <p className="mt-3 text-lg font-medium leading-relaxed">“{verseText}”</p>
         <p className="mt-2 text-sm text-indigo-200">{verseRef}</p>
       </div>
 
       {/* Reflexão */}
-      {reflection ? (
-        <div className="rounded-xl border border-border bg-white p-5">
+      <div className="rounded-xl border border-border bg-white p-5">
+        {reflection ? (
           <p className="whitespace-pre-line leading-relaxed text-slate-700">
             {reflection}
           </p>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-border bg-white p-5">
+        ) : (
           <p className="text-sm leading-relaxed text-slate-600">
             Reserve um momento para meditar nesta palavra e orar.
           </p>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Reações */}
+      <div className="flex flex-wrap gap-2">
+        {REACTIONS.map((r) => {
+          const active = myReaction === r.type;
+          const n = reactions[r.type] ?? 0;
+          return (
+            <button
+              key={r.type}
+              onClick={() => react(r.type)}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                active
+                  ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                  : 'border-border bg-white text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <span className="text-base leading-none">{r.emoji}</span>
+              <span className="font-medium">{r.label}</span>
+              {n > 0 && (
+                <span
+                  className={`text-xs ${active ? 'text-indigo-500' : 'text-slate-400'}`}
+                >
+                  {n}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
       {/* Música do dia */}
       {content?.songUrl && (
@@ -184,6 +409,42 @@ export default function DevocionalPage(): React.ReactElement {
           </div>
         </a>
       )}
+
+      {/* Diário / anotações */}
+      <div className="rounded-xl border border-border bg-white p-5">
+        <div className="mb-2 flex items-center gap-2">
+          <NotebookPen className="h-4 w-4 text-indigo-600" />
+          <p className="text-sm font-semibold text-slate-800">
+            Meu diário de hoje
+          </p>
+        </div>
+        <p className="mb-3 text-xs text-slate-400">
+          O que Deus falou com você? (só você vê)
+        </p>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Escreva sua reflexão pessoal..."
+          maxLength={2000}
+          className="min-h-[110px] w-full resize-y rounded-lg border border-border bg-slate-50 p-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white"
+        />
+        <div className="mt-2 flex items-center justify-end gap-3">
+          {noteSaved && (
+            <span className="flex items-center gap-1 text-xs text-emerald-600">
+              <Check className="h-3.5 w-3.5" />
+              Salvo
+            </span>
+          )}
+          <button
+            onClick={saveNote}
+            disabled={noteSaving || note === savedNote}
+            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
+          >
+            {noteSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+            Salvar
+          </button>
+        </div>
+      </div>
 
       {/* Compartilhar */}
       <button

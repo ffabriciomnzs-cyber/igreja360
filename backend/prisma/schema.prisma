@@ -89,6 +89,43 @@ model Devotional {
   @@index([churchId])
 }
 
+model DevotionalCompletion {
+  id        String   @id @default(cuid())
+  churchId  String
+  memberId  String
+  day       String
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, day])
+  @@index([churchId, day])
+  @@index([memberId])
+}
+
+model DevotionalNote {
+  id        String   @id @default(cuid())
+  churchId  String
+  memberId  String
+  day       String
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, day])
+  @@index([memberId])
+}
+
+model DevotionalReaction {
+  id        String   @id @default(cuid())
+  churchId  String
+  memberId  String
+  day       String
+  type      String
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, day])
+  @@index([churchId, day])
+}
+
 enum UserRole {
   SUPER_ADMIN
   ADMIN
