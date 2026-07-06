@@ -87,41 +87,48 @@ function BibleReader(): React.ReactElement {
         Devocional
       </Link>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2 text-indigo-600">
-          <BookOpen className="h-5 w-5" />
-          <h1 className="text-lg font-bold text-slate-900">
-            {current?.name ?? 'Bíblia'}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 p-5 text-white shadow-lg">
+        <BookOpen className="absolute -right-3 -top-3 h-20 w-20 text-white/10" />
+        <div className="relative">
+          <p className="text-xs uppercase tracking-wide text-indigo-200">
+            Bíblia Sagrada
+          </p>
+          <h1 className="mt-0.5 text-2xl font-bold">
+            {current?.name ?? 'Bíblia'}{' '}
+            <span className="text-indigo-200">{chapter}</span>
           </h1>
+          <div className="mt-3 flex gap-2">
+            <select
+              value={abbrev}
+              onChange={(e) => {
+                setAbbrev(e.target.value);
+                setChapter(1);
+                setHighlight(null);
+              }}
+              className="min-w-0 flex-1 rounded-lg border-0 bg-white/15 px-3 py-2 text-sm font-medium text-white outline-none backdrop-blur [&>option]:text-slate-900"
+            >
+              {books.map((b) => (
+                <option key={b.abbrev} value={b.abbrev}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={chapter}
+              onChange={(e) => goChapter(Number(e.target.value))}
+              className="rounded-lg border-0 bg-white/15 px-3 py-2 text-sm font-medium text-white outline-none backdrop-blur [&>option]:text-slate-900"
+            >
+              {Array.from(
+                { length: current?.chapters ?? 1 },
+                (_, i) => i + 1,
+              ).map((c) => (
+                <option key={c} value={c}>
+                  Cap. {c}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <select
-          value={abbrev}
-          onChange={(e) => {
-            setAbbrev(e.target.value);
-            setChapter(1);
-            setHighlight(null);
-          }}
-          className="rounded-md border border-border bg-white px-2 py-1 text-sm"
-        >
-          {books.map((b) => (
-            <option key={b.abbrev} value={b.abbrev}>
-              {b.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={chapter}
-          onChange={(e) => goChapter(Number(e.target.value))}
-          className="rounded-md border border-border bg-white px-2 py-1 text-sm"
-        >
-          {Array.from({ length: current?.chapters ?? 1 }, (_, i) => i + 1).map(
-            (c) => (
-              <option key={c} value={c}>
-                Cap. {c}
-              </option>
-            ),
-          )}
-        </select>
       </div>
 
       {loading ? (
@@ -130,20 +137,20 @@ function BibleReader(): React.ReactElement {
           Carregando...
         </p>
       ) : (
-        <div className="space-y-2 rounded-xl border border-border bg-white p-5">
+        <div className="space-y-2.5 rounded-2xl border border-border bg-white p-5 shadow-sm">
           {verses.map((text, i) => {
             const v = i + 1;
             const active = highlight === v;
             return (
               <p
                 key={v}
-                className={`leading-relaxed ${
+                className={`leading-relaxed transition-colors ${
                   active
-                    ? 'rounded-md bg-indigo-50 px-2 py-1 text-slate-900'
+                    ? 'rounded-lg bg-indigo-50 px-3 py-2 text-slate-900 ring-1 ring-indigo-100'
                     : 'text-slate-700'
                 }`}
               >
-                <span className="mr-1 align-super text-xs font-semibold text-indigo-400">
+                <span className="mr-1.5 align-super text-xs font-bold text-indigo-500">
                   {v}
                 </span>
                 {text}
@@ -157,18 +164,18 @@ function BibleReader(): React.ReactElement {
         <button
           onClick={() => goChapter(chapter - 1)}
           disabled={chapter <= 1}
-          className="flex items-center gap-1 rounded-lg border border-border bg-white px-4 py-2 text-sm text-slate-600 disabled:opacity-40"
+          className="flex items-center gap-1 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-40"
         >
           <ChevronLeft className="h-4 w-4" />
           Anterior
         </button>
-        <span className="text-sm text-slate-400">
-          Cap. {chapter} / {current?.chapters ?? 1}
+        <span className="text-xs font-medium text-slate-400">
+          {chapter} / {current?.chapters ?? 1}
         </span>
         <button
           onClick={() => goChapter(chapter + 1)}
           disabled={!current || chapter >= current.chapters}
-          className="flex items-center gap-1 rounded-lg border border-border bg-white px-4 py-2 text-sm text-slate-600 disabled:opacity-40"
+          className="flex items-center gap-1 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-40"
         >
           Próximo
           <ChevronRight className="h-4 w-4" />
