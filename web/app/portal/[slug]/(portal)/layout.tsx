@@ -11,6 +11,7 @@ import {
   clearMemberSession,
 } from '@/lib/member-api';
 import { cn } from '@/lib/utils';
+import { InstallPrompt } from '@/components/InstallPrompt';
 
 export default function PortalLayout({
   children,
@@ -86,6 +87,9 @@ export default function PortalLayout({
       </header>
 
       <main className="mx-auto max-w-2xl p-4">{children}</main>
+
+      <InstallPrompt />
+
 
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-white">
         <div className="mx-auto flex max-w-2xl">
