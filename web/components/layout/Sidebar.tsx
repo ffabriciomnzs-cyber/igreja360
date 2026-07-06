@@ -21,6 +21,7 @@ import {
   BookOpen,
   ClipboardList,
   UserCog,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -50,7 +51,15 @@ const items: NavItem[] = [
   { href: '/settings', label: 'Configurações', icon: Settings },
 ];
 
-export function Sidebar(): React.ReactElement {
+interface SidebarProps {
+  open?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({
+  open = false,
+  onClose,
+}: SidebarProps): React.ReactElement {
   const pathname = usePathname();
   const [church, setChurch] = useState<ChurchSettings | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -102,20 +111,40 @@ export function Sidebar(): React.ReactElement {
   }, []);
 
   return (
-    <nav className="flex h-full w-64 flex-col bg-blue-100 text-blue-900">
-      <div className="flex items-center gap-2 px-6 py-5 text-xl font-bold">
-        {church?.logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={church.logo}
-            alt="Logo"
-            className="h-8 w-8 shrink-0 rounded object-contain"
-          />
-        ) : (
-          <Church className="h-6 w-6 shrink-0 text-blue-600" />
+    <>
+      {open && (
+        <div
+          onClick={onClose}
+          aria-hidden
+          className="fixed inset-0 z-40 bg-slate-900/50 md:hidden"
+        />
+      )}
+      <nav
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col bg-blue-100 text-blue-900 shadow-xl transition-transform duration-200 md:static md:z-auto md:translate-x-0 md:shadow-none',
+          open ? 'translate-x-0' : '-translate-x-full',
         )}
-        <span className="truncate">{church?.name || 'Igreja360'}</span>
-      </div>
+      >
+        <div className="flex items-center gap-2 px-6 py-5 text-xl font-bold">
+          {church?.logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={church.logo}
+              alt="Logo"
+              className="h-8 w-8 shrink-0 rounded object-contain"
+            />
+          ) : (
+            <Church className="h-6 w-6 shrink-0 text-blue-600" />
+          )}
+          <span className="truncate">{church?.name || 'Igreja360'}</span>
+          <button
+            onClick={onClose}
+            aria-label="Fechar menu"
+            className="ml-auto rounded-md p-1.5 text-blue-900/60 hover:bg-blue-200 md:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       <ul className="flex-1 space-y-1 px-3">
         {items
           .filter((item) => !item.adminOnly || isAdmin)
@@ -127,6 +156,7 @@ export function Sidebar(): React.ReactElement {
             <li key={item.href}>
               <Link
                 href={item.href}
+                onClick={onClose}
                 className={cn(
                   'flex items-center gap-3 rounded-md border-l-2 border-transparent px-3 py-2 text-sm text-blue-900/60 transition-colors hover:bg-blue-200 hover:text-blue-900',
                   active &&
@@ -146,5 +176,6 @@ export function Sidebar(): React.ReactElement {
         })}
       </ul>
     </nav>
+    </>
   );
 }

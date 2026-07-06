@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -13,6 +13,7 @@ export default function DashboardLayout({
 }): React.ReactElement | null {
   const router = useRouter();
   const { user, loading, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -31,13 +32,17 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 print:h-auto print:overflow-visible">
       <div className="print:hidden">
-        <Sidebar />
+        <Sidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
       </div>
       <div className="flex flex-1 flex-col overflow-hidden print:overflow-visible">
         <div className="print:hidden">
-          <Header user={user} onLogout={logout} />
+          <Header
+            user={user}
+            onLogout={logout}
+            onMenuClick={() => setMobileOpen(true)}
+          />
         </div>
-        <main className="flex-1 overflow-y-auto p-6 print:overflow-visible print:p-0">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 print:overflow-visible print:p-0">
           {children}
         </main>
       </div>
