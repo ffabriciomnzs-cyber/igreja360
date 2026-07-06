@@ -162,6 +162,7 @@ export default function DevocionalPage(): React.ReactElement {
       verseRef,
       title: content?.title || undefined,
       footer: churchName || 'Igreja360',
+      seed: Number(brTodayStr().replace(/-/g, '')),
     })
       .then(({ dataUrl, blob }) => {
         if (!mounted) return;
@@ -359,14 +360,32 @@ export default function DevocionalPage(): React.ReactElement {
         </div>
       </div>
 
-      {/* Imagem para compartilhar (própria ou gerada) */}
+      {/* Imagem para compartilhar (própria ou gerada) + botão logo abaixo */}
       {shareImage && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={shareImage}
-          alt="Devocional"
-          className="w-full rounded-2xl object-cover shadow"
-        />
+        <div className="space-y-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={shareImage}
+            alt="Devocional"
+            className="w-full rounded-2xl object-cover shadow"
+          />
+          <button
+            onClick={share}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-white py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <Share2 className="h-4 w-4" />
+            Compartilhar nas redes
+          </button>
+        </div>
+      )}
+      {!shareImage && (
+        <button
+          onClick={share}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-white py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          <Share2 className="h-4 w-4" />
+          Compartilhar nas redes
+        </button>
       )}
 
       {/* Versículo */}
@@ -535,15 +554,6 @@ export default function DevocionalPage(): React.ReactElement {
           </button>
         </div>
       </div>
-
-      {/* Compartilhar */}
-      <button
-        onClick={share}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-white py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
-      >
-        <Share2 className="h-4 w-4" />
-        Compartilhar nas redes
-      </button>
 
       {/* Oração coletiva */}
       <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-5 text-center">
