@@ -37,7 +37,7 @@ export async function GET(
     scope: `/portal/${slug}/`,
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#0f172a',
+    background_color: '#000000',
     theme_color: '#4f46e5',
     icons: [
       {
