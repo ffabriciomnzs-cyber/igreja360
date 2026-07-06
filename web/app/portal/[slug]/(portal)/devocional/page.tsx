@@ -12,27 +12,14 @@ import {
   Check,
   Flame,
   NotebookPen,
-  Layers,
-  ChevronRight,
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
-import { verseOfDay } from '@/lib/verse-of-day';
+import { devotionalOfDay, daySeed } from '@/lib/daily-devotional';
 import { generateVerseImage } from '@/lib/verse-image';
-
-interface DevotionalContent {
-  title: string | null;
-  verseRef: string | null;
-  verseText: string | null;
-  reflection: string;
-  songTitle: string | null;
-  songUrl: string | null;
-  image: string | null;
-}
 
 interface DevotionalResponse {
   count: number;
   joined: boolean;
-  content: DevotionalContent | null;
   completed: boolean;
   streak: number;
   history: string[];
@@ -64,26 +51,18 @@ function shiftDay(day: string, delta: number): string {
   return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
 }
 
-interface PlanSummary {
-  id: string;
-  title: string;
-  description: string | null;
-  cover: string | null;
-  totalDays: number;
-  completedDays: number;
-}
-
 export default function DevocionalPage(): React.ReactElement {
   const params = useParams();
   const slug = String(params.slug);
-  const fallback = verseOfDay();
+
+  // Conteúdo do dia — pré-definido, automático (biblioteca embutida).
+  const daily = devotionalOfDay();
   const today = new Intl.DateTimeFormat('pt-BR', {
     weekday: 'long',
     day: '2-digit',
     month: 'long',
   }).format(new Date());
 
-  const [content, setContent] = useState<DevotionalContent | null>(null);
   const [count, setCount] = useState(0);
   const [joined, setJoined] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -106,11 +85,9 @@ export default function DevocionalPage(): React.ReactElement {
   const [genImage, setGenImage] = useState('');
   const genBlobRef = useRef<Blob | null>(null);
 
-  const [plans, setPlans] = useState<PlanSummary[]>([]);
-
-  const verseRef = content?.verseRef || fallback.ref;
-  const verseText = content?.verseText || fallback.text;
-  const reflection = content?.reflection || null;
+  const songUrl = daily.song
+    ? `https://www.youtube.com/results?search_query=${encodeURIComponent(daily.song)}`
+    : null;
 
   useEffect(() => {
     let mounted = true;
@@ -118,7 +95,6 @@ export default function DevocionalPage(): React.ReactElement {
       .get<DevotionalResponse>('/member-auth/devotional')
       .then(({ data }) => {
         if (!mounted) return;
-        setContent(data.content);
         setCount(data.count);
         setJoined(data.joined);
         setCompleted(data.completed);
@@ -139,30 +115,15 @@ export default function DevocionalPage(): React.ReactElement {
     };
   }, []);
 
+  // Gera a imagem do versículo do dia para compartilhar.
   useEffect(() => {
-    let mounted = true;
-    memberApi
-      .get<PlanSummary[]>('/member-auth/plans')
-      .then(({ data }) => {
-        if (mounted) setPlans(data);
-      })
-      .catch(() => undefined);
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Gera a imagem do versículo quando o devocional não traz imagem própria.
-  useEffect(() => {
-    if (loading) return;
-    if (content?.image) return;
     let mounted = true;
     generateVerseImage({
-      verseText,
-      verseRef,
-      title: content?.title || undefined,
+      verseText: daily.text,
+      verseRef: daily.ref,
+      title: daily.title,
       footer: churchName || 'Igreja360',
-      seed: Number(brTodayStr().replace(/-/g, '')),
+      seed: daySeed(),
     })
       .then(({ dataUrl, blob }) => {
         if (!mounted) return;
@@ -173,7 +134,7 @@ export default function DevocionalPage(): React.ReactElement {
     return () => {
       mounted = false;
     };
-  }, [loading, content, verseText, verseRef, churchName]);
+  }, [daily.text, daily.ref, daily.title, churchName]);
 
   async function togglePray(): Promise<void> {
     setSaving(true);
@@ -241,27 +202,23 @@ export default function DevocionalPage(): React.ReactElement {
   }
 
   const share = useCallback(async (): Promise<void> => {
-    const parts = [
-      content?.title || 'Devocional do dia',
+    const text = [
+      daily.title,
       '',
-      `“${verseText}” — ${verseRef}`,
-    ];
-    if (reflection) parts.push('', reflection);
-    const text = parts.join('\n');
+      `“${daily.text}” — ${daily.ref}`,
+      '',
+      daily.reflection,
+    ].join('\n');
 
     const data: ShareData = { title: 'Devocional', text };
     try {
-      let file: File | null = null;
-      if (content?.image) {
-        const blob = await (await fetch(content.image)).blob();
-        file = new File([blob], 'devocional.jpg', { type: blob.type });
-      } else if (genBlobRef.current) {
-        file = new File([genBlobRef.current], 'devocional.jpg', {
+      if (genBlobRef.current) {
+        const file = new File([genBlobRef.current], 'devocional.jpg', {
           type: 'image/jpeg',
         });
-      }
-      if (file && navigator.canShare?.({ files: [file] })) {
-        (data as ShareData & { files: File[] }).files = [file];
+        if (navigator.canShare?.({ files: [file] })) {
+          (data as ShareData & { files: File[] }).files = [file];
+        }
       }
     } catch {
       /* segue sem imagem */
@@ -281,9 +238,8 @@ export default function DevocionalPage(): React.ReactElement {
         /* ignora */
       }
     }
-  }, [content, verseText, verseRef, reflection]);
+  }, [daily]);
 
-  const shareImage = content?.image || genImage;
   const historySet = new Set(history);
   const todayStr = brTodayStr();
   const last7 = Array.from({ length: 7 }, (_, i) => shiftDay(todayStr, i - 6));
@@ -300,9 +256,7 @@ export default function DevocionalPage(): React.ReactElement {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">
-          {content?.title || 'Devocional do dia'}
-        </h1>
+        <h1 className="text-xl font-bold text-slate-900">{daily.title}</h1>
         <p className="text-sm capitalize text-slate-500">{today}</p>
       </div>
 
@@ -360,12 +314,12 @@ export default function DevocionalPage(): React.ReactElement {
         </div>
       </div>
 
-      {/* Imagem para compartilhar (própria ou gerada) + botão logo abaixo */}
-      {shareImage && (
+      {/* Imagem para compartilhar + botão logo abaixo */}
+      {genImage && (
         <div className="space-y-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={shareImage}
+            src={genImage}
             alt="Devocional"
             className="w-full rounded-2xl object-cover shadow"
           />
@@ -378,23 +332,16 @@ export default function DevocionalPage(): React.ReactElement {
           </button>
         </div>
       )}
-      {!shareImage && (
-        <button
-          onClick={share}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-white py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
-          <Share2 className="h-4 w-4" />
-          Compartilhar nas redes
-        </button>
-      )}
 
       {/* Versículo */}
       <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 p-6 text-white shadow-lg">
         <BookOpen className="h-6 w-6 text-indigo-200" />
-        <p className="mt-3 text-lg font-medium leading-relaxed">“{verseText}”</p>
-        <p className="mt-2 text-sm text-indigo-200">{verseRef}</p>
+        <p className="mt-3 text-lg font-medium leading-relaxed">
+          “{daily.text}”
+        </p>
+        <p className="mt-2 text-sm text-indigo-200">{daily.ref}</p>
         <Link
-          href={`/portal/${slug}/biblia?ref=${encodeURIComponent(verseRef)}`}
+          href={`/portal/${slug}/biblia?ref=${encodeURIComponent(daily.ref)}`}
           className="mt-3 inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25"
         >
           <BookOpen className="h-3.5 w-3.5" />
@@ -404,15 +351,9 @@ export default function DevocionalPage(): React.ReactElement {
 
       {/* Reflexão */}
       <div className="rounded-xl border border-border bg-white p-5">
-        {reflection ? (
-          <p className="whitespace-pre-line leading-relaxed text-slate-700">
-            {reflection}
-          </p>
-        ) : (
-          <p className="text-sm leading-relaxed text-slate-600">
-            Reserve um momento para meditar nesta palavra e orar.
-          </p>
-        )}
+        <p className="whitespace-pre-line leading-relaxed text-slate-700">
+          {daily.reflection}
+        </p>
       </div>
 
       {/* Reações */}
@@ -445,9 +386,9 @@ export default function DevocionalPage(): React.ReactElement {
       </div>
 
       {/* Música do dia */}
-      {content?.songUrl && (
+      {songUrl && (
         <a
-          href={content.songUrl}
+          href={songUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-3 rounded-xl border border-border bg-white p-4 hover:bg-slate-50"
@@ -459,64 +400,9 @@ export default function DevocionalPage(): React.ReactElement {
             <p className="text-xs uppercase tracking-wide text-slate-400">
               Música do dia
             </p>
-            <p className="truncate font-medium text-slate-900">
-              {content.songTitle || 'Ouvir agora'}
-            </p>
+            <p className="truncate font-medium text-slate-900">{daily.song}</p>
           </div>
         </a>
-      )}
-
-      {/* Planos de leitura */}
-      {plans.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-indigo-600" />
-            <p className="text-sm font-semibold text-slate-800">
-              Planos de leitura
-            </p>
-          </div>
-          {plans.map((p) => {
-            const pct =
-              p.totalDays > 0
-                ? Math.round((p.completedDays / p.totalDays) * 100)
-                : 0;
-            return (
-              <Link
-                key={p.id}
-                href={`/portal/${slug}/planos/${p.id}`}
-                className="flex items-center gap-3 rounded-xl border border-border bg-white p-3 hover:bg-slate-50"
-              >
-                {p.cover ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={p.cover}
-                    alt={p.title}
-                    className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
-                    <Layers className="h-6 w-6" />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-slate-900">
-                    {p.title}
-                  </p>
-                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className="h-full rounded-full bg-indigo-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {p.completedDays}/{p.totalDays} dias
-                  </p>
-                </div>
-                <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
-              </Link>
-            );
-          })}
-        </div>
       )}
 
       {/* Diário / anotações */}
