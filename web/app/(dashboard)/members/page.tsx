@@ -184,7 +184,8 @@ export default function MembersPage(): React.ReactElement {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500">
@@ -265,6 +266,67 @@ export default function MembersPage(): React.ReactElement {
                 </tbody>
               </table>
             </div>
+
+            <div className="divide-y divide-border md:hidden">
+              {members.map((m) => (
+                <div key={m.id} className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/members/${m.id}`}
+                        className="font-medium text-slate-900 hover:text-indigo-600"
+                      >
+                        {m.name}
+                      </Link>
+                      {m.city && (
+                        <p className="text-xs text-slate-500">{m.city}</p>
+                      )}
+                    </div>
+                    <Badge variant={STATUS_VARIANTS[m.status]}>
+                      {STATUS_LABELS[m.status]}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 space-y-0.5 text-sm text-slate-600">
+                    {m.email && <p className="truncate">{m.email}</p>}
+                    {m.phone && (
+                      <p className="text-xs text-slate-500">{m.phone}</p>
+                    )}
+                    <p className="text-xs text-slate-500">
+                      {m.role ? ROLE_LABELS[m.role] : 'Sem cargo'} · Entrada:{' '}
+                      {m.joinedAt ? formatDate(m.joinedAt) : '—'}
+                    </p>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Link href={`/members/${m.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Eye className="h-4 w-4" />
+                        Ver
+                      </Button>
+                    </Link>
+                    <Link href={`/members/${m.id}/edit`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Pencil className="h-4 w-4" />
+                        Editar
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Remover"
+                      onClick={() => handleDelete(m)}
+                      disabled={deletingId === m.id}
+                    >
+                      {deletingId === m.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>

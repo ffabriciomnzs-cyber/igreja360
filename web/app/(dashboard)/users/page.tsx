@@ -276,7 +276,8 @@ export default function UsersPage(): React.ReactElement {
         </Card>
       ) : (
         <Card>
-          <CardContent className="overflow-x-auto p-0">
+          <CardContent className="p-0">
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-slate-50 text-left">
@@ -344,6 +345,57 @@ export default function UsersPage(): React.ReactElement {
                 ))}
               </tbody>
             </table>
+            </div>
+
+            <div className="divide-y divide-border md:hidden">
+              {users.map((u) => (
+                <div key={u.id} className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-800">
+                        {u.name}
+                        {u.id === currentUserId && (
+                          <span className="ml-1 text-xs text-slate-400">
+                            (você)
+                          </span>
+                        )}
+                      </p>
+                      <p className="truncate text-xs text-slate-500">
+                        {u.email}
+                      </p>
+                    </div>
+                    <Badge variant={u.active ? 'success' : 'muted'}>
+                      {u.active ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <Badge variant="default">
+                      {roleLabel(u.role, u.gender)}
+                    </Badge>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Editar"
+                        onClick={() => openEdit(u)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      {u.id !== currentUserId && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Excluir"
+                          onClick={() => remove(u)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

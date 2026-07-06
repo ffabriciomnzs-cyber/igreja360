@@ -198,7 +198,8 @@ export default function FinancialPage(): React.ReactElement {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500">
@@ -271,6 +272,71 @@ export default function FinancialPage(): React.ReactElement {
                 </tbody>
               </table>
             </div>
+
+            <div className="divide-y divide-border md:hidden">
+              {items.map((t) => {
+                const isIncome = t.type === 'INCOME';
+                return (
+                  <div key={t.id} className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-900">
+                          {t.category}
+                        </p>
+                        {t.description && (
+                          <p className="text-xs text-slate-500">
+                            {t.description}
+                          </p>
+                        )}
+                        <p className="mt-0.5 text-xs text-slate-400">
+                          {formatDate(t.date)}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p
+                          className={`font-semibold ${
+                            isIncome ? 'text-emerald-600' : 'text-red-600'
+                          }`}
+                        >
+                          {isIncome ? '+' : '−'} {formatCurrency(Number(t.amount))}
+                        </p>
+                        <Badge
+                          variant={isIncome ? 'success' : 'danger'}
+                          className="mt-1"
+                        >
+                          {isIncome ? 'Receita' : 'Despesa'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Link
+                        href={`/financial/${t.id}/edit`}
+                        className="flex-1"
+                      >
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Pencil className="h-4 w-4" />
+                          Editar
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Remover"
+                        onClick={() => handleDelete(t)}
+                        disabled={deletingId === t.id}
+                      >
+                        {deletingId === t.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
