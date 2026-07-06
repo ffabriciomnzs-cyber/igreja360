@@ -13,11 +13,19 @@ import {
   MapPin,
   ChevronRight,
   Heart,
+  Bell,
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
 import { formatCurrency } from '@/lib/utils';
 
 interface PortalHome {
+  announcements: {
+    id: string;
+    title: string;
+    content: string;
+    type: string;
+    createdAt: string;
+  }[];
   worship: {
     id: string;
     title: string;
@@ -158,6 +166,28 @@ export default function PortalInicioPage(): React.ReactElement {
           </span>
         </Link>
       </div>
+
+      {/* Avisos */}
+      {data.announcements.length > 0 && (
+        <section>
+          <SectionTitle icon={Bell} color="bg-indigo-500">
+            Avisos da igreja
+          </SectionTitle>
+          <div className="space-y-2">
+            {data.announcements.map((a) => (
+              <div
+                key={a.id}
+                className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 shadow-sm"
+              >
+                <p className="font-semibold text-slate-900">{a.title}</p>
+                <p className="mt-1 whitespace-pre-line text-sm text-slate-600">
+                  {a.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Campanhas */}
       <section>

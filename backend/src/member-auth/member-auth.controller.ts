@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -13,6 +14,8 @@ import { MemberRegisterDto } from './dto/member-register.dto';
 import { MemberLoginDto } from './dto/member-login.dto';
 import { DevotionalNoteDto } from './dto/devotional-note.dto';
 import { DevotionalReactDto } from './dto/devotional-react.dto';
+import { CreatePrayerDto } from './dto/create-prayer.dto';
+import { UpdateMemberProfileDto } from './dto/update-member-profile.dto';
 import { MemberJwtGuard, MemberPrincipal } from './member-jwt.guard';
 import { CurrentMember } from './current-member.decorator';
 
@@ -89,6 +92,30 @@ export class MemberAuthController {
     @Body() dto: DevotionalReactDto,
   ) {
     return this.portal.react(member.churchId, member.id, dto.type);
+  }
+
+  @Patch('profile')
+  @UseGuards(MemberJwtGuard)
+  updateProfile(
+    @CurrentMember() member: MemberPrincipal,
+    @Body() dto: UpdateMemberProfileDto,
+  ) {
+    return this.portal.updateProfile(member.id, dto);
+  }
+
+  @Get('prayers')
+  @UseGuards(MemberJwtGuard)
+  myPrayers(@CurrentMember() member: MemberPrincipal) {
+    return this.portal.myPrayers(member.id);
+  }
+
+  @Post('prayers')
+  @UseGuards(MemberJwtGuard)
+  createPrayer(
+    @CurrentMember() member: MemberPrincipal,
+    @Body() dto: CreatePrayerDto,
+  ) {
+    return this.portal.createPrayer(member.churchId, member.id, dto);
   }
 
   @Get('plans')

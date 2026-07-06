@@ -88,16 +88,19 @@ export default function PortalLayout({
               <Church className="h-5 w-5 text-indigo-600" />
             )}
           </div>
-          <div className="min-w-0 flex-1">
+          <Link
+            href={`${base}/perfil`}
+            className="min-w-0 flex-1 rounded-lg px-1 py-0.5 -mx-1 transition-colors hover:bg-white/10"
+          >
             <p className="truncate text-sm font-semibold leading-tight">
               {churchName || 'Portal do Membro'}
             </p>
             {firstName && (
               <p className="truncate text-xs text-indigo-100">
-                Olá, {firstName} 👋
+                Olá, {firstName} 👋 · ver perfil
               </p>
             )}
-          </div>
+          </Link>
           <button
             onClick={logout}
             className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/25"

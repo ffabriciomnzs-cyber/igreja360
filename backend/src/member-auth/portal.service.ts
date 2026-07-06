@@ -294,7 +294,8 @@ export class PortalService {
 
   async home(churchId: string) {
     const now = new Date();
-    const [worship, events, campaigns] = await this.prisma.$transaction([
+    const [worship, events, campaigns, announcements] =
+      await this.prisma.$transaction([
       this.prisma.worshipService.findMany({
         where: { churchId, date: { gte: now } },
         orderBy: { date: 'asc' },
@@ -331,11 +332,24 @@ export class PortalService {
           current: true,
         },
       }),
+      this.prisma.communication.findMany({
+        where: { churchId },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          type: true,
+          createdAt: true,
+        },
+      }),
     ]);
 
     return {
       worship,
       events,
+      announcements,
       campaigns: campaigns.map((c) => {
         const goal = Number(c.goal ?? 0);
         const current = Number(c.current ?? 0);
@@ -361,9 +375,12 @@ export class PortalService {
         name: true,
         email: true,
         phone: true,
+        cpf: true,
         photo: true,
         birthDate: true,
         baptismDate: true,
+        address: true,
+        city: true,
         status: true,
         role: true,
         joinedAt: true,
@@ -373,9 +390,79 @@ export class PortalService {
 
     const church = await this.prisma.church.findUnique({
       where: { id: member.churchId },
-      select: { name: true, logo: true, cardLogo: true, denomination: true },
+      select: {
+        name: true,
+        logo: true,
+        cardLogo: true,
+        denomination: true,
+        phone: true,
+        address: true,
+      },
     });
 
     return { member, church };
+  }
+
+  async updateProfile(
+    memberId: string,
+    dto: {
+      name?: string;
+      phone?: string;
+      birthDate?: string;
+      address?: string;
+      city?: string;
+      photo?: string;
+    },
+  ) {
+    const data: Record<string, unknown> = {};
+    if (dto.name !== undefined) data.name = dto.name.trim();
+    if (dto.phone !== undefined) data.phone = dto.phone.trim() || null;
+    if (dto.birthDate !== undefined)
+      data.birthDate = dto.birthDate ? new Date(dto.birthDate) : null;
+    if (dto.address !== undefined) data.address = dto.address.trim() || null;
+    if (dto.city !== undefined) data.city = dto.city.trim() || null;
+    if (dto.photo !== undefined) data.photo = dto.photo || null;
+    await this.prisma.member.update({ where: { id: memberId }, data });
+    return this.me(memberId);
+  }
+
+  async createPrayer(
+    churchId: string,
+    memberId: string,
+    dto: { title: string; description?: string; isPublic?: boolean },
+  ) {
+    return this.prisma.prayer.create({
+      data: {
+        churchId,
+        memberId,
+        title: dto.title.trim(),
+        description: dto.description?.trim() || null,
+        visibility: dto.isPublic ? 'PUBLIC' : 'PRIVATE',
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        visibility: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async myPrayers(memberId: string) {
+    return this.prisma.prayer.findMany({
+      where: { memberId },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        visibility: true,
+        createdAt: true,
+      },
+    });
   }
 }
