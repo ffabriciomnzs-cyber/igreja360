@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic';
 // Manifesto PWA por igreja (slug), para o portal ser instalável como app.
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { slug: string } },
+  { params }: { params: Promise<{ slug: string }> },
 ): Promise<Response> {
-  const slug = params.slug;
+  const { slug } = await params;
 
   // Tenta usar o nome da igreja; se falhar, usa um nome genérico.
   let name = 'Portal do Membro';

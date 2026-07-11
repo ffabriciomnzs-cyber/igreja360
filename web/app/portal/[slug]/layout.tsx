@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from 'next';
 
 // Metadados do portal por igreja: liga o manifesto PWA, ícones e modo "app" no iOS.
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
-}): Metadata {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
   return {
-    manifest: `/portal/${params.slug}/manifest.webmanifest`,
+    manifest: `/portal/${slug}/manifest.webmanifest`,
     appleWebApp: {
       capable: true,
       statusBarStyle: 'default',
