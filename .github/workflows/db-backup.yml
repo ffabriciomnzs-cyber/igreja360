@@ -1,0 +1,41 @@
+name: Backup do banco (off-site)
+
+# Backup automático diário do Postgres de produção, guardado como artifact no
+# GitHub (fora do Railway). Complementa o backup nativo do Railway.
+#
+# PASSO ÚNICO NECESSÁRIO (você): adicionar o secret DATABASE_URL no GitHub:
+#   Settings → Secrets and variables → Actions → New repository secret
+#   Name: DATABASE_URL
+#   Value: a connection string do Postgres do Railway (postgresql://...)
+#
+# Para testar sem esperar o horário: aba Actions → "Backup do banco" → Run workflow.
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 06:00 UTC = 03:00 (BRT) todos os dias
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    container: postgres:16 # traz o pg_dump 16 (mesma versão do banco)
+    steps:
+      - name: Gerar dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "❌ Secret DATABASE_URL não configurado. Veja instruções no topo do arquivo."
+            exit 1
+          fi
+          ts=$(date +%Y%m%d-%H%M%S)
+          echo "Gerando backup igreja360-$ts.sql.gz ..."
+          pg_dump "$DATABASE_URL" --no-owner --no-privileges | gzip > "igreja360-$ts.sql.gz"
+          ls -lh igreja360-*.sql.gz
+
+      - name: Enviar backup (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: igreja360-db-backup
+          path: igreja360-*.sql.gz
+          retention-days: 30
