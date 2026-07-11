@@ -4,13 +4,19 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import helmet from '@fastify/helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: false }),
+    // trustProxy: atrás do proxy do Railway, para o rate limit e logs
+    // enxergarem o IP real do cliente (X-Forwarded-For).
+    new FastifyAdapter({ logger: false, trustProxy: true }),
   );
+
+  // Cabeçalhos de segurança (HSTS, no-sniff, etc.). CSP desligado por ser API.
+  await app.register(helmet, { contentSecurityPolicy: false });
 
   app.setGlobalPrefix('v1');
 

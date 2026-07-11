@@ -8,6 +8,8 @@ RUN npm install
 COPY . .
 RUN npx prisma generate && npm run build
 EXPOSE 8080
-# Aplica o schema e sobe a API. O seed NÃO roda no boot (era desnecessário e
-# deixava cada partida lenta); rode manualmente uma vez, se precisar popular.
-CMD npx prisma db push --accept-data-loss && node dist/src/main.js
+# Aplica o schema e sobe a API. SEM --accept-data-loss: mudanças destrutivas
+# (apagar coluna/tabela) fazem o deploy ABORTAR em vez de destruir dados —
+# à prova de perda de dados. Migrations versionadas são o próximo passo.
+# O seed NÃO roda no boot; rode manualmente uma vez, se precisar popular.
+CMD npx prisma db push --skip-generate && node dist/src/main.js
