@@ -8,8 +8,7 @@ RUN npm install
 COPY . .
 RUN npx prisma generate && npm run build
 EXPOSE 8080
-# Aplica o schema e sobe a API. SEM --accept-data-loss: mudanças destrutivas
-# (apagar coluna/tabela) fazem o deploy ABORTAR em vez de destruir dados —
-# à prova de perda de dados. Migrations versionadas são o próximo passo.
-# O seed NÃO roda no boot; rode manualmente uma vez, se precisar popular.
-CMD npx prisma db push --skip-generate && node dist/src/main.js
+# Migrations versionadas + boot da API (ver docker-entrypoint.sh).
+# Substitui o antigo `db push`: agora o schema evolui por migrations auditáveis
+# e à prova de perda de dados. O seed NÃO roda no boot.
+CMD ["sh", "docker-entrypoint.sh"]
