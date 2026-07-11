@@ -83,6 +83,7 @@ export class MembersService {
         maritalStatus: dto.maritalStatus?.trim() || null,
         profession: dto.profession?.trim() || null,
         photo: dto.photo || null,
+        gender: dto.gender ?? null,
         status: dto.status ?? 'ACTIVE',
         role: dto.role ?? null,
         cellId: dto.cellId || null,
@@ -151,6 +152,7 @@ export class MembersService {
     if (dto.profession !== undefined)
       data.profession = dto.profession?.trim() || null;
     if (dto.photo !== undefined) data.photo = dto.photo || null;
+    if (dto.gender !== undefined) data.gender = dto.gender ?? null;
     if (dto.status !== undefined) data.status = dto.status;
     if (dto.role !== undefined) data.role = dto.role ?? null;
     if (dto.cellId !== undefined)

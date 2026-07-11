@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { api, extractApiError } from '@/lib/api';
 import {
   Member,
+  GENDER_LABELS,
   ROLE_LABELS,
   ROLE_OPTIONS,
   STATUS_LABELS,
@@ -28,6 +29,7 @@ interface FormState {
   email: string;
   phone: string;
   cpf: string;
+  gender: string;
   birthDate: string;
   baptismDate: string;
   address: string;
@@ -94,6 +96,7 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
     email: member?.email ?? '',
     phone: member?.phone ?? '',
     cpf: member?.cpf ?? '',
+    gender: member?.gender ?? '',
     birthDate: isoToDateInput(member?.birthDate ?? null),
     baptismDate: isoToDateInput(member?.baptismDate ?? null),
     address: member?.address ?? '',
@@ -165,6 +168,7 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
       email: form.email.trim() || undefined,
       phone: form.phone.trim() || undefined,
       cpf: form.cpf.trim() || undefined,
+      gender: form.gender || undefined,
       birthDate: form.birthDate ? new Date(form.birthDate).toISOString() : undefined,
       baptismDate: form.baptismDate
         ? new Date(form.baptismDate).toISOString()
@@ -297,6 +301,22 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
                 onChange={(e) => update('cpf', e.target.value)}
                 placeholder="000.000.000-00"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gender">Sexo</Label>
+              <Select
+                id="gender"
+                value={form.gender}
+                onChange={(e) => update('gender', e.target.value)}
+              >
+                <option value="">Não informado</option>
+                <option value="MALE">{GENDER_LABELS.MALE}</option>
+                <option value="FEMALE">{GENDER_LABELS.FEMALE}</option>
+              </Select>
+              <p className="text-xs text-slate-400">
+                Define o cargo no masculino/feminino (ex.: Pastor/Pastora).
+              </p>
             </div>
 
             <div className="space-y-2">

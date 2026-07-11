@@ -12,7 +12,7 @@ import { api, extractApiError } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import {
   Member,
-  ROLE_LABELS,
+  roleLabel,
   STATUS_LABELS,
   STATUS_VARIANTS,
 } from '@/lib/members';
@@ -159,7 +159,7 @@ export default function MemberDetailPage(): React.ReactElement {
             </div>
             <Field
               label="Cargo"
-              value={member.role ? ROLE_LABELS[member.role] : null}
+              value={member.role ? roleLabel(member.role, member.gender) : null}
             />
             <Field label="Célula" value={member.cell?.name} />
             <Field

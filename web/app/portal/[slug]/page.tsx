@@ -10,6 +10,7 @@ import {
   PortalMember,
 } from '@/lib/member-api';
 import { PORTAL_BG_VIDEO } from '@/lib/portal-config';
+import { GENDER_LABELS } from '@/lib/members';
 
 type Tab = 'login' | 'register';
 
@@ -24,7 +25,7 @@ export default function PortalLoginPage(): React.ReactElement {
   const [pendingMsg, setPendingMsg] = useState<string | null>(null);
 
   const [login, setLogin] = useState({ email: '', password: '' });
-  const [reg, setReg] = useState({ name: '', email: '', password: '' });
+  const [reg, setReg] = useState({ name: '', email: '', password: '', gender: '' });
 
   const [church, setChurch] = useState<{
     name: string;
@@ -81,10 +82,11 @@ export default function PortalLoginPage(): React.ReactElement {
           name: reg.name.trim(),
           email: reg.email.trim(),
           password: reg.password,
+          gender: reg.gender || undefined,
         },
       );
       setPendingMsg(data.message);
-      setReg({ name: '', email: '', password: '' });
+      setReg({ name: '', email: '', password: '', gender: '' });
     } catch (err) {
       setError(memberApiError(err));
     } finally {
@@ -242,6 +244,22 @@ export default function PortalLoginPage(): React.ReactElement {
                   }
                   className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Sexo
+                </label>
+                <select
+                  value={reg.gender}
+                  onChange={(e) =>
+                    setReg((s) => ({ ...s, gender: e.target.value }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                >
+                  <option value="">Prefiro não informar</option>
+                  <option value="MALE">{GENDER_LABELS.MALE}</option>
+                  <option value="FEMALE">{GENDER_LABELS.FEMALE}</option>
+                </select>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">

@@ -376,6 +376,7 @@ export class PortalService {
         email: true,
         phone: true,
         cpf: true,
+        gender: true,
         photo: true,
         birthDate: true,
         baptismDate: true,
@@ -408,6 +409,7 @@ export class PortalService {
     dto: {
       name?: string;
       phone?: string;
+      gender?: 'MALE' | 'FEMALE';
       birthDate?: string;
       address?: string;
       city?: string;
@@ -417,6 +419,7 @@ export class PortalService {
     const data: Record<string, unknown> = {};
     if (dto.name !== undefined) data.name = dto.name.trim();
     if (dto.phone !== undefined) data.phone = dto.phone.trim() || null;
+    if (dto.gender !== undefined) data.gender = dto.gender ?? null;
     if (dto.birthDate !== undefined)
       data.birthDate = dto.birthDate ? new Date(dto.birthDate) : null;
     if (dto.address !== undefined) data.address = dto.address.trim() || null;

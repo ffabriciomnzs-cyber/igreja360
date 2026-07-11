@@ -7,7 +7,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { MemberRole, MemberStatus } from '@prisma/client';
+import { Gender, MemberRole, MemberStatus } from '@prisma/client';
 
 export class CreateMemberDto {
   @IsString({ message: 'O nome é obrigatório.' })
@@ -65,6 +65,10 @@ export class CreateMemberDto {
   @IsOptional()
   @IsString()
   photo?: string;
+
+  @IsOptional()
+  @IsEnum(Gender, { message: 'Sexo inválido.' })
+  gender?: Gender;
 
   @IsOptional()
   @IsEnum(MemberStatus, { message: 'Status inválido.' })

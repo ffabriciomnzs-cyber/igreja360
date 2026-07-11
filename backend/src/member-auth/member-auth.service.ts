@@ -54,6 +54,7 @@ export class MemberAuthService {
         where: { id: existing.id },
         data: {
           name: dto.name.trim(),
+          ...(dto.gender ? { gender: dto.gender } : {}),
           passwordHash: await bcrypt.hash(dto.password, 10),
           portalStatus: 'PENDING',
         },
@@ -64,6 +65,7 @@ export class MemberAuthService {
           churchId: church.id,
           name: dto.name.trim(),
           email,
+          gender: dto.gender ?? null,
           status: 'VISITOR',
           passwordHash: await bcrypt.hash(dto.password, 10),
           portalStatus: 'PENDING',

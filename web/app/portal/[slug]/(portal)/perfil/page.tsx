@@ -14,7 +14,13 @@ import {
 import { memberApi } from '@/lib/member-api';
 import { fileToCompressedDataUrl } from '@/lib/image';
 import { formatDate } from '@/lib/utils';
-import { ROLE_LABELS, STATUS_LABELS } from '@/lib/members';
+import {
+  GENDER_LABELS,
+  ROLE_LABELS,
+  roleLabel,
+  STATUS_LABELS,
+  type Gender,
+} from '@/lib/members';
 
 interface MeMember {
   id: string;
@@ -22,6 +28,7 @@ interface MeMember {
   email: string | null;
   phone: string | null;
   cpf: string | null;
+  gender: Gender | null;
   photo: string | null;
   birthDate: string | null;
   baptismDate: string | null;
@@ -70,6 +77,7 @@ export default function PerfilPage(): React.ReactElement {
   const [form, setForm] = useState({
     name: '',
     phone: '',
+    gender: '',
     birthDate: '',
     address: '',
     city: '',
@@ -108,6 +116,7 @@ export default function PerfilPage(): React.ReactElement {
     setForm({
       name: me.member.name ?? '',
       phone: me.member.phone ?? '',
+      gender: me.member.gender ?? '',
       birthDate: toDateInput(me.member.birthDate),
       address: me.member.address ?? '',
       city: me.member.city ?? '',
@@ -137,6 +146,7 @@ export default function PerfilPage(): React.ReactElement {
       const { data } = await memberApi.patch<Me>('/member-auth/profile', {
         name: form.name,
         phone: form.phone,
+        gender: form.gender || undefined,
         birthDate: form.birthDate || undefined,
         address: form.address,
         city: form.city,
@@ -230,7 +240,7 @@ export default function PerfilPage(): React.ReactElement {
               {member.name}
             </h3>
             <p className="text-sm text-indigo-600">
-              {member.role ? ROLE_LABELS[member.role] : 'Membro'}
+              {member.role ? roleLabel(member.role, member.gender) : 'Membro'}
             </p>
             <dl className="mt-2 space-y-1 text-xs">
               <div className="flex justify-between gap-2">
@@ -326,6 +336,22 @@ export default function PerfilPage(): React.ReactElement {
                 />
               </div>
             ))}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">
+                Sexo
+              </label>
+              <select
+                value={form.gender}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, gender: e.target.value }))
+                }
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              >
+                <option value="">Não informado</option>
+                <option value="MALE">{GENDER_LABELS.MALE}</option>
+                <option value="FEMALE">{GENDER_LABELS.FEMALE}</option>
+              </select>
+            </div>
             <p className="text-xs text-slate-400">
               Para alterar seu e-mail de acesso, fale com a secretaria.
             </p>

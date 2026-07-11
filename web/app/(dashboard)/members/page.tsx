@@ -27,7 +27,7 @@ import {
   STATUS_LABELS,
   STATUS_OPTIONS,
   STATUS_VARIANTS,
-  ROLE_LABELS,
+  roleLabel,
 } from '@/lib/members';
 
 export default function MembersPage(): React.ReactElement {
@@ -224,7 +224,7 @@ export default function MembersPage(): React.ReactElement {
                         )}
                       </td>
                       <td className="px-4 py-3 text-slate-600">
-                        {m.role ? ROLE_LABELS[m.role] : '—'}
+                        {m.role ? roleLabel(m.role, m.gender) : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={STATUS_VARIANTS[m.status]}>
@@ -292,7 +292,7 @@ export default function MembersPage(): React.ReactElement {
                       <p className="text-xs text-slate-500">{m.phone}</p>
                     )}
                     <p className="text-xs text-slate-500">
-                      {m.role ? ROLE_LABELS[m.role] : 'Sem cargo'} · Entrada:{' '}
+                      {m.role ? roleLabel(m.role, m.gender) : 'Sem cargo'} · Entrada:{' '}
                       {m.joinedAt ? formatDate(m.joinedAt) : '—'}
                     </p>
                   </div>

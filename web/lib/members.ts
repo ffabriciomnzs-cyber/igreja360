@@ -13,12 +13,15 @@ export type MemberRole =
   | 'WORKER'
   | 'MEMBER';
 
+export type Gender = 'MALE' | 'FEMALE';
+
 export interface Member {
   id: string;
   name: string;
   email: string | null;
   phone: string | null;
   cpf: string | null;
+  gender: Gender | null;
   birthDate: string | null;
   baptismDate: string | null;
   address: string | null;
@@ -106,6 +109,26 @@ export const ROLE_LABELS: Record<MemberRole, string> = {
   PASTOR: 'Pastor',
   WORKER: 'Obreiro',
   MEMBER: 'Membro',
+};
+
+// Cargos no feminino (usados quando o sexo do membro é feminino).
+export const ROLE_LABELS_FEMALE: Record<MemberRole, string> = {
+  DEACON: 'Diaconisa',
+  ELDER: 'Presbítera',
+  EVANGELIST: 'Evangelista',
+  PASTOR: 'Pastora',
+  WORKER: 'Obreira',
+  MEMBER: 'Membro',
+};
+
+// Rótulo do cargo já flexionado pelo sexo (feminino quando gender === 'FEMALE').
+export function roleLabel(role: MemberRole, gender?: Gender | null): string {
+  return gender === 'FEMALE' ? ROLE_LABELS_FEMALE[role] : ROLE_LABELS[role];
+}
+
+export const GENDER_LABELS: Record<Gender, string> = {
+  MALE: 'Masculino',
+  FEMALE: 'Feminino',
 };
 
 export const STATUS_OPTIONS: MemberStatus[] = [

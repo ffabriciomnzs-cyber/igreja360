@@ -184,6 +184,7 @@ model Member {
   email     String?
   phone     String?
   cpf       String?
+  gender    Gender?
   birthDate DateTime?
   baptismDate DateTime?
   address   String?

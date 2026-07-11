@@ -1,4 +1,11 @@
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+import { Gender } from '@prisma/client';
 
 export class UpdateMemberProfileDto {
   @IsOptional()
@@ -11,6 +18,10 @@ export class UpdateMemberProfileDto {
   @IsString()
   @MaxLength(40)
   phone?: string;
+
+  @IsOptional()
+  @IsEnum(Gender, { message: 'Sexo inválido.' })
+  gender?: Gender;
 
   @IsOptional()
   @IsString()

@@ -10,7 +10,7 @@ import { api, extractApiError } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import {
   MemberCardData,
-  ROLE_LABELS,
+  roleLabel,
   STATUS_LABELS,
 } from '@/lib/members';
 
@@ -165,7 +165,7 @@ export default function MemberCardPage(): React.ReactElement {
                 {member.name}
               </h3>
               <p className="text-sm text-indigo-600">
-                {member.role ? ROLE_LABELS[member.role] : 'Membro'}
+                {member.role ? roleLabel(member.role, member.gender) : 'Membro'}
               </p>
 
               <dl className="mt-3 grid grid-cols-1 gap-1.5 text-xs">
