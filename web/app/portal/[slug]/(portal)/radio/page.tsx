@@ -1,9 +1,9 @@
 'use client';
 
-import { useRef, useState } from 'react';
 import { Play, Pause, Loader2, Radio as RadioIcon } from 'lucide-react';
-import { RADIO_STATIONS, RadioStation } from '@/lib/radio';
+import { RADIO_STATIONS } from '@/lib/radio';
 import { cn } from '@/lib/utils';
+import { useRadioPlayer } from '@/components/portal/radio-player';
 
 function Equalizer(): React.ReactElement {
   return (
@@ -25,64 +25,22 @@ function Equalizer(): React.ReactElement {
 }
 
 export default function PortalRadioPage(): React.ReactElement {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [current, setCurrent] = useState<RadioStation | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  function selectStation(station: RadioStation): void {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (current?.url === station.url) {
-      if (playing) audio.pause();
-      else void audio.play().catch(() => undefined);
-      return;
-    }
-    setCurrent(station);
-    setLoading(true);
-    audio.src = station.url;
-    audio.load();
-    void audio.play().catch(() => {
-      setLoading(false);
-      setPlaying(false);
-    });
-  }
-
-  function toggleCurrent(): void {
-    const audio = audioRef.current;
-    if (!audio || !current) return;
-    if (playing) audio.pause();
-    else void audio.play().catch(() => undefined);
-  }
+  const { current, playing, loading, select, toggle } = useRadioPlayer();
 
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-xl font-bold text-slate-900">Rádio Gospel 📻</h1>
         <p className="text-sm text-slate-500">
-          Ouça louvor enquanto navega pelo portal.
+          Continua tocando enquanto você navega pelo portal.
         </p>
       </div>
-
-      <audio
-        ref={audioRef}
-        onPlaying={() => {
-          setPlaying(true);
-          setLoading(false);
-        }}
-        onPause={() => setPlaying(false)}
-        onWaiting={() => setLoading(true)}
-        onError={() => {
-          setLoading(false);
-          setPlaying(false);
-        }}
-      />
 
       {/* Tocando agora */}
       {current && (
         <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 p-5 text-white shadow-lg">
           <button
-            onClick={toggleCurrent}
+            onClick={toggle}
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-indigo-700 shadow-md transition-transform hover:scale-105"
           >
             {loading ? (
@@ -114,7 +72,7 @@ export default function PortalRadioPage(): React.ReactElement {
           return (
             <button
               key={station.url}
-              onClick={() => selectStation(station)}
+              onClick={() => select(station)}
               className={cn(
                 'flex w-full items-center gap-3 rounded-2xl border bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md',
                 active

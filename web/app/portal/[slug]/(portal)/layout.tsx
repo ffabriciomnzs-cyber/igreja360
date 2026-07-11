@@ -12,6 +12,8 @@ import {
 } from '@/lib/member-api';
 import { cn } from '@/lib/utils';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { RadioPlayerProvider } from '@/components/portal/radio-player';
+import { RadioMiniBar } from '@/components/portal/RadioMiniBar';
 
 export default function PortalLayout({
   children,
@@ -73,6 +75,7 @@ export default function PortalLayout({
   ];
 
   return (
+    <RadioPlayerProvider>
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-indigo-50/60 pb-28">
       <header className="sticky top-0 z-30 bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-600 text-white shadow-lg">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 py-3.5">
@@ -114,6 +117,7 @@ export default function PortalLayout({
       <main className="mx-auto max-w-2xl p-4">{children}</main>
 
       <InstallPrompt />
+      <RadioMiniBar />
 
       <nav className="fixed inset-x-0 bottom-0 z-30 px-3 pb-3">
         <div className="mx-auto flex max-w-md items-center justify-around rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.15)] backdrop-blur">
@@ -150,5 +154,6 @@ export default function PortalLayout({
         </div>
       </nav>
     </div>
+    </RadioPlayerProvider>
   );
 }
