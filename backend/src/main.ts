@@ -32,6 +32,10 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin: corsOrigin === '*' ? true : corsOrigin.split(','),
     credentials: true,
+    // Métodos explícitos: sem isso, o Fastify 5 anunciava só GET,HEAD,POST no
+    // preflight e o navegador bloqueava PATCH/PUT/DELETE (todo salvar/excluir).
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   const port = Number(process.env.PORT ?? 3000);
