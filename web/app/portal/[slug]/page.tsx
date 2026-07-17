@@ -25,7 +25,13 @@ export default function PortalLoginPage(): React.ReactElement {
   const [pendingMsg, setPendingMsg] = useState<string | null>(null);
 
   const [login, setLogin] = useState({ email: '', password: '' });
-  const [reg, setReg] = useState({ name: '', email: '', password: '', gender: '' });
+  const [reg, setReg] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    gender: '',
+  });
 
   const [church, setChurch] = useState<{
     name: string;
@@ -81,12 +87,13 @@ export default function PortalLoginPage(): React.ReactElement {
           slug,
           name: reg.name.trim(),
           email: reg.email.trim(),
+          phone: reg.phone.trim() || undefined,
           password: reg.password,
           gender: reg.gender || undefined,
         },
       );
       setPendingMsg(data.message);
-      setReg({ name: '', email: '', password: '', gender: '' });
+      setReg({ name: '', email: '', phone: '', password: '', gender: '' });
     } catch (err) {
       setError(memberApiError(err));
     } finally {
@@ -194,15 +201,16 @@ export default function PortalLoginPage(): React.ReactElement {
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">
-                  E-mail
+                  E-mail ou telefone
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={login.email}
                   onChange={(e) =>
                     setLogin((s) => ({ ...s, email: e.target.value }))
                   }
+                  placeholder="seu@email.com ou (00) 90000-0000"
                   className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
@@ -274,6 +282,24 @@ export default function PortalLoginPage(): React.ReactElement {
                   }
                   className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Telefone (WhatsApp)
+                </label>
+                <input
+                  type="tel"
+                  value={reg.phone}
+                  onChange={(e) =>
+                    setReg((s) => ({ ...s, phone: e.target.value }))
+                  }
+                  placeholder="(00) 90000-0000"
+                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                />
+                <p className="mt-1 text-xs text-slate-400">
+                  Se a igreja já tem seu telefone cadastrado, seu acesso é
+                  vinculado ao cadastro existente (sem duplicar).
+                </p>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">

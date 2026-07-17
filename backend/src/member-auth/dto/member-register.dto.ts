@@ -24,6 +24,11 @@ export class MemberRegisterDto {
   @IsEmail({}, { message: 'E-mail inválido.' })
   email!: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(20, { message: 'Telefone inválido.' })
+  phone?: string;
+
   @IsString()
   @MinLength(6, { message: 'A senha deve ter ao menos 6 caracteres.' })
   @MaxLength(72)
