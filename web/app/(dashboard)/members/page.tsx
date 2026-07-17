@@ -12,6 +12,7 @@ import {
   Users,
   Upload,
   UserCheck,
+  Merge,
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -110,6 +111,12 @@ export default function MembersPage(): React.ReactElement {
                     {pendingRequests}
                   </span>
                 )}
+              </Button>
+            </Link>
+            <Link href="/members/duplicates">
+              <Button variant="outline">
+                <Merge className="h-4 w-4" />
+                Duplicados
               </Button>
             </Link>
             <Link href="/members/import">

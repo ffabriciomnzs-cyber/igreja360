@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMemberDto } from './dto/create-member.dto';
@@ -8,6 +12,22 @@ import { QueryMembersDto } from './dto/query-members.dto';
 const memberInclude = {
   cell: { select: { id: true, name: true } },
 } satisfies Prisma.MemberInclude;
+
+// Chave de comparação de telefone: só dígitos, sem o código do país (55).
+function phoneKey(v?: string | null): string {
+  let d = (v ?? '').replace(/\D/g, '');
+  if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
+  return d;
+}
+
+// Ranking de status para escolher o "mais ativo" ao mesclar.
+const STATUS_RANK: Record<string, number> = {
+  ACTIVE: 5,
+  VISITOR: 4,
+  INACTIVE: 3,
+  TRANSFERRED: 2,
+  DECEASED: 1,
+};
 
 @Injectable()
 export class MembersService {
@@ -220,6 +240,219 @@ export class MembersService {
     });
 
     return { member, church };
+  }
+
+  // Detecta grupos de cadastros que parecem a MESMA pessoa (mesmo telefone
+  // normalizado OU mesmo e-mail). Usa union-find para juntar grupos que se
+  // conectam por telefone e/ou e-mail.
+  async duplicates(churchId: string) {
+    const members = await this.prisma.member.findMany({
+      where: { churchId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        gender: true,
+        status: true,
+        role: true,
+        portalStatus: true,
+        photo: true,
+        city: true,
+        createdAt: true,
+        joinedAt: true,
+        cell: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const parent = new Map<string, string>();
+    const find = (x: string): string => {
+      let r = x;
+      while (parent.get(r) !== r) r = parent.get(r) as string;
+      let c = x;
+      while (parent.get(c) !== r) {
+        const n = parent.get(c) as string;
+        parent.set(c, r);
+        c = n;
+      }
+      return r;
+    };
+    const union = (a: string, b: string): void => {
+      parent.set(find(a), find(b));
+    };
+    members.forEach((m) => parent.set(m.id, m.id));
+
+    const byPhone = new Map<string, string>();
+    const byEmail = new Map<string, string>();
+    for (const m of members) {
+      const pk = phoneKey(m.phone);
+      if (pk) {
+        if (byPhone.has(pk)) union(m.id, byPhone.get(pk) as string);
+        else byPhone.set(pk, m.id);
+      }
+      const ek = (m.email ?? '').toLowerCase().trim();
+      if (ek) {
+        if (byEmail.has(ek)) union(m.id, byEmail.get(ek) as string);
+        else byEmail.set(ek, m.id);
+      }
+    }
+
+    const groups = new Map<string, typeof members>();
+    for (const m of members) {
+      const root = find(m.id);
+      const arr = groups.get(root) ?? [];
+      arr.push(m);
+      groups.set(root, arr);
+    }
+
+    return [...groups.values()]
+      .filter((g) => g.length > 1)
+      .map((g) => ({
+        // sugere manter o mais antigo (cadastro original da igreja)
+        suggestedKeepId: g[0].id,
+        members: g,
+      }));
+  }
+
+  // Mescla o cadastro `dropId` no `keepId`: preenche campos faltantes, reatribui
+  // toda a atividade (orações, cultos, devocional) e apaga o duplicado.
+  async merge(churchId: string, keepId: string, dropId: string) {
+    if (keepId === dropId) {
+      throw new BadRequestException('Selecione dois cadastros diferentes.');
+    }
+    const keep = await this.prisma.member.findFirst({
+      where: { id: keepId, churchId },
+    });
+    const drop = await this.prisma.member.findFirst({
+      where: { id: dropId, churchId },
+    });
+    if (!keep || !drop) {
+      throw new NotFoundException('Cadastro não encontrado.');
+    }
+
+    const data: Prisma.MemberUpdateInput = {};
+    const inherit: (keyof typeof keep)[] = [
+      'email',
+      'phone',
+      'cpf',
+      'gender',
+      'birthDate',
+      'baptismDate',
+      'address',
+      'city',
+      'rg',
+      'maritalStatus',
+      'profession',
+      'photo',
+      'role',
+      'passwordHash',
+      'joinedAt',
+    ];
+    for (const f of inherit) {
+      if (keep[f] == null && drop[f] != null) {
+        (data as Record<string, unknown>)[f] = drop[f];
+      }
+    }
+    if (!keep.cellId && drop.cellId) {
+      data.cell = { connect: { id: drop.cellId } };
+    }
+    if (keep.portalStatus === 'NONE' && drop.portalStatus !== 'NONE') {
+      data.portalStatus = drop.portalStatus;
+    }
+    if ((STATUS_RANK[drop.status] ?? 0) > (STATUS_RANK[keep.status] ?? 0)) {
+      data.status = drop.status;
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      // Tabelas sem restrição única: reatribui direto.
+      await tx.prayer.updateMany({
+        where: { memberId: dropId },
+        data: { memberId: keepId },
+      });
+      await tx.worshipParticipant.updateMany({
+        where: { memberId: dropId },
+        data: { memberId: keepId },
+      });
+
+      // Tabelas de devocional únicas por dia: move o que o keeper não tem e
+      // apaga o resto do drop (evita violar @@unique([memberId, day])).
+      const dpDays = (
+        await tx.devotionalPrayer.findMany({
+          where: { memberId: keepId },
+          select: { day: true },
+        })
+      ).map((r) => r.day);
+      await tx.devotionalPrayer.updateMany({
+        where: { memberId: dropId, day: { notIn: dpDays } },
+        data: { memberId: keepId },
+      });
+      await tx.devotionalPrayer.deleteMany({ where: { memberId: dropId } });
+
+      const dcDays = (
+        await tx.devotionalCompletion.findMany({
+          where: { memberId: keepId },
+          select: { day: true },
+        })
+      ).map((r) => r.day);
+      await tx.devotionalCompletion.updateMany({
+        where: { memberId: dropId, day: { notIn: dcDays } },
+        data: { memberId: keepId },
+      });
+      await tx.devotionalCompletion.deleteMany({ where: { memberId: dropId } });
+
+      const dnDays = (
+        await tx.devotionalNote.findMany({
+          where: { memberId: keepId },
+          select: { day: true },
+        })
+      ).map((r) => r.day);
+      await tx.devotionalNote.updateMany({
+        where: { memberId: dropId, day: { notIn: dnDays } },
+        data: { memberId: keepId },
+      });
+      await tx.devotionalNote.deleteMany({ where: { memberId: dropId } });
+
+      const drDays = (
+        await tx.devotionalReaction.findMany({
+          where: { memberId: keepId },
+          select: { day: true },
+        })
+      ).map((r) => r.day);
+      await tx.devotionalReaction.updateMany({
+        where: { memberId: dropId, day: { notIn: drDays } },
+        data: { memberId: keepId },
+      });
+      await tx.devotionalReaction.deleteMany({ where: { memberId: dropId } });
+
+      // Plan progress: único por (memberId, planId, dayNumber).
+      const keepProg = await tx.devotionalPlanProgress.findMany({
+        where: { memberId: keepId },
+        select: { planId: true, dayNumber: true },
+      });
+      const seen = new Set(keepProg.map((p) => `${p.planId}|${p.dayNumber}`));
+      const dropProg = await tx.devotionalPlanProgress.findMany({
+        where: { memberId: dropId },
+        select: { id: true, planId: true, dayNumber: true },
+      });
+      const moveIds = dropProg
+        .filter((p) => !seen.has(`${p.planId}|${p.dayNumber}`))
+        .map((p) => p.id);
+      if (moveIds.length) {
+        await tx.devotionalPlanProgress.updateMany({
+          where: { id: { in: moveIds } },
+          data: { memberId: keepId },
+        });
+      }
+      await tx.devotionalPlanProgress.deleteMany({
+        where: { memberId: dropId },
+      });
+
+      await tx.member.update({ where: { id: keepId }, data });
+      await tx.member.delete({ where: { id: dropId } });
+    });
+
+    return this.findOne(churchId, keepId);
   }
 
   async stats(churchId: string) {

@@ -15,6 +15,7 @@ import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { QueryMembersDto } from './dto/query-members.dto';
 import { ImportMembersDto } from './dto/import-members.dto';
+import { MergeMembersDto } from './dto/merge-members.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -44,6 +45,23 @@ export class MembersController {
   @Get()
   findAll(@CurrentUser() user: AuthUser, @Query() query: QueryMembersDto) {
     return this.membersService.findAll(user.churchId, query);
+  }
+
+  @Get('duplicates')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.PASTOR,
+    UserRole.SECRETARY,
+  )
+  duplicates(@CurrentUser() user: AuthUser) {
+    return this.membersService.duplicates(user.churchId);
+  }
+
+  @Post('merge')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.PASTOR)
+  merge(@CurrentUser() user: AuthUser, @Body() dto: MergeMembersDto) {
+    return this.membersService.merge(user.churchId, dto.keepId, dto.dropId);
   }
 
   @Get('portal/pending')
