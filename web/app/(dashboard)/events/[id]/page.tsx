@@ -120,12 +120,12 @@ export default function EventDetailPage(): React.ReactElement {
       />
 
       {event.photo && (
-        <div className="mb-4 overflow-hidden rounded-lg">
+        <div className="mb-4 flex justify-center overflow-hidden rounded-lg bg-slate-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={event.photo}
             alt={event.name}
-            className="max-h-72 w-full object-cover"
+            className="max-h-96 w-full object-contain"
           />
         </div>
       )}

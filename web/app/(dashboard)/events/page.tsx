@@ -145,13 +145,13 @@ export default function EventsPage(): React.ReactElement {
           {events.map((ev) => (
             <Card key={ev.id} className="flex flex-col overflow-hidden">
               <Link href={`/events/${ev.id}`}>
-                <div className="flex h-32 items-center justify-center bg-gradient-to-br from-indigo-500 to-indigo-700">
+                <div className="flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-500 to-indigo-700">
                   {ev.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={ev.photo}
                       alt={ev.name}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-contain"
                     />
                   ) : (
                     <CalendarDays className="h-10 w-10 text-white/70" />
