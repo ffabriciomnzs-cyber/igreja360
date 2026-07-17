@@ -154,6 +154,19 @@ model DevotionalPlanDay {
   @@index([planId])
 }
 
+model PushSubscription {
+  id        String   @id @default(cuid())
+  churchId  String
+  memberId  String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([churchId])
+  @@index([memberId])
+}
+
 model DevotionalPlanProgress {
   id        String   @id @default(cuid())
   churchId  String

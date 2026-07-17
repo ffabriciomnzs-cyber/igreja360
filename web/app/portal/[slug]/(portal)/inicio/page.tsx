@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
 import { formatCurrency } from '@/lib/utils';
+import { EnableNotifications } from '@/components/portal/EnableNotifications';
 
 interface PortalHome {
   announcements: {
@@ -133,6 +134,8 @@ export default function PortalInicioPage(): React.ReactElement {
 
   return (
     <div className="space-y-6">
+      <EnableNotifications />
+
       {/* Atalhos rápidos */}
       <div className="grid grid-cols-2 gap-3">
         <Link

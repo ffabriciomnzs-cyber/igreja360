@@ -17,6 +17,7 @@ import { WorshipModule } from './worship/worship.module';
 import { UsersModule } from './users/users.module';
 import { MemberAuthModule } from './member-auth/member-auth.module';
 import { DevotionalsModule } from './devotionals/devotionals.module';
+import { PushModule } from './push/push.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -40,6 +41,7 @@ import { HealthController } from './health.controller';
     UsersModule,
     MemberAuthModule,
     DevotionalsModule,
+    PushModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

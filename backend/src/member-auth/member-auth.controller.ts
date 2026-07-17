@@ -19,13 +19,41 @@ import { CreatePrayerDto } from './dto/create-prayer.dto';
 import { UpdateMemberProfileDto } from './dto/update-member-profile.dto';
 import { MemberJwtGuard, MemberPrincipal } from './member-jwt.guard';
 import { CurrentMember } from './current-member.decorator';
+import { PushService } from '../push/push.service';
 
 @Controller('member-auth')
 export class MemberAuthController {
   constructor(
     private readonly memberAuth: MemberAuthService,
     private readonly portal: PortalService,
+    private readonly push: PushService,
   ) {}
+
+  // Chave pública VAPID p/ o membro se inscrever nas notificações (null se off).
+  @Get('push/key')
+  pushKey() {
+    return { key: this.push.getPublicKey() };
+  }
+
+  @Post('push/subscribe')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  async pushSubscribe(
+    @CurrentMember() member: MemberPrincipal,
+    @Body()
+    body: { endpoint: string; keys: { p256dh: string; auth: string } },
+  ) {
+    await this.push.saveSubscription(member.churchId, member.id, body);
+    return { ok: true };
+  }
+
+  @Post('push/unsubscribe')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  async pushUnsubscribe(@Body() body: { endpoint: string }) {
+    await this.push.removeSubscription(body?.endpoint);
+    return { ok: true };
+  }
 
   @Get('church/:slug')
   churchInfo(@Param('slug') slug: string) {

@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { PushService } from '../push/push.service';
 import { CreateCommunicationDto } from './dto/create-communication.dto';
 import { UpdateCommunicationDto } from './dto/update-communication.dto';
 
 @Injectable()
 export class CommunicationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly push: PushService,
+  ) {}
 
   async findAll(churchId: string) {
     return this.prisma.communication.findMany({
@@ -23,7 +27,7 @@ export class CommunicationsService {
   }
 
   async create(churchId: string, authorId: string, dto: CreateCommunicationDto) {
-    return this.prisma.communication.create({
+    const comm = await this.prisma.communication.create({
       data: {
         churchId,
         authorId,
@@ -32,6 +36,25 @@ export class CommunicationsService {
         type: dto.type?.trim() || 'NOTICE',
       },
     });
+    // Notifica os membros por push (não bloqueia nem falha a criação).
+    void this.notifyMembers(churchId, comm.title);
+    return comm;
+  }
+
+  private async notifyMembers(churchId: string, title: string): Promise<void> {
+    try {
+      const church = await this.prisma.church.findUnique({
+        where: { id: churchId },
+        select: { slug: true },
+      });
+      await this.push.sendToChurch(churchId, {
+        title: '📢 Novo aviso da igreja',
+        body: title,
+        url: church?.slug ? `/portal/${church.slug}/inicio` : undefined,
+      });
+    } catch {
+      /* push é best-effort */
+    }
   }
 
   async update(churchId: string, id: string, dto: UpdateCommunicationDto) {
