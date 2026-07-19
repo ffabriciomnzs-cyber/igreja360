@@ -74,7 +74,8 @@ export class CellsService {
       where: { id, churchId },
       include: {
         members: {
-          select: { id: true, name: true, status: true, role: true, photo: true },
+          // sem `photo`: base64 pesado e não exibido na tela da célula
+          select: { id: true, name: true, status: true, role: true },
           orderBy: { name: 'asc' },
         },
         meetings: { orderBy: { date: 'desc' } },

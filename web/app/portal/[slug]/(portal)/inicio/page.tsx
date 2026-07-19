@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
 import { formatCurrency } from '@/lib/utils';
+import { useCached } from '@/lib/use-cached';
 import { EnableNotifications } from '@/components/portal/EnableNotifications';
 
 interface PortalHome {
@@ -103,24 +103,11 @@ export default function PortalInicioPage(): React.ReactElement {
   const params = useParams();
   const slug = String(params.slug);
   const base = `/portal/${slug}`;
-  const [data, setData] = useState<PortalHome | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    memberApi
-      .get<PortalHome>('/member-auth/home')
-      .then(({ data }) => {
-        if (mounted) setData(data);
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // Cache + revalidação em segundo plano: ao voltar para esta aba a tela
+  // aparece na hora com o conteúdo anterior, sem "Carregando...".
+  const { data, loading } = useCached<PortalHome>('portal-home', () =>
+    memberApi.get<PortalHome>('/member-auth/home').then((r) => r.data),
+  );
 
   if (loading) {
     return (

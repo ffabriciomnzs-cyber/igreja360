@@ -14,6 +14,7 @@ import {
   NotebookPen,
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
+import { useCached, setCached } from '@/lib/use-cached';
 import { devotionalOfDay, daySeed } from '@/lib/daily-devotional';
 import { generateVerseImage } from '@/lib/verse-image';
 
@@ -37,6 +38,8 @@ const REACTIONS: { type: string; emoji: string; label: string }[] = [
 ];
 
 const WEEKDAY = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+const DEVOTIONAL_CACHE_KEY = 'portal-devotional';
 
 function brTodayStr(): string {
   const br = new Date(Date.now() - 3 * 60 * 60 * 1000);
@@ -65,7 +68,6 @@ export default function DevocionalPage(): React.ReactElement {
 
   const [count, setCount] = useState(0);
   const [joined, setJoined] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [completed, setCompleted] = useState(false);
@@ -89,31 +91,35 @@ export default function DevocionalPage(): React.ReactElement {
     ? `https://www.youtube.com/results?search_query=${encodeURIComponent(daily.song)}`
     : null;
 
+  // Cache + revalidação: ao voltar para o Devocional a tela abre na hora.
+  const { data: initial, loading } = useCached<DevotionalResponse>(
+    DEVOTIONAL_CACHE_KEY,
+    () =>
+      memberApi
+        .get<DevotionalResponse>('/member-auth/devotional')
+        .then((r) => r.data),
+  );
+
+  // Após uma ação, atualiza o cache para não voltar dado velho ao renavegar.
+  const syncCache = (patch: Partial<DevotionalResponse>): void => {
+    setCached<DevotionalResponse>(DEVOTIONAL_CACHE_KEY, (prev) =>
+      prev ? { ...prev, ...patch } : ({ ...patch } as DevotionalResponse),
+    );
+  };
+
   useEffect(() => {
-    let mounted = true;
-    memberApi
-      .get<DevotionalResponse>('/member-auth/devotional')
-      .then(({ data }) => {
-        if (!mounted) return;
-        setCount(data.count);
-        setJoined(data.joined);
-        setCompleted(data.completed);
-        setStreak(data.streak);
-        setHistory(data.history ?? []);
-        setReactions(data.reactions ?? {});
-        setMyReaction(data.myReaction);
-        setNote(data.note ?? '');
-        setSavedNote(data.note ?? '');
-        setChurchName(data.churchName ?? '');
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    if (!initial) return;
+    setCount(initial.count);
+    setJoined(initial.joined);
+    setCompleted(initial.completed);
+    setStreak(initial.streak);
+    setHistory(initial.history ?? []);
+    setReactions(initial.reactions ?? {});
+    setMyReaction(initial.myReaction);
+    setNote(initial.note ?? '');
+    setSavedNote(initial.note ?? '');
+    setChurchName(initial.churchName ?? '');
+  }, [initial]);
 
   // Gera a imagem do versículo do dia para compartilhar.
   useEffect(() => {
@@ -144,6 +150,7 @@ export default function DevocionalPage(): React.ReactElement {
       );
       setCount(data.count);
       setJoined(data.joined);
+      syncCache({ count: data.count, joined: data.joined });
     } catch {
       /* ignora */
     } finally {
@@ -163,6 +170,11 @@ export default function DevocionalPage(): React.ReactElement {
       setCompleted(data.completed);
       setStreak(data.streak);
       setHistory(data.history ?? []);
+      syncCache({
+        completed: data.completed,
+        streak: data.streak,
+        history: data.history ?? [],
+      });
     } catch {
       /* ignora */
     } finally {
@@ -178,6 +190,10 @@ export default function DevocionalPage(): React.ReactElement {
       }>('/member-auth/devotional/react', { type });
       setReactions(data.reactions ?? {});
       setMyReaction(data.myReaction);
+      syncCache({
+        reactions: data.reactions ?? {},
+        myReaction: data.myReaction,
+      });
     } catch {
       /* ignora */
     }
@@ -192,6 +208,7 @@ export default function DevocionalPage(): React.ReactElement {
         { text: note },
       );
       setSavedNote(data.note ?? '');
+      syncCache({ note: data.note });
       setNoteSaved(true);
       setTimeout(() => setNoteSaved(false), 2500);
     } catch {

@@ -13,6 +13,35 @@ const memberInclude = {
   cell: { select: { id: true, name: true } },
 } satisfies Prisma.MemberInclude;
 
+// Seleção para LISTAGENS: tudo, menos `photo`. A foto é um data URL base64
+// (dezenas de KB por membro) e nenhuma listagem a exibe — mandá-la inflava a
+// resposta de /members para ~511 KB com 20 membros. Detalhe/carteirinha
+// continuam usando `memberInclude` (com foto).
+const memberListSelect = {
+  id: true,
+  churchId: true,
+  name: true,
+  email: true,
+  phone: true,
+  cpf: true,
+  gender: true,
+  birthDate: true,
+  baptismDate: true,
+  address: true,
+  city: true,
+  rg: true,
+  maritalStatus: true,
+  profession: true,
+  status: true,
+  role: true,
+  portalStatus: true,
+  cellId: true,
+  joinedAt: true,
+  createdAt: true,
+  updatedAt: true,
+  cell: { select: { id: true, name: true } },
+} satisfies Prisma.MemberSelect;
+
 // Chave de comparação de telefone: só dígitos, sem o código do país (55).
 function phoneKey(v?: string | null): string {
   let d = (v ?? '').replace(/\D/g, '');
@@ -59,7 +88,7 @@ export class MembersService {
     const [data, total] = await this.prisma.$transaction([
       this.prisma.member.findMany({
         where,
-        include: memberInclude,
+        select: memberListSelect,
         orderBy: { name: 'asc' },
         skip,
         take: limit,
@@ -257,7 +286,8 @@ export class MembersService {
         status: true,
         role: true,
         portalStatus: true,
-        photo: true,
+        // sem `photo`: varre TODOS os membros da igreja; base64 deixaria a
+        // resposta na casa dos MB e a tela de duplicados não exibe a foto.
         city: true,
         createdAt: true,
         joinedAt: true,
