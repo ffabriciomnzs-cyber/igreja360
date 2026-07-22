@@ -85,7 +85,39 @@ async function main(): Promise<void> {
     });
   }
 
+  // Membro COM acesso ao portal. Sem isto não dá para abrir o portal em
+  // desenvolvimento: os membros acima não têm senha, e o cadastro pelo site
+  // nasce PENDING (precisa de aprovação de um admin).
+  const membroSenha = 'Membro@2024';
+  const membroEmail = 'membro@demo-church.com.br';
+  await prisma.member.upsert({
+    where: { id: 'seed-membro-portal' },
+    update: {
+      passwordHash: await bcrypt.hash(membroSenha, 10),
+      portalStatus: 'APPROVED',
+    },
+    create: {
+      id: 'seed-membro-portal',
+      churchId: church.id,
+      name: 'Membro do Portal',
+      email: membroEmail,
+      phone: '(11) 98888-0000',
+      passwordHash: await bcrypt.hash(membroSenha, 10),
+      portalStatus: 'APPROVED',
+      status: 'ACTIVE',
+      role: 'MEMBER',
+      gender: 'MALE',
+      birthDate: new Date('1990-05-10T12:00:00Z'),
+    },
+  });
+
   console.log('Seed concluído. Igreja: %s', church.name);
+  console.log(
+    'Portal do membro: /portal/%s — %s / %s',
+    church.slug,
+    membroEmail,
+    membroSenha,
+  );
 }
 
 main()
