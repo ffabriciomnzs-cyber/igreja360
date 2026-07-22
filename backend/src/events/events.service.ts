@@ -78,12 +78,14 @@ export class EventsService {
       month: '2-digit',
       timeZone: 'America/Sao_Paulo',
     });
+    // .catch: garante que uma falha no push jamais vire unhandled rejection
+    // (o `void` sozinho nao captura), o que poderia derrubar o processo.
     void this.push.notifyChurch(
       churchId,
       '📅 Novo evento',
       `${created.name} — ${quando}`,
       'events',
-    );
+    ).catch(() => undefined);
     return created;
   }
 

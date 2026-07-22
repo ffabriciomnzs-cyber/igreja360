@@ -68,7 +68,7 @@ export function EventForm({ event }: EventFormProps): React.ReactElement {
       return;
     }
     try {
-      setPhoto(await fileToCompressedDataUrl(file));
+      setPhoto(await fileToCompressedDataUrl(file, 1200, 0.75, 'jpeg'));
       setError(null);
     } catch {
       setError('Não foi possível carregar a imagem.');

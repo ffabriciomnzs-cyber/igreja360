@@ -4,6 +4,8 @@
   "description": "Igreja360 API - NestJS + Prisma",
   "license": "UNLICENSED",
   "scripts": {
+    "test": "./test/run-with-db.sh",
+    "test:watch": "./test/run-with-db.sh --watch",
     "build": "nest build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
@@ -49,12 +51,18 @@
   "devDependencies": {
     "@nestjs/cli": "^11.0.24",
     "@nestjs/schematics": "^11.1.0",
+    "@nestjs/testing": "^11.1.28",
     "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.7.4",
     "@types/passport-jwt": "^4.0.1",
     "@types/pdfkit": "^0.13.5",
     "@types/qrcode": "^1.5.5",
+    "@types/supertest": "^7.2.1",
+    "jest": "^30.4.2",
     "prisma": "^5.20.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.2"

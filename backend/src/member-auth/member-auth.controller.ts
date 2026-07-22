@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { THROTTLE_LOGIN } from '../throttle.config';
 import { MemberAuthService } from './member-auth.service';
 import { PortalService } from './portal.service';
 import { MemberRegisterDto } from './dto/member-register.dto';
@@ -78,13 +79,13 @@ export class MemberAuthController {
     return this.memberAuth.churchInfo(slug);
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle(THROTTLE_LOGIN)
   @Post('register')
   register(@Body() dto: MemberRegisterDto) {
     return this.memberAuth.register(dto);
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle(THROTTLE_LOGIN)
   @Post('login')
   @HttpCode(200)
   login(@Body() dto: MemberLoginDto) {

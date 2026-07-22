@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
+import { THROTTLE_GLOBAL } from './throttle.config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { MembersModule } from './members/members.module';
@@ -26,7 +27,7 @@ import { HealthController } from './health.controller';
     ConfigModule.forRoot({ isGlobal: true }),
     // Limite global anti-abuso: 200 req/min por IP (rotas sensíveis, como
     // login, têm limite mais estrito via @Throttle).
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 200 }]),
+    ThrottlerModule.forRoot([THROTTLE_GLOBAL]),
     // Tarefas diárias (lembrete de culto, aniversariantes) — ver
     // push/notifications.scheduler.ts.
     ScheduleModule.forRoot(),

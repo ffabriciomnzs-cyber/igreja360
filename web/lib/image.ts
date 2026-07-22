@@ -36,12 +36,20 @@ export async function removeDarkBackground(
   });
 }
 
+/**
+ * 'auto'  — PNG entra como PNG (preserva transparência), resto vira JPEG.
+ * 'png'   — força PNG. Use em logos, onde a transparência importa.
+ * 'jpeg'  — força JPEG **mesmo se o original for PNG**. Use em fotos e
+ *           cartazes: um PNG de cartaz sai com centenas de KB, porque PNG não
+ *           tem compressão com perda (o `quality` é simplesmente ignorado).
+ */
+export type ImageFormat = 'auto' | 'png' | 'jpeg';
+
 export async function fileToCompressedDataUrl(
   file: File,
   max = 800,
   quality = 0.8,
-  // Força saída PNG (mantém transparência) — use para logos.
-  png = false,
+  format: ImageFormat = 'auto',
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -59,13 +67,20 @@ export async function fileToCompressedDataUrl(
           reject(new Error('Não foi possível processar a imagem.'));
           return;
         }
+        const comoPng =
+          format === 'png' || (format === 'auto' && file.type === 'image/png');
+
+        // JPEG não tem canal alfa: sem isso, o transparente de um PNG
+        // convertido sairia preto. Pinta o fundo antes de desenhar.
+        if (!comoPng) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+        }
         ctx.drawImage(img, 0, 0, w, h);
-        // PNG preserva transparência (logos); demais formatos viram JPEG
-        // comprimido (fotos). Sem isso, o fundo transparente ficaria preto.
-        const dataUrl =
-          png || file.type === 'image/png'
-            ? canvas.toDataURL('image/png')
-            : canvas.toDataURL('image/jpeg', quality);
+
+        const dataUrl = comoPng
+          ? canvas.toDataURL('image/png')
+          : canvas.toDataURL('image/jpeg', quality);
         resolve(dataUrl);
       };
       img.onerror = () => reject(new Error('Imagem inválida.'));

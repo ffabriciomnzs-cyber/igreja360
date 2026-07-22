@@ -37,7 +37,7 @@ export class CommunicationsService {
       },
     });
     // Notifica os membros por push (não bloqueia nem falha a criação).
-    void this.notifyMembers(churchId, comm.title);
+    void this.notifyMembers(churchId, comm.title).catch(() => undefined);
     return comm;
   }
 

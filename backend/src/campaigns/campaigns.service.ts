@@ -49,12 +49,14 @@ export class CampaignsService {
       },
     });
     // Avisa os membros por push (best-effort, não bloqueia a criação).
+    // .catch: garante que uma falha no push jamais vire unhandled rejection
+    // (o `void` sozinho nao captura), o que poderia derrubar o processo.
     void this.push.notifyChurch(
       churchId,
       '💜 Nova campanha',
       created.title,
       'campaigns',
-    );
+    ).catch(() => undefined);
     return created;
   }
 
