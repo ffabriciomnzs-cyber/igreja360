@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   Loader2,
   Pencil,
@@ -10,6 +12,8 @@ import {
   HandHeart,
   Plus,
   BadgeCheck,
+  Bell,
+  ChevronRight,
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
 import { fileToCompressedDataUrl } from '@/lib/image';
@@ -70,6 +74,8 @@ function toDateInput(iso: string | null): string {
 }
 
 export default function PerfilPage(): React.ReactElement {
+  // Hook no topo: abaixo há returns antecipados (loading / sem dados).
+  const slug = String(useParams()?.slug ?? '');
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -402,6 +408,23 @@ export default function PerfilPage(): React.ReactElement {
           </dl>
         )}
       </section>
+
+      {/* Notificações */}
+      <Link
+        href={`/portal/${slug}/notificacoes`}
+        className="flex items-center gap-3 rounded-2xl border border-border bg-white p-4 hover:bg-slate-50"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <Bell className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-slate-800">Notificações</p>
+          <p className="text-xs text-slate-500">
+            Escolha o que receber no celular
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+      </Link>
 
       {/* Pedidos de oração */}
       <section>

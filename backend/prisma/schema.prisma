@@ -208,6 +208,9 @@ model Member {
   photo     String?
   passwordHash String?
   portalStatus PortalStatus @default(NONE)
+  // Quais notificações o membro quer receber. NULL = recebe tudo (padrão).
+  // Formato: { "worship": true, "events": false, ... } — ver push.service.ts.
+  notifyPrefs  Json?
   status    MemberStatus @default(ACTIVE)
   role      MemberRole?
   cellId    String?

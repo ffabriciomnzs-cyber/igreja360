@@ -8,6 +8,23 @@ export interface PushPayload {
   url?: string;
 }
 
+/** Categorias que o membro pode ligar/desligar em Perfil → Notificações. */
+export const NOTIFY_CATEGORIES = [
+  'announcements',
+  'worship',
+  'events',
+  'campaigns',
+  'birthdays',
+] as const;
+export type NotifyCategory = (typeof NOTIFY_CATEGORIES)[number];
+
+/** Prefs ausentes ou campo ausente = recebe (opt-out, não opt-in). */
+function wantsCategory(prefs: unknown, category?: NotifyCategory): boolean {
+  if (!category || !prefs || typeof prefs !== 'object') return true;
+  const value = (prefs as Record<string, unknown>)[category];
+  return value !== false;
+}
+
 @Injectable()
 export class PushService {
   private readonly logger = new Logger('PushService');
@@ -53,6 +70,35 @@ export class PushService {
     });
   }
 
+  /** Preferências do membro, já com o padrão (tudo ligado) preenchido. */
+  async getPrefs(memberId: string): Promise<Record<NotifyCategory, boolean>> {
+    const member = await this.prisma.member.findUnique({
+      where: { id: memberId },
+      select: { notifyPrefs: true },
+    });
+    const saved = member?.notifyPrefs;
+    return Object.fromEntries(
+      NOTIFY_CATEGORIES.map((c) => [c, wantsCategory(saved, c)]),
+    ) as Record<NotifyCategory, boolean>;
+  }
+
+  /** Grava as preferências. Só aceita as categorias conhecidas. */
+  async setPrefs(
+    memberId: string,
+    patch: Partial<Record<NotifyCategory, boolean>>,
+  ): Promise<Record<NotifyCategory, boolean>> {
+    const atuais = await this.getPrefs(memberId);
+    const novas = { ...atuais };
+    for (const c of NOTIFY_CATEGORIES) {
+      if (typeof patch[c] === 'boolean') novas[c] = patch[c];
+    }
+    await this.prisma.member.update({
+      where: { id: memberId },
+      data: { notifyPrefs: novas },
+    });
+    return novas;
+  }
+
   async removeSubscription(endpoint: string): Promise<void> {
     if (!endpoint) return;
     await this.prisma.pushSubscription
@@ -68,27 +114,51 @@ export class PushService {
     churchId: string,
     title: string,
     body: string,
+    category?: NotifyCategory,
   ): Promise<void> {
     try {
       const church = await this.prisma.church.findUnique({
         where: { id: churchId },
         select: { slug: true },
       });
-      await this.sendToChurch(churchId, {
-        title,
-        body,
-        url: church?.slug ? `/portal/${church.slug}/inicio` : undefined,
-      });
+      await this.sendToChurch(
+        churchId,
+        {
+          title,
+          body,
+          url: church?.slug ? `/portal/${church.slug}/inicio` : undefined,
+        },
+        category,
+      );
     } catch {
       /* push é best-effort */
     }
   }
 
-  async sendToChurch(churchId: string, payload: PushPayload): Promise<void> {
+  async sendToChurch(
+    churchId: string,
+    payload: PushPayload,
+    category?: NotifyCategory,
+  ): Promise<void> {
     if (!this.configured) return;
-    const subs = await this.prisma.pushSubscription.findMany({
+    let subs = await this.prisma.pushSubscription.findMany({
       where: { churchId },
     });
+
+    // Respeita quem desligou essa categoria em Perfil → Notificações.
+    if (category && subs.length) {
+      const members = await this.prisma.member.findMany({
+        where: { id: { in: subs.map((s) => s.memberId) } },
+        select: { id: true, notifyPrefs: true },
+      });
+      const optedOut = new Set(
+        members
+          .filter((m) => !wantsCategory(m.notifyPrefs, category))
+          .map((m) => m.id),
+      );
+      subs = subs.filter((s) => !optedOut.has(s.memberId));
+    }
+
     const body = JSON.stringify(payload);
     await Promise.all(
       subs.map((s) =>

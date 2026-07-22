@@ -102,6 +102,7 @@ export class WorshipService {
       churchId,
       '⛪ Novo culto agendado',
       `${created.title} — ${quando}`,
+      'worship',
     );
     return created;
   }

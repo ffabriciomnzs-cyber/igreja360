@@ -82,6 +82,7 @@ export class EventsService {
       churchId,
       '📅 Novo evento',
       `${created.name} — ${quando}`,
+      'events',
     );
     return created;
   }

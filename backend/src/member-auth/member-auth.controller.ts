@@ -17,6 +17,7 @@ import { DevotionalNoteDto } from './dto/devotional-note.dto';
 import { DevotionalReactDto } from './dto/devotional-react.dto';
 import { CreatePrayerDto } from './dto/create-prayer.dto';
 import { UpdateMemberProfileDto } from './dto/update-member-profile.dto';
+import { NotifyPrefsDto } from './dto/notify-prefs.dto';
 import { MemberJwtGuard, MemberPrincipal } from './member-jwt.guard';
 import { CurrentMember } from './current-member.decorator';
 import { PushService } from '../push/push.service';
@@ -45,6 +46,23 @@ export class MemberAuthController {
   ) {
     await this.push.saveSubscription(member.churchId, member.id, body);
     return { ok: true };
+  }
+
+  // Preferências por categoria (Perfil → Notificações). Sempre pelo id do
+  // JWT do membro: nunca aceita id vindo do cliente.
+  @Get('push/prefs')
+  @UseGuards(MemberJwtGuard)
+  async pushPrefs(@CurrentMember() member: MemberPrincipal) {
+    return this.push.getPrefs(member.id);
+  }
+
+  @Patch('push/prefs')
+  @UseGuards(MemberJwtGuard)
+  async pushPrefsUpdate(
+    @CurrentMember() member: MemberPrincipal,
+    @Body() dto: NotifyPrefsDto,
+  ) {
+    return this.push.setPrefs(member.id, dto);
   }
 
   @Post('push/unsubscribe')

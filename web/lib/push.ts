@@ -15,6 +15,30 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return arr;
 }
 
+export type PushEnvironment = 'ok' | 'ios-precisa-instalar';
+
+/**
+ * No iPhone/iPad o Safari só expõe o PushManager quando o site está instalado
+ * na tela de início (iOS 16.4+). Sem isso o estado vira 'unsupported' e o
+ * membro nunca receberia nada — por isso detectamos e mostramos como instalar.
+ */
+export function pushEnvironment(): PushEnvironment {
+  if (typeof window === 'undefined') return 'ok';
+  const ua = window.navigator.userAgent.toLowerCase();
+  const isIOS =
+    /iphone|ipad|ipod/.test(ua) ||
+    // iPad moderno se anuncia como Mac; o toque o denuncia.
+    (/macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  if (!isIOS) return 'ok';
+
+  const instalado =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as unknown as { standalone?: boolean }).standalone === true;
+  if (instalado) return 'ok';
+
+  return 'PushManager' in window ? 'ok' : 'ios-precisa-instalar';
+}
+
 function supported(): boolean {
   return (
     typeof window !== 'undefined' &&

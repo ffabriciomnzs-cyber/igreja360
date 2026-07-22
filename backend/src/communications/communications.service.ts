@@ -42,19 +42,12 @@ export class CommunicationsService {
   }
 
   private async notifyMembers(churchId: string, title: string): Promise<void> {
-    try {
-      const church = await this.prisma.church.findUnique({
-        where: { id: churchId },
-        select: { slug: true },
-      });
-      await this.push.sendToChurch(churchId, {
-        title: '📢 Novo aviso da igreja',
-        body: title,
-        url: church?.slug ? `/portal/${church.slug}/inicio` : undefined,
-      });
-    } catch {
-      /* push é best-effort */
-    }
+    await this.push.notifyChurch(
+      churchId,
+      '📢 Novo aviso da igreja',
+      title,
+      'announcements',
+    );
   }
 
   async update(churchId: string, id: string, dto: UpdateCommunicationDto) {

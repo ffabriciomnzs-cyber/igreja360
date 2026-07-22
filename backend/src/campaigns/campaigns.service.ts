@@ -49,7 +49,12 @@ export class CampaignsService {
       },
     });
     // Avisa os membros por push (best-effort, não bloqueia a criação).
-    void this.push.notifyChurch(churchId, '💜 Nova campanha', created.title);
+    void this.push.notifyChurch(
+      churchId,
+      '💜 Nova campanha',
+      created.title,
+      'campaigns',
+    );
     return created;
   }
 
