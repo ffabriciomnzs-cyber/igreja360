@@ -45,6 +45,16 @@ describe('Isolamento entre igrejas (multi-tenant)', () => {
       '/v1/communications',
       { title: 'Aviso da A', content: 'Conteudo do aviso' },
     ],
+    // Dinheiro: a igreja B jamais pode enxergar o caixa da A.
+    [
+      '/v1/financial',
+      {
+        type: 'INCOME',
+        category: 'Dízimo',
+        amount: 1234.56,
+        date: '2026-07-01T12:00:00.000Z',
+      },
+    ],
   ];
 
   describe.each(recursos)('%s', (rota, payload) => {
@@ -148,6 +158,27 @@ describe('Isolamento entre igrejas (multi-tenant)', () => {
       expect(res.statusCode).toBe(200);
       expect(res.body).not.toContain('12345678901');
       expect(res.body).not.toContain('Fulano da A');
+    });
+  });
+
+  describe('Financeiro (valores não podem vazar)', () => {
+    it('o resumo financeiro da B não soma nada da A', async () => {
+      await req(app, 'POST', '/v1/financial', A.adminToken, {
+        type: 'INCOME',
+        category: 'Dízimo',
+        amount: 9999.99,
+        date: '2026-07-01T12:00:00.000Z',
+      });
+
+      // Os dois lados: se a A também não enxergasse o próprio valor, o
+      // "não contém" da B passaria sem provar nada.
+      const daA = await req(app, 'GET', '/v1/financial/stats', A.adminToken);
+      expect(daA.statusCode).toBe(200);
+      expect(daA.body).toContain('9999.99');
+
+      const daB = await req(app, 'GET', '/v1/financial/stats', B.adminToken);
+      expect(daB.statusCode).toBe(200);
+      expect(daB.body).not.toContain('9999.99');
     });
   });
 
