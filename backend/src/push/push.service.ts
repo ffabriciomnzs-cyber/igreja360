@@ -61,6 +61,29 @@ export class PushService {
   }
 
   /** Envia uma notificação para todos os membros inscritos da igreja. No-op se VAPID não configurado. */
+  // Atalho para avisar a igreja sobre um novo registro (campanha, culto,
+  // evento, aviso...). Resolve o link do portal e é best-effort: nunca lança,
+  // para não quebrar a criação do registro caso o push falhe.
+  async notifyChurch(
+    churchId: string,
+    title: string,
+    body: string,
+  ): Promise<void> {
+    try {
+      const church = await this.prisma.church.findUnique({
+        where: { id: churchId },
+        select: { slug: true },
+      });
+      await this.sendToChurch(churchId, {
+        title,
+        body,
+        url: church?.slug ? `/portal/${church.slug}/inicio` : undefined,
+      });
+    } catch {
+      /* push é best-effort */
+    }
+  }
+
   async sendToChurch(churchId: string, payload: PushPayload): Promise<void> {
     if (!this.configured) return;
     const subs = await this.prisma.pushSubscription.findMany({

@@ -1,13 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PushService } from '../push/push.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { QueryEventsDto } from './dto/query-events.dto';
 
 @Injectable()
 export class EventsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly push: PushService,
+  ) {}
 
   async findAll(churchId: string, query: QueryEventsDto) {
     const page = query.page ?? 1;
@@ -55,7 +59,7 @@ export class EventsService {
   }
 
   async create(churchId: string, dto: CreateEventDto) {
-    return this.prisma.event.create({
+    const created = await this.prisma.event.create({
       data: {
         churchId,
         name: dto.name.trim(),
@@ -68,6 +72,18 @@ export class EventsService {
         photo: dto.photo || null,
       },
     });
+    // Avisa os membros por push (best-effort, não bloqueia a criação).
+    const quando = created.date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      timeZone: 'America/Sao_Paulo',
+    });
+    void this.push.notifyChurch(
+      churchId,
+      '📅 Novo evento',
+      `${created.name} — ${quando}`,
+    );
+    return created;
   }
 
   async update(churchId: string, id: string, dto: UpdateEventDto) {

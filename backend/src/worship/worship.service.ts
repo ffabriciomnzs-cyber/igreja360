@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, WorshipStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PushService } from '../push/push.service';
 import {
   CreateWorshipDto,
   WorshipItemDto,
@@ -11,7 +12,10 @@ import { QueryWorshipDto } from './dto/query-worship.dto';
 
 @Injectable()
 export class WorshipService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly push: PushService,
+  ) {}
 
   private mapItems(items: WorshipItemDto[]) {
     return items.map((it, i) => ({
@@ -67,7 +71,7 @@ export class WorshipService {
   }
 
   async create(churchId: string, dto: CreateWorshipDto) {
-    return this.prisma.worshipService.create({
+    const created = await this.prisma.worshipService.create({
       data: {
         churchId,
         title: dto.title.trim(),
@@ -88,6 +92,18 @@ export class WorshipService {
         participants: { orderBy: { name: 'asc' } },
       },
     });
+    // Avisa os membros por push (best-effort, não bloqueia a criação).
+    const quando = created.date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      timeZone: 'America/Sao_Paulo',
+    });
+    void this.push.notifyChurch(
+      churchId,
+      '⛪ Novo culto agendado',
+      `${created.title} — ${quando}`,
+    );
+    return created;
   }
 
   async update(churchId: string, id: string, dto: UpdateWorshipDto) {

@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, CampaignStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PushService } from '../push/push.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
 
 @Injectable()
 export class CampaignsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly push: PushService,
+  ) {}
 
   async findAll(churchId: string, status?: string, search?: string) {
     const where: Prisma.CampaignWhereInput = { churchId };
@@ -31,7 +35,7 @@ export class CampaignsService {
   }
 
   async create(churchId: string, dto: CreateCampaignDto) {
-    return this.prisma.campaign.create({
+    const created = await this.prisma.campaign.create({
       data: {
         churchId,
         title: dto.title.trim(),
@@ -44,6 +48,9 @@ export class CampaignsService {
         endDate: dto.endDate ? new Date(dto.endDate) : null,
       },
     });
+    // Avisa os membros por push (best-effort, não bloqueia a criação).
+    void this.push.notifyChurch(churchId, '💜 Nova campanha', created.title);
+    return created;
   }
 
   async update(churchId: string, id: string, dto: UpdateCampaignDto) {
