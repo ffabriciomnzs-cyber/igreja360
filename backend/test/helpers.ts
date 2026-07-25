@@ -19,7 +19,8 @@ export async function createTestApp(): Promise<NestFastifyApplication> {
   }).compile();
 
   const app = moduleRef.createNestApplication<NestFastifyApplication>(
-    new FastifyAdapter({ logger: false }),
+    // Mesmo bodyLimit do main.ts, senão o teste do limite provaria o default.
+    new FastifyAdapter({ logger: false, bodyLimit: 2 * 1024 * 1024 }),
   );
   app.setGlobalPrefix('v1');
   app.useGlobalPipes(

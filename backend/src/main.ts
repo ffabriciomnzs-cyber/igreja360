@@ -12,7 +12,15 @@ async function bootstrap(): Promise<void> {
     AppModule,
     // trustProxy: atrás do proxy do Railway, para o rate limit e logs
     // enxergarem o IP real do cliente (X-Forwarded-For).
-    new FastifyAdapter({ logger: false, trustProxy: true }),
+    // bodyLimit: teto explícito de 2 MB por requisição. As imagens legítimas
+    // (foto de membro ≤512px, banner de evento ≤1200px em JPEG) ficam bem
+    // abaixo disso; o limite impede que um corpo gigante infle o banco ou
+    // derrube o processo. NÃO deixar no default implícito.
+    new FastifyAdapter({
+      logger: false,
+      trustProxy: true,
+      bodyLimit: 2 * 1024 * 1024,
+    }),
   );
 
   // Cabeçalhos de segurança (HSTS, no-sniff, etc.). CSP desligado por ser API.
