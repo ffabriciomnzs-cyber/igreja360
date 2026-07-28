@@ -18,11 +18,21 @@ export interface Event {
   createdAt: string;
 }
 
-/** Endereço completo do banner, para usar em `<img src>`. */
+/**
+ * Endereço do banner, para usar em `<img src>`.
+ *
+ * Aceita as DUAS formas de resposta: a atual (`photoUrl`) e a antiga
+ * (`photo` em base64). Motivo: API e portal são serviços separados no Railway
+ * e sobem em momentos diferentes — durante essa janela, um pode estar numa
+ * versão e o outro na anterior. Tolerar as duas evita banner sumido no meio de
+ * um deploy.
+ */
 export function eventPhotoSrc(event: {
   photoUrl?: string | null;
+  photo?: string | null;
 }): string | null {
-  return event.photoUrl ? `${apiBaseUrl}${event.photoUrl}` : null;
+  if (event.photoUrl) return `${apiBaseUrl}${event.photoUrl}`;
+  return event.photo || null;
 }
 
 export interface PaginatedEvents {
