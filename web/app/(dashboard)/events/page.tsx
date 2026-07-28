@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { api, extractApiError } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
-import { Event, PaginatedEvents } from '@/lib/events';
+import { Event, PaginatedEvents, eventPhotoSrc } from '@/lib/events';
 
 export default function EventsPage(): React.ReactElement {
   const [events, setEvents] = useState<Event[]>([]);
@@ -146,10 +146,10 @@ export default function EventsPage(): React.ReactElement {
             <Card key={ev.id} className="flex flex-col overflow-hidden">
               <Link href={`/events/${ev.id}`}>
                 <div className="flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-500 to-indigo-700">
-                  {ev.photo ? (
+                  {eventPhotoSrc(ev) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={ev.photo}
+                      src={eventPhotoSrc(ev) as string}
                       alt={ev.name}
                       className="h-full w-full object-contain"
                     />

@@ -6,6 +6,42 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { QueryEventsDto } from './dto/query-events.dto';
 
+/**
+ * Seleção padrão do evento: tudo, MENOS `photo`. A foto é um data URL base64
+ * (centenas de KB) e trafegava em toda listagem e detalhe. Agora a tela recebe
+ * `photoUrl` e busca a imagem pelo endpoint público, que o navegador guarda em
+ * cache. Só o endpoint da imagem lê a coluna `photo`.
+ */
+const eventSelect = {
+  id: true,
+  churchId: true,
+  name: true,
+  description: true,
+  date: true,
+  endDate: true,
+  location: true,
+  capacity: true,
+  type: true,
+  photoUpdatedAt: true,
+  createdAt: true,
+} satisfies Prisma.EventSelect;
+
+type EventRow = Prisma.EventGetPayload<{ select: typeof eventSelect }>;
+
+/**
+ * Acrescenta `photoUrl` (relativa à raiz da API; a tela prefixa com a base).
+ * O `?v=` é a data da última troca da foto: muda a URL quando a imagem muda,
+ * o que permite cachear de forma agressiva sem servir imagem velha.
+ */
+function withPhotoUrl(event: EventRow) {
+  return {
+    ...event,
+    photoUrl: event.photoUpdatedAt
+      ? `/public/events/${event.id}/photo?v=${event.photoUpdatedAt.getTime()}`
+      : null,
+  };
+}
+
 @Injectable()
 export class EventsService {
   constructor(
@@ -35,12 +71,18 @@ export class EventsService {
       query.when === 'past' ? { date: 'desc' } : { date: 'asc' };
 
     const [data, total] = await this.prisma.$transaction([
-      this.prisma.event.findMany({ where, orderBy, skip, take: limit }),
+      this.prisma.event.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        select: eventSelect,
+      }),
       this.prisma.event.count({ where }),
     ]);
 
     return {
-      data,
+      data: data.map(withPhotoUrl),
       total,
       page,
       limit,
@@ -51,11 +93,12 @@ export class EventsService {
   async findOne(churchId: string, id: string) {
     const event = await this.prisma.event.findFirst({
       where: { id, churchId },
+      select: eventSelect,
     });
     if (!event) {
       throw new NotFoundException('Evento não encontrado.');
     }
-    return event;
+    return withPhotoUrl(event);
   }
 
   async create(churchId: string, dto: CreateEventDto) {
@@ -70,7 +113,9 @@ export class EventsService {
         capacity: dto.capacity ?? null,
         type: dto.type?.trim() || null,
         photo: dto.photo || null,
+        photoUpdatedAt: dto.photo ? new Date() : null,
       },
+      select: eventSelect,
     });
     // Avisa os membros por push (best-effort, não bloqueia a criação).
     const quando = created.date.toLocaleDateString('pt-BR', {
@@ -86,7 +131,7 @@ export class EventsService {
       `${created.name} — ${quando}`,
       'events',
     ).catch(() => undefined);
-    return created;
+    return withPhotoUrl(created);
   }
 
   async update(churchId: string, id: string, dto: UpdateEventDto) {
@@ -101,9 +146,19 @@ export class EventsService {
     if (dto.location !== undefined) data.location = dto.location?.trim() || null;
     if (dto.capacity !== undefined) data.capacity = dto.capacity ?? null;
     if (dto.type !== undefined) data.type = dto.type?.trim() || null;
-    if (dto.photo !== undefined) data.photo = dto.photo || null;
+    // `photo` ausente = mantém a atual (a tela só o envia quando troca ou
+    // remove a imagem, para não reenviar centenas de KB a cada "Salvar").
+    if (dto.photo !== undefined) {
+      data.photo = dto.photo || null;
+      data.photoUpdatedAt = dto.photo ? new Date() : null;
+    }
 
-    return this.prisma.event.update({ where: { id }, data });
+    const updated = await this.prisma.event.update({
+      where: { id },
+      data,
+      select: eventSelect,
+    });
+    return withPhotoUrl(updated);
   }
 
   async remove(churchId: string, id: string) {

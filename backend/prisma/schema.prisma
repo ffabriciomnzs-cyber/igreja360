@@ -307,6 +307,10 @@ model Event {
   capacity    Int?
   type        String?
   photo       String?
+  // Quando a foto mudou pela última vez. Serve para dois fins: saber se existe
+  // foto SEM carregar o base64 (que é pesado) nas listagens, e versionar a URL
+  // pública (?v=) para o cache do navegador expirar quando a imagem trocar.
+  photoUpdatedAt DateTime?
   createdAt   DateTime  @default(now())
 
   @@index([churchId])

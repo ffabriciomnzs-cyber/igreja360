@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { api, extractApiError } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
-import { Event } from '@/lib/events';
+import { Event, eventPhotoSrc } from '@/lib/events';
 
 function Info({
   icon: Icon,
@@ -119,11 +119,11 @@ export default function EventDetailPage(): React.ReactElement {
         }
       />
 
-      {event.photo && (
+      {eventPhotoSrc(event) && (
         <div className="mb-4 flex justify-center overflow-hidden rounded-lg bg-slate-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={event.photo}
+            src={eventPhotoSrc(event) as string}
             alt={event.name}
             className="max-h-96 w-full object-contain"
           />

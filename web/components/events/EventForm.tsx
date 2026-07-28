@@ -11,7 +11,7 @@ import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { api, extractApiError } from '@/lib/api';
 import { fileToCompressedDataUrl } from '@/lib/image';
-import { Event, EVENT_TYPES } from '@/lib/events';
+import { Event, EVENT_TYPES, eventPhotoSrc } from '@/lib/events';
 
 interface EventFormProps {
   event?: Event;
@@ -49,7 +49,15 @@ export function EventForm({ event }: EventFormProps): React.ReactElement {
     capacity: event?.capacity != null ? String(event.capacity) : '',
     description: event?.description ?? '',
   });
-  const [photo, setPhoto] = useState<string>(event?.photo ?? '');
+  // O que aparece na tela: a imagem já salva vem por URL; uma imagem recém
+  // escolhida é exibida direto do arquivo lido (data URL).
+  const [preview, setPreview] = useState<string | null>(
+    event ? eventPhotoSrc(event) : null,
+  );
+  // O que enviar: `undefined` = o usuário não mexeu na imagem, então NÃO
+  // mandamos o campo e o banner atual é preservado (evita reenviar centenas de
+  // KB a cada "Salvar"). String = imagem nova. String vazia = remover.
+  const [novaFoto, setNovaFoto] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,7 +76,9 @@ export function EventForm({ event }: EventFormProps): React.ReactElement {
       return;
     }
     try {
-      setPhoto(await fileToCompressedDataUrl(file, 1200, 0.75, 'jpeg'));
+      const dataUrl = await fileToCompressedDataUrl(file, 1200, 0.75, 'jpeg');
+      setNovaFoto(dataUrl);
+      setPreview(dataUrl);
       setError(null);
     } catch {
       setError('Não foi possível carregar a imagem.');
@@ -98,7 +108,8 @@ export function EventForm({ event }: EventFormProps): React.ReactElement {
       location: form.location.trim() || undefined,
       capacity: form.capacity ? Number(form.capacity) : undefined,
       description: form.description.trim() || undefined,
-      photo,
+      // Só vai quando mudou — ver o comentário em `novaFoto`.
+      ...(novaFoto !== undefined ? { photo: novaFoto } : {}),
     };
 
     setSaving(true);
@@ -130,10 +141,10 @@ export function EventForm({ event }: EventFormProps): React.ReactElement {
             <Label>Banner do evento</Label>
             <div className="flex items-center gap-4">
               <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-md bg-slate-100 text-xs text-slate-400 ring-1 ring-slate-200">
-                {photo ? (
+                {preview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={photo}
+                    src={preview}
                     alt="Banner"
                     className="h-full w-full object-cover"
                   />
@@ -156,14 +167,17 @@ export function EventForm({ event }: EventFormProps): React.ReactElement {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="h-4 w-4" />
-                  {photo ? 'Trocar' : 'Enviar'}
+                  {preview ? 'Trocar' : 'Enviar'}
                 </Button>
-                {photo && (
+                {preview && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => setPhoto('')}
+                    onClick={() => {
+                      setNovaFoto('');
+                      setPreview(null);
+                    }}
                   >
                     <Trash2 className="h-4 w-4 text-red-500" />
                     Remover

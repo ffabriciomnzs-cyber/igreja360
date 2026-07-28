@@ -1,3 +1,5 @@
+import { apiBaseUrl } from './api';
+
 export interface Event {
   id: string;
   name: string;
@@ -7,8 +9,20 @@ export interface Event {
   location: string | null;
   capacity: number | null;
   type: string | null;
-  photo: string | null;
+  /**
+   * Caminho da imagem na API (ex.: `/public/events/abc/photo?v=123`), ou null.
+   * A API não devolve mais o base64 do banner: a imagem vem por esta URL, que
+   * o navegador guarda em cache. Use `eventPhotoSrc()` para montar o endereço.
+   */
+  photoUrl: string | null;
   createdAt: string;
+}
+
+/** Endereço completo do banner, para usar em `<img src>`. */
+export function eventPhotoSrc(event: {
+  photoUrl?: string | null;
+}): string | null {
+  return event.photoUrl ? `${apiBaseUrl}${event.photoUrl}` : null;
 }
 
 export interface PaginatedEvents {

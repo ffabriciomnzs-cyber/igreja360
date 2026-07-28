@@ -13,6 +13,9 @@ import {
 const baseURL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/v1';
 
+/** Raiz da API — para montar URL de arquivo servido por ela (ex.: banner). */
+export const apiBaseUrl = baseURL;
+
 export const api: AxiosInstance = axios.create({ baseURL });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
