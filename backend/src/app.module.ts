@@ -20,6 +20,7 @@ import { UsersModule } from './users/users.module';
 import { MemberAuthModule } from './member-auth/member-auth.module';
 import { DevotionalsModule } from './devotionals/devotionals.module';
 import { PushModule } from './push/push.module';
+import { SearchModule } from './search/search.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -47,6 +48,7 @@ import { HealthController } from './health.controller';
     MemberAuthModule,
     DevotionalsModule,
     PushModule,
+    SearchModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

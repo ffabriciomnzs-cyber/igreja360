@@ -35,6 +35,26 @@ import { FinancialStats } from '@/lib/financial';
 import { Campaign } from '@/lib/campaigns';
 import { verseOfDay } from '@/lib/verse-of-day';
 
+interface WorshipItem {
+  id: string;
+  title: string;
+  date: string;
+}
+
+/** "domingo às 18h" / "hoje às 19h30" — contexto humano sob a saudação. */
+function quandoCulto(iso: string): string {
+  const d = new Date(iso);
+  const hoje = new Date();
+  const mesmoDia = d.toDateString() === hoje.toDateString();
+  const hora = d
+    .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    .replace(':00', 'h')
+    .replace(':', 'h');
+  if (mesmoDia) return `hoje às ${hora}`;
+  const dia = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+  return `${dia} às ${hora}`;
+}
+
 const EMPTY_STATS: MemberStats = {
   total: 0,
   active: 0,
@@ -57,6 +77,7 @@ export default function DashboardPage(): React.ReactElement {
   const [birthdays, setBirthdays] = useState<MemberBirthday[]>([]);
   const [growth, setGrowth] = useState<MemberGrowthPoint[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [nextWorship, setNextWorship] = useState<WorshipItem | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
 
@@ -99,6 +120,12 @@ export default function DashboardPage(): React.ReactElement {
         .get<Campaign[]>('/campaigns', { params: { status: 'ACTIVE' } })
         .then(({ data }) => {
           if (mounted) setCampaigns(data);
+        })
+        .catch(() => undefined),
+      api
+        .get<WorshipItem[]>('/worship', { params: { when: 'upcoming' } })
+        .then(({ data }) => {
+          if (mounted) setNextWorship(data[0] ?? null);
         })
         .catch(() => undefined),
     ];
@@ -171,11 +198,51 @@ export default function DashboardPage(): React.ReactElement {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           {firstName ? `Olá, ${firstName} 👋` : 'Dashboard'}
         </h1>
-        <p className="mt-1 text-sm capitalize text-slate-500">{today}</p>
+        <p className="mt-1 text-sm text-slate-500">
+          <span className="capitalize">{today}</span>
+          {ready && nextWorship && (
+            <>
+              {' · '}
+              <Link
+                href={`/worship/${nextWorship.id}`}
+                className="font-medium text-indigo-600 hover:underline"
+              >
+                {nextWorship.title} {quandoCulto(nextWorship.date)}
+              </Link>
+            </>
+          )}
+        </p>
+      </div>
+
+      {/* Ações rápidas: o que mais se faz no dia a dia, a um clique. */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {[
+          { href: '/members/new', label: 'Novo membro', icon: UserPlus },
+          {
+            href: '/communications/new',
+            label: 'Publicar aviso',
+            icon: Megaphone,
+          },
+          { href: '/events/new', label: 'Novo evento', icon: Calendar },
+          { href: '/worship/new', label: 'Planejar culto', icon: BookOpen },
+          { href: '/financial/new', label: 'Lançamento', icon: Wallet },
+        ].map((a) => {
+          const Icon = a.icon;
+          return (
+            <Link
+              key={a.href}
+              href={a.href}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm text-slate-600 transition-colors duration-150 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {a.label}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Palavra do dia */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Search } from 'lucide-react';
 import { AuthUser, roleLabel } from '@/lib/auth';
 import { RadioPlayer } from './RadioPlayer';
 
@@ -35,6 +35,20 @@ export function Header({
       )}
 
       <RadioPlayer />
+
+      {/* Abre a busca global (a paleta escuta este evento e o ⌘K/Ctrl+K). */}
+      <button
+        onClick={() =>
+          window.dispatchEvent(new Event('igreja360:open-search'))
+        }
+        className="flex min-w-0 shrink items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-600 md:w-64"
+      >
+        <Search className="h-4 w-4 shrink-0" />
+        <span className="hidden truncate md:inline">Buscar...</span>
+        <kbd className="ml-auto hidden rounded border border-slate-200 px-1.5 text-[10px] font-medium md:block">
+          ⌘K
+        </kbd>
+      </button>
 
       <div className="ml-auto flex items-center gap-3">
         <div className="hidden text-right leading-tight sm:block">

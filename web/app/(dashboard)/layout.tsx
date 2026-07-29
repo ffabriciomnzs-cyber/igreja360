@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { CommandPalette } from '@/components/layout/CommandPalette';
 import { useAuth } from '@/hooks/useAuth';
 import { Toaster } from 'sonner';
 
@@ -48,6 +49,7 @@ export default function DashboardLayout({
         </main>
         {/* Confirmações pós-ação ("Membro salvo") — sem isso, salvar é silêncio. */}
         <Toaster richColors position="top-center" closeButton />
+        <CommandPalette />
       </div>
     </div>
   );
