@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -45,6 +46,7 @@ export function CommunicationForm({ communication }: Props): React.ReactElement 
       } else {
         await api.post('/communications', payload);
       }
+      toast.success(editing ? 'Aviso atualizado' : 'Aviso criado');
       router.push('/communications');
       router.refresh();
     } catch (err) {

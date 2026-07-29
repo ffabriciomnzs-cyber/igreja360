@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Plus, Loader2, Pencil, Trash2, Megaphone } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { CardsSkeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { api, extractApiError } from '@/lib/api';
@@ -74,21 +76,18 @@ export default function CampaignsPage(): React.ReactElement {
 
       {loading ? (
         <Card>
-          <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Carregando campanhas...
-          </CardContent>
+          <CardsSkeleton />
         </Card>
       ) : items.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <Megaphone className="h-8 w-8 text-slate-300" />
-            <p className="text-sm font-medium text-slate-700">
-              Nenhuma campanha cadastrada
-            </p>
-            <p className="text-sm text-slate-500">
-              Crie uma campanha com meta de arrecadação.
-            </p>
+          <CardContent>
+            <EmptyState
+              icon={Megaphone}
+              title="Nenhuma campanha ainda"
+              description="Crie uma campanha com meta de arrecadação e acompanhe o progresso."
+              actionHref="/campaigns/new"
+              actionLabel="Criar campanha"
+            />
           </CardContent>
         </Card>
       ) : (

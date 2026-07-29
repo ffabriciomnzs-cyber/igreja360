@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Plus, Loader2, Pencil, Trash2, MessageSquare } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ListSkeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { api, extractApiError } from '@/lib/api';
@@ -73,21 +75,18 @@ export default function CommunicationsPage(): React.ReactElement {
 
       {loading ? (
         <Card>
-          <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Carregando comunicados...
-          </CardContent>
+          <ListSkeleton />
         </Card>
       ) : items.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <MessageSquare className="h-8 w-8 text-slate-300" />
-            <p className="text-sm font-medium text-slate-700">
-              Nenhum comunicado publicado
-            </p>
-            <p className="text-sm text-slate-500">
-              Publique um aviso para a igreja.
-            </p>
+          <CardContent>
+            <EmptyState
+              icon={MessageSquare}
+              title="Nenhum comunicado publicado"
+              description="Avisos publicados aqui chegam como notificação no celular dos membros."
+              actionHref="/communications/new"
+              actionLabel="Publicar aviso"
+            />
           </CardContent>
         </Card>
       ) : (

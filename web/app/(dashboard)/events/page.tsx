@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { CardsSkeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -121,23 +123,22 @@ export default function EventsPage(): React.ReactElement {
 
       {loading ? (
         <Card>
-          <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Carregando eventos...
-          </CardContent>
+          <CardsSkeleton />
         </Card>
       ) : events.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <CalendarDays className="h-8 w-8 text-slate-300" />
-            <p className="text-sm font-medium text-slate-700">
-              {when === 'upcoming'
-                ? 'Nenhum evento agendado'
-                : 'Nenhum evento passado'}
-            </p>
-            <p className="text-sm text-slate-500">
-              Crie um novo evento para a agenda da igreja.
-            </p>
+          <CardContent>
+            <EmptyState
+              icon={CalendarDays}
+              title={
+                when === 'upcoming'
+                  ? 'Nenhum evento agendado'
+                  : 'Nenhum evento passado'
+              }
+              description="Divulgue conferências, retiros e batismos para toda a igreja."
+              actionHref={when === 'upcoming' ? '/events/new' : undefined}
+              actionLabel="Criar evento"
+            />
           </CardContent>
         </Card>
       ) : (

@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -99,6 +100,7 @@ export function CampaignForm({
       } else {
         await api.post('/campaigns', payload);
       }
+      toast.success(editing ? 'Campanha atualizado' : 'Campanha criado');
       router.push('/campaigns');
       router.refresh();
     } catch (err) {

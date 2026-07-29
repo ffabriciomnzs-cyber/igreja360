@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -90,6 +91,7 @@ export function TransactionForm({
       } else {
         await api.post('/financial', payload);
       }
+      toast.success(editing ? 'Lançamento atualizado' : 'Lançamento criado');
       router.push('/financial');
       router.refresh();
     } catch (err) {

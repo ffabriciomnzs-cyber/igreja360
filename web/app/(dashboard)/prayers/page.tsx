@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { ListSkeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -191,10 +192,7 @@ export default function PrayersPage(): React.ReactElement {
 
       {loading ? (
         <Card>
-          <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Carregando pedidos...
-          </CardContent>
+          <ListSkeleton />
         </Card>
       ) : items.length === 0 ? (
         <Card>

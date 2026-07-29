@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -97,6 +98,7 @@ export function CellForm({ cell }: CellFormProps): React.ReactElement {
       } else {
         await api.post('/cells', payload);
       }
+      toast.success(editing ? 'Célula atualizado' : 'Célula criado');
       router.push('/cells');
       router.refresh();
     } catch (err) {

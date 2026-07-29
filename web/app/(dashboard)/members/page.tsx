@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ListSkeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -176,20 +178,15 @@ export default function MembersPage(): React.ReactElement {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Carregando membros...
-            </div>
+            <ListSkeleton />
           ) : members.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-              <Users className="h-8 w-8 text-slate-300" />
-              <p className="text-sm font-medium text-slate-700">
-                Nenhum membro encontrado
-              </p>
-              <p className="text-sm text-slate-500">
-                Cadastre o primeiro membro para começar.
-              </p>
-            </div>
+            <EmptyState
+              icon={Users}
+              title="Nenhum membro encontrado"
+              description="Cadastre um a um ou importe todos de uma planilha."
+              actionHref="/members/new"
+              actionLabel="Cadastrar membro"
+            />
           ) : (
             <>
             <div className="hidden overflow-x-auto md:block">

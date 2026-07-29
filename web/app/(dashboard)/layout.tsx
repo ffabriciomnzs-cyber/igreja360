@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
+import { Toaster } from 'sonner';
 
 export default function DashboardLayout({
   children,
@@ -45,6 +46,8 @@ export default function DashboardLayout({
         <main className="flex-1 overflow-y-auto p-4 md:p-6 print:overflow-visible print:p-0">
           {children}
         </main>
+        {/* Confirmações pós-ação ("Membro salvo") — sem isso, salvar é silêncio. */}
+        <Toaster richColors position="top-center" closeButton />
       </div>
     </div>
   );

@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ListSkeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -127,20 +129,15 @@ export default function CellsPage(): React.ReactElement {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Carregando células...
-            </div>
+            <ListSkeleton />
           ) : cells.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-              <Network className="h-8 w-8 text-slate-300" />
-              <p className="text-sm font-medium text-slate-700">
-                Nenhuma célula encontrada
-              </p>
-              <p className="text-sm text-slate-500">
-                Cadastre a primeira célula para começar.
-              </p>
-            </div>
+            <EmptyState
+              icon={Network}
+              title="Nenhuma célula encontrada"
+              description="Organize os membros em pequenos grupos de comunhão."
+              actionHref="/cells/new"
+              actionLabel="Criar célula"
+            />
           ) : (
             <>
             <div className="hidden overflow-x-auto md:block">

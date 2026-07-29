@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -231,6 +232,7 @@ export function WorshipForm({
       } else {
         await api.post('/worship', payload);
       }
+      toast.success(editing ? 'Culto atualizado' : 'Culto criado');
       router.push('/worship');
       router.refresh();
     } catch (err) {

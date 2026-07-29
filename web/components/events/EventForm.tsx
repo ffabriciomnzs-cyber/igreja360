@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Upload, Trash2 } from 'lucide-react';
@@ -119,6 +120,7 @@ export function EventForm({ event }: EventFormProps): React.ReactElement {
       } else {
         await api.post('/events', payload);
       }
+      toast.success(editing ? 'Evento atualizado' : 'Evento criado');
       router.push('/events');
       router.refresh();
     } catch (err) {

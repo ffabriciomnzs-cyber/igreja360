@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Upload, Trash2 } from 'lucide-react';
@@ -192,6 +193,7 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
       } else {
         await api.post('/members', payload);
       }
+      toast.success(editing ? 'Membro atualizado' : 'Membro criado');
       router.push('/members');
       router.refresh();
     } catch (err) {

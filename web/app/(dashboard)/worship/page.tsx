@@ -13,6 +13,7 @@ import {
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ListSkeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { api, extractApiError } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
@@ -94,10 +95,7 @@ export default function WorshipListPage(): React.ReactElement {
           {error}
         </div>
       ) : loading ? (
-        <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Carregando...
-        </div>
+        <ListSkeleton />
       ) : services.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
