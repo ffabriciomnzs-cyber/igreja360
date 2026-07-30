@@ -189,7 +189,7 @@ export default function PerfilPage(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+      <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
         <Loader2 className="h-4 w-4 animate-spin" />
         Carregando...
       </div>
@@ -203,7 +203,7 @@ export default function PerfilPage(): React.ReactElement {
   return (
     <div className="space-y-6">
       {/* Carteirinha digital */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200">
+      <div className="overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-lg ring-1 ring-slate-200 dark:ring-slate-700">
         <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-indigo-600 to-violet-700 px-5 py-4 text-white">
           <div className="min-w-0">
             <p className="text-[10px] font-medium uppercase tracking-widest text-indigo-200">
@@ -229,7 +229,7 @@ export default function PerfilPage(): React.ReactElement {
         </div>
 
         <div className="flex gap-4 px-5 py-4">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-indigo-50 text-xl font-bold text-indigo-600">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-xl font-bold text-indigo-600 dark:text-indigo-400">
             {member.photo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -242,22 +242,22 @@ export default function PerfilPage(): React.ReactElement {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-lg font-bold text-slate-900">
+            <h3 className="truncate text-lg font-bold text-slate-900 dark:text-slate-100">
               {member.name}
             </h3>
-            <p className="text-sm text-indigo-600">
+            <p className="text-sm text-indigo-600 dark:text-indigo-400">
               {member.role ? roleLabel(member.role, member.gender) : 'Membro'}
             </p>
             <dl className="mt-2 space-y-1 text-xs">
               <div className="flex justify-between gap-2">
-                <dt className="text-slate-400">Situação</dt>
-                <dd className="font-medium text-slate-700">
+                <dt className="text-slate-400 dark:text-slate-500">Situação</dt>
+                <dd className="font-medium text-slate-700 dark:text-slate-300">
                   {STATUS_LABELS[member.status]}
                 </dd>
               </div>
               <div className="flex justify-between gap-2">
-                <dt className="text-slate-400">Membro desde</dt>
-                <dd className="font-medium text-slate-700">
+                <dt className="text-slate-400 dark:text-slate-500">Membro desde</dt>
+                <dd className="font-medium text-slate-700 dark:text-slate-300">
                   {member.joinedAt ? formatDate(member.joinedAt) : '—'}
                 </dd>
               </div>
@@ -265,8 +265,8 @@ export default function PerfilPage(): React.ReactElement {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-5 py-3 text-[10px] text-slate-500">
-          <p className="font-semibold text-slate-700">
+        <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 dark:bg-slate-950 px-5 py-3 text-[10px] text-slate-500 dark:text-slate-400">
+          <p className="font-semibold text-slate-700 dark:text-slate-300">
             ID {member.id.slice(0, 8).toUpperCase()}
           </p>
           {church?.phone && <p>{church.phone}</p>}
@@ -276,11 +276,11 @@ export default function PerfilPage(): React.ReactElement {
       {/* Meus dados */}
       <section>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-800">Meus dados</h2>
+          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200">Meus dados</h2>
           {!editing && (
             <button
               onClick={startEdit}
-              className="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+              className="flex items-center gap-1 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
             >
               <Pencil className="h-3.5 w-3.5" />
               Editar
@@ -289,9 +289,9 @@ export default function PerfilPage(): React.ReactElement {
         </div>
 
         {editing ? (
-          <div className="space-y-3 rounded-2xl border border-border bg-white p-4">
+          <div className="space-y-3 rounded-2xl border border-border bg-white dark:bg-slate-900 p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-indigo-50 text-lg font-bold text-indigo-600">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-lg font-bold text-indigo-600 dark:text-indigo-400">
                 {form.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -312,7 +312,7 @@ export default function PerfilPage(): React.ReactElement {
               />
               <button
                 onClick={() => photoRef.current?.click()}
-                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
                 <Upload className="h-4 w-4" />
                 Trocar foto
@@ -329,7 +329,7 @@ export default function PerfilPage(): React.ReactElement {
               ] as const
             ).map(([key, label, type]) => (
               <div key={key}>
-                <label className="mb-1 block text-xs font-medium text-slate-500">
+                <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
                   {label}
                 </label>
                 <input
@@ -338,12 +338,12 @@ export default function PerfilPage(): React.ReactElement {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, [key]: e.target.value }))
                   }
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
             ))}
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">
+              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
                 Sexo
               </label>
               <select
@@ -351,21 +351,21 @@ export default function PerfilPage(): React.ReactElement {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, gender: e.target.value }))
                 }
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
               >
                 <option value="">Não informado</option>
                 <option value="MALE">{GENDER_LABELS.MALE}</option>
                 <option value="FEMALE">{GENDER_LABELS.FEMALE}</option>
               </select>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-400 dark:text-slate-500">
               Para alterar seu e-mail de acesso, fale com a secretaria.
             </p>
 
             <div className="flex justify-end gap-2 pt-1">
               <button
                 onClick={() => setEditing(false)}
-                className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-100"
+                className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="h-4 w-4" />
                 Cancelar
@@ -385,7 +385,7 @@ export default function PerfilPage(): React.ReactElement {
             </div>
           </div>
         ) : (
-          <dl className="divide-y divide-slate-100 rounded-2xl border border-border bg-white px-4">
+          <dl className="divide-y divide-slate-100 dark:divide-slate-800 rounded-2xl border border-border bg-white dark:bg-slate-900 px-4">
             {(
               [
                 ['E-mail', member.email],
@@ -399,8 +399,8 @@ export default function PerfilPage(): React.ReactElement {
               ] as const
             ).map(([label, value]) => (
               <div key={label} className="flex justify-between gap-3 py-2.5">
-                <dt className="text-sm text-slate-400">{label}</dt>
-                <dd className="text-right text-sm font-medium text-slate-700">
+                <dt className="text-sm text-slate-400 dark:text-slate-500">{label}</dt>
+                <dd className="text-right text-sm font-medium text-slate-700 dark:text-slate-300">
                   {value || '—'}
                 </dd>
               </div>
@@ -412,43 +412,43 @@ export default function PerfilPage(): React.ReactElement {
       {/* Notificações */}
       <Link
         href={`/portal/${slug}/notificacoes`}
-        className="flex items-center gap-3 rounded-2xl border border-border bg-white p-4 hover:bg-slate-50"
+        className="flex items-center gap-3 rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60"
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
           <Bell className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-800">Notificações</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Notificações</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Escolha o que receber no celular
           </p>
         </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
       </Link>
 
       {/* Pedidos de oração */}
       <section>
-        <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
-          <HandHeart className="h-4 w-4 text-indigo-600" />
+        <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+          <HandHeart className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
           Meus pedidos de oração
         </h2>
 
-        <div className="space-y-3 rounded-2xl border border-border bg-white p-4">
+        <div className="space-y-3 rounded-2xl border border-border bg-white dark:bg-slate-900 p-4">
           <input
             value={pTitle}
             onChange={(e) => setPTitle(e.target.value)}
             placeholder="Pelo que a igreja pode orar?"
             maxLength={160}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
           />
           <textarea
             value={pDesc}
             onChange={(e) => setPDesc(e.target.value)}
             placeholder="Conte mais, se quiser (opcional)"
             maxLength={2000}
-            className="min-h-[70px] w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            className="min-h-[70px] w-full resize-y rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
           />
-          <label className="flex items-center gap-2 text-xs text-slate-500">
+          <label className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <input
               type="checkbox"
               checked={pPublic}
@@ -474,7 +474,7 @@ export default function PerfilPage(): React.ReactElement {
 
         <div className="mt-3 space-y-2">
           {prayers.length === 0 ? (
-            <p className="rounded-2xl border border-border bg-white p-4 text-center text-sm text-slate-400">
+            <p className="rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 text-center text-sm text-slate-400 dark:text-slate-500">
               Você ainda não enviou pedidos.
             </p>
           ) : (
@@ -483,15 +483,15 @@ export default function PerfilPage(): React.ReactElement {
               return (
                 <div
                   key={p.id}
-                  className="rounded-2xl border border-border bg-white p-4 shadow-sm"
+                  className="rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium text-slate-900">{p.title}</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">{p.title}</p>
                     <span
                       className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                         answered
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-indigo-50 text-indigo-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
                       }`}
                     >
                       {answered ? (
@@ -503,7 +503,7 @@ export default function PerfilPage(): React.ReactElement {
                     </span>
                   </div>
                   {p.description && (
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       {p.description}
                     </p>
                   )}

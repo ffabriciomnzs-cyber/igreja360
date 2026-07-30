@@ -89,22 +89,22 @@ export default function FinancialPage(): React.ReactElement {
       label: 'Receitas',
       value: summary.income,
       icon: TrendingUp,
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-50',
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
     },
     {
       label: 'Despesas',
       value: summary.expense,
       icon: TrendingDown,
-      color: 'text-red-600',
-      bg: 'bg-red-50',
+      color: 'text-red-600 dark:text-red-400',
+      bg: 'bg-red-50 dark:bg-red-950/40',
     },
     {
       label: 'Saldo',
       value: summary.balance,
       icon: Wallet,
-      color: summary.balance >= 0 ? 'text-indigo-600' : 'text-red-600',
-      bg: 'bg-indigo-50',
+      color: summary.balance >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-red-600 dark:text-red-400',
+      bg: 'bg-indigo-50 dark:bg-indigo-950/50',
     },
   ];
 
@@ -130,7 +130,7 @@ export default function FinancialPage(): React.ReactElement {
             <Card key={c.label}>
               <CardContent className="flex items-center justify-between p-6">
                 <div>
-                  <p className="text-sm text-slate-500">{c.label}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{c.label}</p>
                   <p className={`mt-1 text-2xl font-bold ${c.color}`}>
                     {formatCurrency(c.value)}
                   </p>
@@ -149,7 +149,7 @@ export default function FinancialPage(): React.ReactElement {
       <Card className="mb-4">
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <Input
               value={search}
               onChange={(e) => {
@@ -176,7 +176,7 @@ export default function FinancialPage(): React.ReactElement {
       </Card>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -187,11 +187,11 @@ export default function FinancialPage(): React.ReactElement {
             <ListSkeleton />
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-              <Receipt className="h-8 w-8 text-slate-300" />
-              <p className="text-sm font-medium text-slate-700">
+              <Receipt className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Nenhum lançamento encontrado
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Registre a primeira receita ou despesa.
               </p>
             </div>
@@ -200,7 +200,7 @@ export default function FinancialPage(): React.ReactElement {
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     <th className="px-4 py-3 font-medium">Data</th>
                     <th className="px-4 py-3 font-medium">Categoria</th>
                     <th className="px-4 py-3 font-medium">Tipo</th>
@@ -214,17 +214,17 @@ export default function FinancialPage(): React.ReactElement {
                     return (
                       <tr
                         key={t.id}
-                        className="border-b border-border last:border-0 hover:bg-slate-50"
+                        className="border-b border-border last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                       >
-                        <td className="px-4 py-3 text-slate-600">
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                           {formatDate(t.date)}
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium text-slate-900 dark:text-slate-100">
                             {t.category}
                           </p>
                           {t.description && (
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                               {t.description}
                             </p>
                           )}
@@ -236,7 +236,7 @@ export default function FinancialPage(): React.ReactElement {
                         </td>
                         <td
                           className={`px-4 py-3 text-right font-medium ${
-                            isIncome ? 'text-emerald-600' : 'text-red-600'
+                            isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                           }`}
                         >
                           {isIncome ? '+' : '−'}{' '}
@@ -278,22 +278,22 @@ export default function FinancialPage(): React.ReactElement {
                   <div key={t.id} className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium text-slate-900 dark:text-slate-100">
                           {t.category}
                         </p>
                         {t.description && (
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             {t.description}
                           </p>
                         )}
-                        <p className="mt-0.5 text-xs text-slate-400">
+                        <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
                           {formatDate(t.date)}
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
                         <p
                           className={`font-semibold ${
-                            isIncome ? 'text-emerald-600' : 'text-red-600'
+                            isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                           }`}
                         >
                           {isIncome ? '+' : '−'} {formatCurrency(Number(t.amount))}
@@ -340,7 +340,7 @@ export default function FinancialPage(): React.ReactElement {
       </Card>
 
       {!loading && items.length > 0 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
           <span>
             {total} {total === 1 ? 'lançamento' : 'lançamentos'}
           </span>

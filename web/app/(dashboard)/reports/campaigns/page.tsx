@@ -87,13 +87,13 @@ export default function CampaignsReportPage(): React.ReactElement {
             render: (c) =>
               c.goal > 0 ? (
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div
                       className="h-full rounded-full bg-indigo-500"
                       style={{ width: `${Math.min(100, c.progress)}%` }}
                     />
                   </div>
-                  <span className="text-xs text-slate-500">{c.progress}%</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{c.progress}%</span>
                 </div>
               ) : (
                 '—'

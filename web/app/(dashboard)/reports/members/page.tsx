@@ -58,9 +58,9 @@ export default function MembersReportPage(): React.ReactElement {
     ], rows);
 
   const filters = (
-    <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-white p-4">
+    <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-white dark:bg-slate-900 p-4">
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">
+        <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
           Status
         </label>
         <select
@@ -77,7 +77,7 @@ export default function MembersReportPage(): React.ReactElement {
         </select>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">
+        <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
           Cargo
         </label>
         <select

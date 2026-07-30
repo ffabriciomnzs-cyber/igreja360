@@ -76,7 +76,7 @@ function SectionTitle({
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800">
+    <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
       <span
         className={`flex h-7 w-7 items-center justify-center rounded-lg text-white ${color}`}
       >
@@ -111,7 +111,7 @@ export default function PortalInicioPage(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+      <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
         <Loader2 className="h-4 w-4 animate-spin" />
         Carregando...
       </div>
@@ -167,10 +167,10 @@ export default function PortalInicioPage(): React.ReactElement {
             {data.announcements.map((a) => (
               <div
                 key={a.id}
-                className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 shadow-sm"
+                className="rounded-2xl border border-indigo-100 dark:border-indigo-900 bg-indigo-50/40 p-4 shadow-sm"
               >
-                <p className="font-semibold text-slate-900">{a.title}</p>
-                <p className="mt-1 whitespace-pre-line text-sm text-slate-600">
+                <p className="font-semibold text-slate-900 dark:text-slate-100">{a.title}</p>
+                <p className="mt-1 whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
                   {a.content}
                 </p>
               </div>
@@ -185,7 +185,7 @@ export default function PortalInicioPage(): React.ReactElement {
           Campanhas
         </SectionTitle>
         {data.campaigns.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-white p-4 text-sm text-slate-400">
+          <p className="rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 text-sm text-slate-400 dark:text-slate-500">
             Nenhuma campanha ativa no momento.
           </p>
         ) : (
@@ -193,14 +193,14 @@ export default function PortalInicioPage(): React.ReactElement {
             {data.campaigns.map((c) => (
               <div
                 key={c.id}
-                className="rounded-2xl border border-border bg-white p-4 shadow-sm"
+                className="rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 shadow-sm"
               >
                 <div className="flex items-start gap-2">
                   <Heart className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-slate-900">{c.title}</p>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">{c.title}</p>
                     {c.description && (
-                      <p className="mt-0.5 text-sm text-slate-500">
+                      <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                         {c.description}
                       </p>
                     )}
@@ -208,7 +208,7 @@ export default function PortalInicioPage(): React.ReactElement {
                 </div>
                 {c.goal > 0 && (
                   <div className="mt-3">
-                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-rose-400 to-rose-600"
                         style={{ width: `${c.progress}%` }}
@@ -218,7 +218,7 @@ export default function PortalInicioPage(): React.ReactElement {
                       <span className="font-semibold text-rose-600">
                         {formatCurrency(c.current)}
                       </span>
-                      <span className="text-slate-400">
+                      <span className="text-slate-400 dark:text-slate-500">
                         Meta: {formatCurrency(c.goal)}
                       </span>
                     </div>
@@ -236,7 +236,7 @@ export default function PortalInicioPage(): React.ReactElement {
           Próximos cultos
         </SectionTitle>
         {data.worship.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-white p-4 text-sm text-slate-400">
+          <p className="rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 text-sm text-slate-400 dark:text-slate-500">
             Nenhum culto programado.
           </p>
         ) : (
@@ -244,17 +244,17 @@ export default function PortalInicioPage(): React.ReactElement {
             {data.worship.map((w) => (
               <div
                 key={w.id}
-                className="flex gap-3 rounded-2xl border border-border bg-white p-3 shadow-sm"
+                className="flex gap-3 rounded-2xl border border-border bg-white dark:bg-slate-900 p-3 shadow-sm"
               >
                 <DateBadge iso={w.date} />
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-slate-900">{w.title}</p>
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">{w.title}</p>
                   {w.theme && (
-                    <p className="mt-0.5 line-clamp-2 text-sm text-slate-500">
+                    <p className="mt-0.5 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">
                       {w.theme}
                     </p>
                   )}
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400">
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400 dark:text-slate-500">
                     <span>{dateBadge(w.date).time}</span>
                     {w.bibleRef && (
                       <span className="flex items-center gap-1">
@@ -276,7 +276,7 @@ export default function PortalInicioPage(): React.ReactElement {
           Próximos eventos
         </SectionTitle>
         {data.events.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-white p-4 text-sm text-slate-400">
+          <p className="rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 text-sm text-slate-400 dark:text-slate-500">
             Nenhum evento programado.
           </p>
         ) : (
@@ -284,12 +284,12 @@ export default function PortalInicioPage(): React.ReactElement {
             {data.events.map((ev) => (
               <div
                 key={ev.id}
-                className="flex gap-3 rounded-2xl border border-border bg-white p-3 shadow-sm"
+                className="flex gap-3 rounded-2xl border border-border bg-white dark:bg-slate-900 p-3 shadow-sm"
               >
                 <DateBadge iso={ev.date} />
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-slate-900">{ev.name}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">{ev.name}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400 dark:text-slate-500">
                     <span>{dateBadge(ev.date).time}</span>
                     {ev.location && (
                       <span className="flex items-center gap-1">

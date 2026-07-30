@@ -14,7 +14,7 @@ export function RadioMiniBar(): React.ReactElement | null {
       <div className="mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-700 px-3 py-2 text-white shadow-lg">
         <button
           onClick={toggle}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-indigo-700"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300"
           aria-label={playing ? 'Pausar' : 'Tocar'}
         >
           {loading ? (

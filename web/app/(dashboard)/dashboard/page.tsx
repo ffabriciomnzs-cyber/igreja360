@@ -66,7 +66,7 @@ const EMPTY_STATS: MemberStats = {
 const FINANCE_ROLES = ['SUPER_ADMIN', 'ADMIN', 'PASTOR', 'TREASURER'];
 
 function Skeleton({ className }: { className?: string }): React.ReactElement {
-  return <div className={cn('animate-pulse rounded bg-slate-200', className)} />;
+  return <div className={cn('animate-pulse rounded bg-slate-200 dark:bg-slate-700', className)} />;
 }
 
 export default function DashboardPage(): React.ReactElement {
@@ -199,17 +199,17 @@ export default function DashboardPage(): React.ReactElement {
   return (
     <div>
       <div className="mb-5">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           {firstName ? `Olá, ${firstName} 👋` : 'Dashboard'}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           <span className="capitalize">{today}</span>
           {ready && nextWorship && (
             <>
               {' · '}
               <Link
                 href={`/worship/${nextWorship.id}`}
-                className="font-medium text-indigo-600 hover:underline"
+                className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
               >
                 {nextWorship.title} {quandoCulto(nextWorship.date)}
               </Link>
@@ -236,7 +236,7 @@ export default function DashboardPage(): React.ReactElement {
             <Link
               key={a.href}
               href={a.href}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm text-slate-600 transition-colors duration-150 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-sm text-slate-600 dark:text-slate-300 transition-colors duration-150 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-700 dark:hover:text-indigo-300"
             >
               <Icon className="h-3.5 w-3.5" />
               {a.label}
@@ -246,19 +246,19 @@ export default function DashboardPage(): React.ReactElement {
       </div>
 
       {/* Palavra do dia */}
-      <div className="mb-6 rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-white p-5">
+      <div className="mb-6 rounded-xl border border-indigo-100 dark:border-indigo-900 bg-gradient-to-r from-indigo-50 dark:from-indigo-950/40 to-white dark:to-slate-900 p-5">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white">
             <BookOpen className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
               Palavra do dia
             </p>
-            <p className="mt-1 italic leading-relaxed text-slate-700">
+            <p className="mt-1 italic leading-relaxed text-slate-700 dark:text-slate-300">
               “{verse.text}”
             </p>
-            <p className="mt-1 text-sm font-medium text-slate-500">
+            <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
               {verse.ref}
             </p>
           </div>
@@ -266,7 +266,7 @@ export default function DashboardPage(): React.ReactElement {
       </div>
 
       {error && (
-        <div className="mb-4 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="mb-4 flex items-center gap-2 rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
           <AlertCircle className="h-4 w-4 shrink-0" />
           Não foi possível carregar alguns dados. Verifique sua conexão e
           atualize a página.
@@ -282,21 +282,21 @@ export default function DashboardPage(): React.ReactElement {
               <Card className="transition-shadow group-hover:shadow-md">
                 <CardContent className="flex items-center justify-between p-6">
                   <div>
-                    <p className="text-sm text-slate-500">{c.label}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{c.label}</p>
                     {ready ? (
-                      <p className="mt-1 text-2xl font-bold text-slate-900">
+                      <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">
                         {c.value}
                       </p>
                     ) : (
                       <Skeleton className="mt-2 h-7 w-12" />
                     )}
                     {ready && c.trend !== undefined && c.trend > 0 && (
-                      <p className="mt-1 text-xs font-medium text-emerald-600">
+                      <p className="mt-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                         +{c.trend} este mês
                       </p>
                     )}
                   </div>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
                     <Icon className="h-5 w-5" />
                   </div>
                 </CardContent>
@@ -312,16 +312,16 @@ export default function DashboardPage(): React.ReactElement {
           <Card>
             <CardContent className="flex items-center justify-between p-6">
               <div>
-                <p className="text-sm text-slate-500">Entradas do mês</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Entradas do mês</p>
                 {ready ? (
-                  <p className="mt-1 text-xl font-bold text-emerald-600">
+                  <p className="mt-1 text-xl font-bold text-emerald-600 dark:text-emerald-400">
                     {formatCurrency(finance?.monthIncome ?? 0)}
                   </p>
                 ) : (
                   <Skeleton className="mt-2 h-6 w-24" />
                 )}
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
                 <ArrowUpRight className="h-5 w-5" />
               </div>
             </CardContent>
@@ -329,16 +329,16 @@ export default function DashboardPage(): React.ReactElement {
           <Card>
             <CardContent className="flex items-center justify-between p-6">
               <div>
-                <p className="text-sm text-slate-500">Saídas do mês</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Saídas do mês</p>
                 {ready ? (
-                  <p className="mt-1 text-xl font-bold text-red-600">
+                  <p className="mt-1 text-xl font-bold text-red-600 dark:text-red-400">
                     {formatCurrency(finance?.monthExpense ?? 0)}
                   </p>
                 ) : (
                   <Skeleton className="mt-2 h-6 w-24" />
                 )}
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-red-50 text-red-600">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
                 <ArrowDownRight className="h-5 w-5" />
               </div>
             </CardContent>
@@ -346,14 +346,14 @@ export default function DashboardPage(): React.ReactElement {
           <Card>
             <CardContent className="flex items-center justify-between p-6">
               <div>
-                <p className="text-sm text-slate-500">Saldo do mês</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Saldo do mês</p>
                 {ready ? (
                   <p
                     className={cn(
                       'mt-1 text-xl font-bold',
                       (finance?.monthBalance ?? 0) >= 0
-                        ? 'text-slate-900'
-                        : 'text-red-600',
+                        ? 'text-slate-900 dark:text-slate-100'
+                        : 'text-red-600 dark:text-red-400',
                     )}
                   >
                     {formatCurrency(finance?.monthBalance ?? 0)}
@@ -362,7 +362,7 @@ export default function DashboardPage(): React.ReactElement {
                   <Skeleton className="mt-2 h-6 w-24" />
                 )}
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
                 <Wallet className="h-5 w-5" />
               </div>
             </CardContent>
@@ -370,14 +370,14 @@ export default function DashboardPage(): React.ReactElement {
           <Card>
             <CardContent className="flex items-center justify-between p-6">
               <div>
-                <p className="text-sm text-slate-500">Saldo geral</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Saldo geral</p>
                 {ready ? (
                   <p
                     className={cn(
                       'mt-1 text-xl font-bold',
                       (finance?.balance ?? 0) >= 0
-                        ? 'text-slate-900'
-                        : 'text-red-600',
+                        ? 'text-slate-900 dark:text-slate-100'
+                        : 'text-red-600 dark:text-red-400',
                     )}
                   >
                     {formatCurrency(finance?.balance ?? 0)}
@@ -386,7 +386,7 @@ export default function DashboardPage(): React.ReactElement {
                   <Skeleton className="mt-2 h-6 w-24" />
                 )}
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                 <Landmark className="h-5 w-5" />
               </div>
             </CardContent>
@@ -399,7 +399,7 @@ export default function DashboardPage(): React.ReactElement {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <TrendingUp className="h-4 w-4 text-indigo-600" />
+              <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               Novos membros (últimos 6 meses)
             </CardTitle>
           </CardHeader>
@@ -413,7 +413,7 @@ export default function DashboardPage(): React.ReactElement {
                     key={g.key}
                     className="flex flex-1 flex-col items-center gap-1"
                   >
-                    <span className="text-xs font-medium text-slate-700">
+                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                       {g.count}
                     </span>
                     <div className="flex w-full flex-1 items-end">
@@ -425,7 +425,7 @@ export default function DashboardPage(): React.ReactElement {
                         }}
                       />
                     </div>
-                    <span className="text-xs capitalize text-slate-500">
+                    <span className="text-xs capitalize text-slate-500 dark:text-slate-400">
                       {g.label}
                     </span>
                   </div>
@@ -438,7 +438,7 @@ export default function DashboardPage(): React.ReactElement {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Cake className="h-4 w-4 text-indigo-600" />
+              <Cake className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               Aniversariantes do mês
             </CardTitle>
           </CardHeader>
@@ -450,7 +450,7 @@ export default function DashboardPage(): React.ReactElement {
                 <Skeleton className="h-6 w-2/3" />
               </div>
             ) : birthdays.length === 0 ? (
-              <p className="py-8 text-center text-sm text-slate-400">
+              <p className="py-8 text-center text-sm text-slate-400 dark:text-slate-500">
                 Nenhum aniversariante neste mês.
               </p>
             ) : (
@@ -462,11 +462,11 @@ export default function DashboardPage(): React.ReactElement {
                   >
                     <Link
                       href={`/members/${b.id}`}
-                      className="text-sm font-medium text-slate-900 hover:text-indigo-600"
+                      className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400"
                     >
                       {b.name}
                     </Link>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       {formatDate(b.birthDate)}
                     </span>
                   </li>
@@ -492,7 +492,7 @@ export default function DashboardPage(): React.ReactElement {
               </div>
             ) : stats.recent.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-400 dark:text-slate-500">
                   Nenhum membro cadastrado ainda.
                 </p>
                 <Link
@@ -512,11 +512,11 @@ export default function DashboardPage(): React.ReactElement {
                     <div>
                       <Link
                         href={`/members/${m.id}`}
-                        className="text-sm font-medium text-slate-900 hover:text-indigo-600"
+                        className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400"
                       >
                         {m.name}
                       </Link>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {m.joinedAt
                           ? `Entrada em ${formatDate(m.joinedAt)}`
                           : `Cadastrado em ${formatDate(m.createdAt)}`}
@@ -535,7 +535,7 @@ export default function DashboardPage(): React.ReactElement {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Calendar className="h-4 w-4 text-indigo-600" />
+              <Calendar className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               Próximos eventos
             </CardTitle>
           </CardHeader>
@@ -548,7 +548,7 @@ export default function DashboardPage(): React.ReactElement {
               </div>
             ) : events.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-400 dark:text-slate-500">
                   Nenhum evento agendado.
                 </p>
                 <Link
@@ -568,11 +568,11 @@ export default function DashboardPage(): React.ReactElement {
                     <div>
                       <Link
                         href={`/events/${e.id}`}
-                        className="text-sm font-medium text-slate-900 hover:text-indigo-600"
+                        className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400"
                       >
                         {e.name}
                       </Link>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {formatDateTime(e.date)}
                         {e.location ? ` · ${e.location}` : ''}
                       </p>
@@ -592,7 +592,7 @@ export default function DashboardPage(): React.ReactElement {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Megaphone className="h-4 w-4 text-indigo-600" />
+                <Megaphone className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                 Campanhas em andamento
               </CardTitle>
             </CardHeader>
@@ -607,17 +607,17 @@ export default function DashboardPage(): React.ReactElement {
                     <div className="flex items-center justify-between text-sm">
                       <Link
                         href={`/campaigns/${c.id}`}
-                        className="font-medium text-slate-900 hover:text-indigo-600"
+                        className="font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400"
                       >
                         {c.title}
                       </Link>
-                      <span className="text-slate-500">
+                      <span className="text-slate-500 dark:text-slate-400">
                         {formatCurrency(current)}
                         {goal > 0 ? ` / ${formatCurrency(goal)}` : ''}
                       </span>
                     </div>
                     {goal > 0 && (
-                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-full rounded-full bg-indigo-500"
                           style={{ width: `${pct}%` }}

@@ -110,7 +110,7 @@ export default function DuplicatesPage(): React.ReactElement {
       <div className="mb-4">
         <Link
           href="/members"
-          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"
+          className="inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800"
         >
           <ChevronLeft className="h-4 w-4" />
           Voltar para Membros
@@ -118,25 +118,25 @@ export default function DuplicatesPage(): React.ReactElement {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
 
       {loading ? (
-        <p className="flex items-center gap-2 py-10 text-sm text-slate-400">
+        <p className="flex items-center gap-2 py-10 text-sm text-slate-400 dark:text-slate-500">
           <Loader2 className="h-4 w-4 animate-spin" />
           Procurando duplicados...
         </p>
       ) : groups.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center gap-2 py-12 text-center text-slate-500">
+          <CardContent className="flex flex-col items-center gap-2 py-12 text-center text-slate-500 dark:text-slate-400">
             <CheckCircle2 className="h-8 w-8 text-emerald-500" />
-            <p className="text-sm font-medium text-slate-700">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Nenhum cadastro duplicado encontrado.
             </p>
             {done > 0 && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {done} {done === 1 ? 'grupo mesclado' : 'grupos mesclados'} nesta
                 sessão. 🎉
               </p>
@@ -145,7 +145,7 @@ export default function DuplicatesPage(): React.ReactElement {
         </Card>
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             {groups.length}{' '}
             {groups.length === 1
               ? 'grupo de duplicados'
@@ -157,8 +157,8 @@ export default function DuplicatesPage(): React.ReactElement {
             return (
               <Card key={group.members.map((m) => m.id).join('-')}>
                 <CardContent className="space-y-3 p-4">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                    <Users className="h-4 w-4 text-indigo-600" />
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                     {group.members.length} cadastros parecidos
                   </div>
 
@@ -170,8 +170,8 @@ export default function DuplicatesPage(): React.ReactElement {
                           key={m.id}
                           className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${
                             keeping
-                              ? 'border-indigo-400 bg-indigo-50/50'
-                              : 'border-border hover:bg-slate-50'
+                              ? 'border-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/40'
+                              : 'border-border hover:bg-slate-50 dark:hover:bg-slate-800/60'
                           }`}
                         >
                           <input
@@ -185,19 +185,19 @@ export default function DuplicatesPage(): React.ReactElement {
                           />
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-medium text-slate-900">
+                              <span className="font-medium text-slate-900 dark:text-slate-100">
                                 {m.name}
                               </span>
                               <Badge variant={STATUS_VARIANTS[m.status]}>
                                 {STATUS_LABELS[m.status]}
                               </Badge>
                               {m.role && (
-                                <span className="text-xs text-indigo-600">
+                                <span className="text-xs text-indigo-600 dark:text-indigo-400">
                                   {roleLabel(m.role, m.gender)}
                                 </span>
                               )}
                               {m.portalStatus !== 'NONE' && (
-                                <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                                <span className="rounded bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
                                   portal: {m.portalStatus.toLowerCase()}
                                 </span>
                               )}
@@ -207,7 +207,7 @@ export default function DuplicatesPage(): React.ReactElement {
                                 </span>
                               )}
                             </div>
-                            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
+                            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400">
                               {m.email && (
                                 <span className="flex items-center gap-1">
                                   <Mail className="h-3 w-3" />
@@ -233,7 +233,7 @@ export default function DuplicatesPage(): React.ReactElement {
                   </div>
 
                   <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
                       Vamos manter o selecionado e unir os dados/atividade dos
                       outros nele.
                     </p>

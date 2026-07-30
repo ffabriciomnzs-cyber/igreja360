@@ -84,15 +84,15 @@ export function EnableNotifications(): React.ReactElement | null {
 
   if (iosPrecisaInstalar) {
     return (
-      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 dark:border-amber-900 bg-amber-50/70 dark:bg-amber-950/40 p-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white">
           <Smartphone className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             Instale o app para receber avisos
           </p>
-          <p className="mt-1 text-xs leading-relaxed text-amber-800">
+          <p className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-200">
             No iPhone, as notificações só funcionam com o portal instalado.
             Toque em <Share className="inline h-3.5 w-3.5 -translate-y-px" />{' '}
             <strong>Compartilhar</strong> e depois em{' '}
@@ -116,15 +116,15 @@ export function EnableNotifications(): React.ReactElement | null {
   }
 
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+    <div className="flex items-start gap-3 rounded-2xl border border-indigo-100 dark:border-indigo-900 bg-indigo-50/60 dark:bg-indigo-950/40 p-4">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
         <Bell className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-slate-900">
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Ativar notificações
         </p>
-        <p className="mt-0.5 text-xs text-slate-500">
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
           Seja avisado no celular sobre novos cultos, eventos, campanhas e
           comunicados da igreja.
         </p>
@@ -141,7 +141,7 @@ export function EnableNotifications(): React.ReactElement | null {
         onClick={dismiss}
         aria-label="Lembrar depois"
         title="Lembrar depois"
-        className="shrink-0 text-slate-400 hover:text-slate-600"
+        className="shrink-0 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
       >
         <X className="h-4 w-4" />
       </button>

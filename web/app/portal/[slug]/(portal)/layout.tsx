@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Home, BookOpen, BookMarked, Baby, Radio, LogOut, Church } from 'lucide-react';
 import {
@@ -76,10 +77,10 @@ export default function PortalLayout({
 
   return (
     <RadioPlayerProvider>
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-indigo-50/60 pb-28">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-indigo-50/60 pb-28 dark:from-slate-950 dark:to-slate-950">
       <header className="sticky top-0 z-30 bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-600 text-white shadow-lg">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 py-3.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-white/40">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white dark:bg-slate-900 shadow-sm ring-1 ring-white/40">
             {churchLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -88,7 +89,7 @@ export default function PortalLayout({
                 className="h-full w-full object-contain p-0.5"
               />
             ) : (
-              <Church className="h-5 w-5 text-indigo-600" />
+              <Church className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
             )}
           </div>
           <Link
@@ -104,6 +105,7 @@ export default function PortalLayout({
               </p>
             )}
           </Link>
+          <ThemeToggle className="text-white/80 hover:bg-white/20 hover:text-white dark:text-white/80 dark:hover:bg-white/20 dark:hover:text-white" />
           <button
             onClick={logout}
             className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/25"
@@ -120,7 +122,7 @@ export default function PortalLayout({
       <RadioMiniBar />
 
       <nav className="fixed inset-x-0 bottom-0 z-30 px-3 pb-3">
-        <div className="mx-auto flex max-w-md items-center justify-around rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.15)] backdrop-blur">
+        <div className="mx-auto flex max-w-md items-center justify-around rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.15)] backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/95">
           {nav.map((item) => {
             const active = pathname === item.href;
             const Icon = item.icon;
@@ -135,7 +137,7 @@ export default function PortalLayout({
                     'flex h-8 w-14 items-center justify-center rounded-full transition-colors',
                     active
                       ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow'
-                      : 'text-slate-400',
+                      : 'text-slate-400 dark:text-slate-500',
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -143,7 +145,7 @@ export default function PortalLayout({
                 <span
                   className={cn(
                     'text-[10px] leading-none',
-                    active ? 'font-semibold text-indigo-600' : 'text-slate-400',
+                    active ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500',
                   )}
                 >
                   {item.label}

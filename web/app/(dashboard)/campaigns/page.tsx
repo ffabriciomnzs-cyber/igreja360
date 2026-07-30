@@ -69,7 +69,7 @@ export default function CampaignsPage(): React.ReactElement {
       />
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -102,10 +102,10 @@ export default function CampaignsPage(): React.ReactElement {
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-semibold text-slate-900">
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                         {c.title}
                       </h3>
-                      <p className="text-xs text-slate-500">{c.type}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{c.type}</p>
                     </div>
                     <Badge variant={CAMPAIGN_STATUS_VARIANTS[c.status]}>
                       {CAMPAIGN_STATUS_LABELS[c.status]}
@@ -115,27 +115,27 @@ export default function CampaignsPage(): React.ReactElement {
                   {goal > 0 && (
                     <div className="mt-4">
                       <div className="mb-1 flex items-center justify-between text-sm">
-                        <span className="font-medium text-slate-700">
+                        <span className="font-medium text-slate-700 dark:text-slate-300">
                           {formatCurrency(current)}
                         </span>
-                        <span className="text-slate-500">
+                        <span className="text-slate-500 dark:text-slate-400">
                           de {formatCurrency(goal)}
                         </span>
                       </div>
-                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-full rounded-full bg-indigo-600"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <p className="mt-1 text-right text-xs text-slate-500">
+                      <p className="mt-1 text-right text-xs text-slate-500 dark:text-slate-400">
                         {pct}% da meta
                       </p>
                     </div>
                   )}
 
                   {c.description && (
-                    <p className="mt-3 line-clamp-2 text-sm text-slate-600">
+                    <p className="mt-3 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">
                       {c.description}
                     </p>
                   )}

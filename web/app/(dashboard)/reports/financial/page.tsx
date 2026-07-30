@@ -67,8 +67,8 @@ export default function FinancialReportPage(): React.ReactElement {
             <Card>
               <CardContent className="flex items-center justify-between p-5">
                 <div>
-                  <p className="text-sm text-slate-500">Receitas</p>
-                  <p className="mt-1 text-xl font-bold text-emerald-600">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Receitas</p>
+                  <p className="mt-1 text-xl font-bold text-emerald-600 dark:text-emerald-400">
                     {formatCurrency(data.summary.income)}
                   </p>
                 </div>
@@ -78,8 +78,8 @@ export default function FinancialReportPage(): React.ReactElement {
             <Card>
               <CardContent className="flex items-center justify-between p-5">
                 <div>
-                  <p className="text-sm text-slate-500">Despesas</p>
-                  <p className="mt-1 text-xl font-bold text-red-600">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Despesas</p>
+                  <p className="mt-1 text-xl font-bold text-red-600 dark:text-red-400">
                     {formatCurrency(data.summary.expense)}
                   </p>
                 </div>
@@ -89,18 +89,18 @@ export default function FinancialReportPage(): React.ReactElement {
             <Card>
               <CardContent className="flex items-center justify-between p-5">
                 <div>
-                  <p className="text-sm text-slate-500">Saldo</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Saldo</p>
                   <p
                     className={`mt-1 text-xl font-bold ${
                       data.summary.balance >= 0
-                        ? 'text-slate-900'
-                        : 'text-red-600'
+                        ? 'text-slate-900 dark:text-slate-100'
+                        : 'text-red-600 dark:text-red-400'
                     }`}
                   >
                     {formatCurrency(data.summary.balance)}
                   </p>
                 </div>
-                <Wallet className="h-5 w-5 text-indigo-500" />
+                <Wallet className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
               </CardContent>
             </Card>
           </div>
@@ -108,7 +108,7 @@ export default function FinancialReportPage(): React.ReactElement {
           {data.byCategory.length > 0 && (
             <Card>
               <CardContent className="p-5">
-                <p className="mb-3 text-sm font-medium text-slate-600">
+                <p className="mb-3 text-sm font-medium text-slate-600 dark:text-slate-300">
                   Por categoria
                 </p>
                 <ul className="divide-y divide-border">
@@ -123,13 +123,13 @@ export default function FinancialReportPage(): React.ReactElement {
                         >
                           {c.type === 'INCOME' ? 'Receita' : 'Despesa'}
                         </Badge>
-                        <span className="text-slate-700">{c.category}</span>
+                        <span className="text-slate-700 dark:text-slate-300">{c.category}</span>
                       </div>
                       <span
                         className={`font-medium ${
                           c.type === 'INCOME'
-                            ? 'text-emerald-600'
-                            : 'text-red-600'
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-red-600 dark:text-red-400'
                         }`}
                       >
                         {formatCurrency(c.amount)}
@@ -142,7 +142,7 @@ export default function FinancialReportPage(): React.ReactElement {
           )}
 
           <div>
-            <p className="mb-3 text-sm font-medium text-slate-600">
+            <p className="mb-3 text-sm font-medium text-slate-600 dark:text-slate-300">
               Lançamentos ({data.transactions.length})
             </p>
             <DataTable
@@ -173,8 +173,8 @@ export default function FinancialReportPage(): React.ReactElement {
                     <span
                       className={
                         t.type === 'INCOME'
-                          ? 'text-emerald-600'
-                          : 'text-red-600'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-red-600 dark:text-red-400'
                       }
                     >
                       {formatCurrency(t.amount)}

@@ -105,7 +105,7 @@ export function TransactionForm({
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
               {error}
             </div>
           )}
@@ -119,8 +119,8 @@ export function TransactionForm({
               }}
               className={`rounded-md border px-4 py-3 text-sm font-medium transition-colors ${
                 form.type === 'INCOME'
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                  : 'border-input text-slate-600 hover:bg-slate-50'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+                  : 'border-input text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
               }`}
             >
               Receita
@@ -133,8 +133,8 @@ export function TransactionForm({
               }}
               className={`rounded-md border px-4 py-3 text-sm font-medium transition-colors ${
                 form.type === 'EXPENSE'
-                  ? 'border-red-500 bg-red-50 text-red-700'
-                  : 'border-input text-slate-600 hover:bg-slate-50'
+                  ? 'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300'
+                  : 'border-input text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
               }`}
             >
               Despesa

@@ -12,7 +12,7 @@ export function Skeleton({
   return (
     <div
       aria-hidden
-      className={cn('animate-pulse rounded-md bg-slate-200/70', className)}
+      className={cn('animate-pulse rounded-md bg-slate-200/70 dark:bg-slate-700/60', className)}
     />
   );
 }
@@ -54,7 +54,7 @@ export function CardsSkeleton({
       {Array.from({ length: cards }).map((_, i) => (
         <div
           key={i}
-          className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+          className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
         >
           <Skeleton className="h-36 w-full rounded-none" />
           <div className="space-y-2 p-4">
@@ -83,7 +83,7 @@ export function StatsSkeleton({
       {Array.from({ length: cards }).map((_, i) => (
         <div
           key={i}
-          className="space-y-2 rounded-xl border border-slate-200 bg-white p-4"
+          className="space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4"
         >
           <Skeleton className="h-3 w-1/2" />
           <Skeleton className="h-7 w-1/3" />

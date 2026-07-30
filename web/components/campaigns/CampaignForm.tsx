@@ -114,7 +114,7 @@ export function CampaignForm({
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
               {error}
             </div>
           )}
@@ -166,7 +166,7 @@ export function CampaignForm({
                 placeholder="Ex.: 25.000,00"
               />
               {parseMoney(form.goal) !== undefined && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   ={' '}
                   {parseMoney(form.goal)!.toLocaleString('pt-BR', {
                     style: 'currency',
@@ -186,7 +186,7 @@ export function CampaignForm({
                 placeholder="Ex.: 1.500,00"
               />
               {parseMoney(form.current) !== undefined && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   ={' '}
                   {parseMoney(form.current)!.toLocaleString('pt-BR', {
                     style: 'currency',

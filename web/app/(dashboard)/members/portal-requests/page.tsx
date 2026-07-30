@@ -64,7 +64,7 @@ export default function PortalRequestsPage(): React.ReactElement {
       />
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -74,8 +74,8 @@ export default function PortalRequestsPage(): React.ReactElement {
       ) : rows.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <UserCheck className="mx-auto h-10 w-10 text-slate-300" />
-            <p className="mt-2 text-sm text-slate-400">
+            <UserCheck className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
+            <p className="mt-2 text-sm text-slate-400 dark:text-slate-500">
               Nenhuma solicitação pendente.
             </p>
           </CardContent>
@@ -86,12 +86,12 @@ export default function PortalRequestsPage(): React.ReactElement {
             <Card key={r.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
-                  <p className="font-medium text-slate-900">{r.name}</p>
-                  <p className="text-sm text-slate-500">
+                  <p className="font-medium text-slate-900 dark:text-slate-100">{r.name}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     {r.email ?? 'sem e-mail'}
                     {r.phone ? ` · ${r.phone}` : ''}
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     Solicitado em {formatDate(r.createdAt)}
                   </p>
                 </div>

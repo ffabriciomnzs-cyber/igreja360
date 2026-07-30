@@ -176,7 +176,7 @@ export default function PrayersPage(): React.ReactElement {
             className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
               status === f.value
                 ? 'bg-primary text-primary-foreground'
-                : 'text-slate-600 hover:bg-slate-50'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
             }`}
           >
             {f.label}
@@ -185,7 +185,7 @@ export default function PrayersPage(): React.ReactElement {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -197,8 +197,8 @@ export default function PrayersPage(): React.ReactElement {
       ) : items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <HandHeart className="h-8 w-8 text-slate-300" />
-            <p className="text-sm font-medium text-slate-700">
+            <HandHeart className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Nenhum pedido de oração
             </p>
           </CardContent>
@@ -209,17 +209,17 @@ export default function PrayersPage(): React.ReactElement {
             <Card key={p.id}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-slate-900">{p.title}</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100">{p.title}</h3>
                   <Badge variant={PRAYER_STATUS_VARIANTS[p.status]}>
                     {PRAYER_STATUS_LABELS[p.status]}
                   </Badge>
                 </div>
                 {p.description && (
-                  <p className="mt-2 whitespace-pre-line text-sm text-slate-600">
+                  <p className="mt-2 whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
                     {p.description}
                   </p>
                 )}
-                <p className="mt-3 text-xs text-slate-400">
+                <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
                   {formatDate(p.createdAt)}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">

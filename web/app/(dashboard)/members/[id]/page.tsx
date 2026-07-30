@@ -26,8 +26,8 @@ function Field({
 }): React.ReactElement {
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-0.5 text-sm text-slate-800">{value || '—'}</p>
+      <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
+      <p className="mt-0.5 text-sm text-slate-800 dark:text-slate-200">{value || '—'}</p>
     </div>
   );
 }
@@ -60,7 +60,7 @@ export default function MemberDetailPage(): React.ReactElement {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Carregando...
         </CardContent>
@@ -80,7 +80,7 @@ export default function MemberDetailPage(): React.ReactElement {
           <ArrowLeft className="h-4 w-4" />
           Voltar
         </Button>
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error ?? 'Membro não encontrado.'}
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function MemberDetailPage(): React.ReactElement {
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">
+              <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
                 Status
               </p>
               <div className="mt-1">

@@ -25,11 +25,11 @@ export function EmptyState({
 }: EmptyStateProps): React.ReactElement {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50">
-        <Icon className="h-6 w-6 text-indigo-500" />
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950/50">
+        <Icon className="h-6 w-6 text-indigo-500 dark:text-indigo-400" />
       </div>
-      <p className="mt-1 text-sm font-semibold text-slate-800">{title}</p>
-      <p className="max-w-xs text-sm text-slate-500">{description}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-200">{title}</p>
+      <p className="max-w-xs text-sm text-slate-500 dark:text-slate-400">{description}</p>
       {actionHref && actionLabel && (
         <Link
           href={actionHref}

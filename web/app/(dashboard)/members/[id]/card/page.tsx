@@ -47,7 +47,7 @@ export default function MemberCardPage(): React.ReactElement {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Carregando carteirinha...
         </CardContent>
@@ -64,7 +64,7 @@ export default function MemberCardPage(): React.ReactElement {
             Voltar
           </Button>
         </Link>
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error ?? 'Não foi possível carregar a carteirinha.'}
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function MemberCardPage(): React.ReactElement {
       <div className="flex justify-center">
         <div
           id="carteirinha"
-          className="w-[420px] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200"
+          className="w-[420px] overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-xl ring-1 ring-slate-200 dark:ring-slate-700"
           style={{
             WebkitPrintColorAdjust: 'exact',
             printColorAdjust: 'exact',
@@ -147,7 +147,7 @@ export default function MemberCardPage(): React.ReactElement {
 
           {/* Corpo */}
           <div className="flex gap-4 px-6 py-5">
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-indigo-50 text-2xl font-bold text-indigo-600">
+            <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
               {member.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -161,29 +161,29 @@ export default function MemberCardPage(): React.ReactElement {
             </div>
 
             <div className="min-w-0 flex-1">
-              <h3 className="truncate text-lg font-bold text-slate-900">
+              <h3 className="truncate text-lg font-bold text-slate-900 dark:text-slate-100">
                 {member.name}
               </h3>
-              <p className="text-sm text-indigo-600">
+              <p className="text-sm text-indigo-600 dark:text-indigo-400">
                 {member.role ? roleLabel(member.role, member.gender) : 'Membro'}
               </p>
 
               <dl className="mt-3 grid grid-cols-1 gap-1.5 text-xs">
                 <div className="flex justify-between gap-2">
-                  <dt className="text-slate-400">Situação</dt>
-                  <dd className="font-medium text-slate-700">
+                  <dt className="text-slate-400 dark:text-slate-500">Situação</dt>
+                  <dd className="font-medium text-slate-700 dark:text-slate-300">
                     {STATUS_LABELS[member.status]}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <dt className="text-slate-400">Membro desde</dt>
-                  <dd className="font-medium text-slate-700">
+                  <dt className="text-slate-400 dark:text-slate-500">Membro desde</dt>
+                  <dd className="font-medium text-slate-700 dark:text-slate-300">
                     {member.joinedAt ? formatDate(member.joinedAt) : '—'}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <dt className="text-slate-400">Batismo</dt>
-                  <dd className="font-medium text-slate-700">
+                  <dt className="text-slate-400 dark:text-slate-500">Batismo</dt>
+                  <dd className="font-medium text-slate-700 dark:text-slate-300">
                     {member.baptismDate ? formatDate(member.baptismDate) : '—'}
                   </dd>
                 </div>
@@ -192,9 +192,9 @@ export default function MemberCardPage(): React.ReactElement {
           </div>
 
           {/* Rodapé */}
-          <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50 px-6 py-4 text-[10px] leading-relaxed text-slate-500">
+          <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50 dark:bg-slate-950 px-6 py-4 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
             <div>
-              <p className="font-semibold text-slate-700">
+              <p className="font-semibold text-slate-700 dark:text-slate-300">
                 ID {member.id.slice(0, 8).toUpperCase()}
               </p>
               {member.cpf && <p>CPF {member.cpf}</p>}

@@ -81,7 +81,7 @@ function BibleReader(): React.ReactElement {
     <div className="space-y-4">
       <Link
         href={`/portal/${slug}/devocional`}
-        className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"
+        className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800"
       >
         <ChevronLeft className="h-4 w-4" />
         Devocional
@@ -132,12 +132,12 @@ function BibleReader(): React.ReactElement {
       </div>
 
       {loading ? (
-        <p className="flex items-center gap-2 py-10 text-sm text-slate-400">
+        <p className="flex items-center gap-2 py-10 text-sm text-slate-400 dark:text-slate-500">
           <Loader2 className="h-4 w-4 animate-spin" />
           Carregando...
         </p>
       ) : (
-        <div className="space-y-2.5 rounded-2xl border border-border bg-white p-5 shadow-sm">
+        <div className="space-y-2.5 rounded-2xl border border-border bg-white dark:bg-slate-900 p-5 shadow-sm">
           {verses.map((text, i) => {
             const v = i + 1;
             const active = highlight === v;
@@ -146,11 +146,11 @@ function BibleReader(): React.ReactElement {
                 key={v}
                 className={`leading-relaxed transition-colors ${
                   active
-                    ? 'rounded-lg bg-indigo-50 px-3 py-2 text-slate-900 ring-1 ring-indigo-100'
-                    : 'text-slate-700'
+                    ? 'rounded-lg bg-indigo-50 dark:bg-indigo-950/50 px-3 py-2 text-slate-900 dark:text-slate-100 ring-1 ring-indigo-100'
+                    : 'text-slate-700 dark:text-slate-300'
                 }`}
               >
-                <span className="mr-1.5 align-super text-xs font-bold text-indigo-500">
+                <span className="mr-1.5 align-super text-xs font-bold text-indigo-500 dark:text-indigo-400">
                   {v}
                 </span>
                 {text}
@@ -164,18 +164,18 @@ function BibleReader(): React.ReactElement {
         <button
           onClick={() => goChapter(chapter - 1)}
           disabled={chapter <= 1}
-          className="flex items-center gap-1 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-40"
+          className="flex items-center gap-1 rounded-xl border border-border bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 shadow-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60 disabled:opacity-40"
         >
           <ChevronLeft className="h-4 w-4" />
           Anterior
         </button>
-        <span className="text-xs font-medium text-slate-400">
+        <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
           {chapter} / {current?.chapters ?? 1}
         </span>
         <button
           onClick={() => goChapter(chapter + 1)}
           disabled={!current || chapter >= current.chapters}
-          className="flex items-center gap-1 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:opacity-40"
+          className="flex items-center gap-1 rounded-xl border border-border bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 shadow-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60 disabled:opacity-40"
         >
           Próximo
           <ChevronRight className="h-4 w-4" />
@@ -189,7 +189,7 @@ export default function PortalBiblePage(): React.ReactElement {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Carregando...
         </div>

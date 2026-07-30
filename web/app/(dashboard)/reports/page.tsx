@@ -143,7 +143,7 @@ export default function ReportsCatalogPage(): React.ReactElement {
       <div className="space-y-8">
         {groups.map((group) => (
           <div key={group.label}>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {group.label}
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -153,17 +153,17 @@ export default function ReportsCatalogPage(): React.ReactElement {
                   <Link key={item.href} href={item.href} className="group">
                     <Card className="h-full transition-shadow group-hover:shadow-md">
                       <CardContent className="flex h-full items-start gap-4 p-5">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
                           <Icon className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
-                            <h3 className="font-semibold text-slate-900">
+                            <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                               {item.title}
                             </h3>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-indigo-600" />
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600 transition-colors group-hover:text-indigo-600" />
                           </div>
-                          <p className="mt-1 text-sm text-slate-500">
+                          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                             {item.description}
                           </p>
                         </div>

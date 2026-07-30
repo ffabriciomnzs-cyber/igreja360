@@ -78,7 +78,7 @@ export default function WorshipDetailPage(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+      <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
         <Loader2 className="h-4 w-4 animate-spin" />
         Carregando...
       </div>
@@ -94,7 +94,7 @@ export default function WorshipDetailPage(): React.ReactElement {
             Voltar
           </Button>
         </Link>
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error ?? 'Culto não encontrado.'}
         </div>
       </div>
@@ -115,14 +115,14 @@ export default function WorshipDetailPage(): React.ReactElement {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               {service.title}
             </h1>
             <Badge variant={WORSHIP_STATUS_VARIANTS[service.status]}>
               {WORSHIP_STATUS_LABELS[service.status]}
             </Badge>
           </div>
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
             <CalendarDays className="h-4 w-4" />
             {formatDateTime(service.date)}
           </p>
@@ -166,20 +166,20 @@ export default function WorshipDetailPage(): React.ReactElement {
         <Card className="mb-4">
           <CardContent className="space-y-2 p-5">
             {service.theme && (
-              <p className="text-slate-800">
-                <span className="font-medium text-slate-500">Tema: </span>
+              <p className="text-slate-800 dark:text-slate-200">
+                <span className="font-medium text-slate-500 dark:text-slate-400">Tema: </span>
                 {service.theme}
               </p>
             )}
             {service.bibleRef && (
-              <p className="flex items-center gap-1.5 text-slate-800">
-                <BookOpen className="h-4 w-4 text-indigo-600" />
-                <span className="font-medium text-slate-500">Texto-base: </span>
+              <p className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                <span className="font-medium text-slate-500 dark:text-slate-400">Texto-base: </span>
                 {service.bibleRef}
               </p>
             )}
             {service.notes && (
-              <p className="whitespace-pre-line text-sm text-slate-600">
+              <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
                 {service.notes}
               </p>
             )}
@@ -191,41 +191,41 @@ export default function WorshipDetailPage(): React.ReactElement {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <ListOrdered className="h-4 w-4 text-indigo-600" />
+              <ListOrdered className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               Ordem do culto
             </CardTitle>
           </CardHeader>
           <CardContent>
             {service.items.length === 0 ? (
-              <p className="py-4 text-center text-sm text-slate-400">
+              <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
                 Nenhum item definido.
               </p>
             ) : (
               <ol className="space-y-3">
                 {service.items.map((item, i) => (
                   <li key={item.id ?? i} className="flex gap-3">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-semibold text-indigo-600">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium text-slate-800">
+                        <p className="font-medium text-slate-800 dark:text-slate-200">
                           {item.title}
                         </p>
                         {item.durationMin != null && (
-                          <span className="flex items-center gap-1 text-xs text-slate-400">
+                          <span className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
                             <Clock className="h-3 w-3" />
                             {item.durationMin} min
                           </span>
                         )}
                       </div>
                       {item.responsible && (
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                           {item.responsible}
                         </p>
                       )}
                       {item.notes && (
-                        <p className="text-xs text-slate-400">{item.notes}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">{item.notes}</p>
                       )}
                     </div>
                   </li>
@@ -238,13 +238,13 @@ export default function WorshipDetailPage(): React.ReactElement {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-4 w-4 text-indigo-600" />
+              <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               Participantes / escala
             </CardTitle>
           </CardHeader>
           <CardContent>
             {service.participants.length === 0 ? (
-              <p className="py-4 text-center text-sm text-slate-400">
+              <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
                 Ninguém escalado ainda.
               </p>
             ) : (
@@ -255,9 +255,9 @@ export default function WorshipDetailPage(): React.ReactElement {
                     className="flex items-center justify-between gap-2 py-2.5"
                   >
                     <div>
-                      <p className="font-medium text-slate-800">{p.name}</p>
+                      <p className="font-medium text-slate-800 dark:text-slate-200">{p.name}</p>
                       {p.notes && (
-                        <p className="text-xs text-slate-400">{p.notes}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">{p.notes}</p>
                       )}
                     </div>
                     <Badge variant="default">{p.role}</Badge>

@@ -22,8 +22,8 @@ function Stat({
   label,
   value,
   icon: Icon,
-  color = 'text-indigo-600',
-  bg = 'bg-indigo-50',
+  color = 'text-indigo-600 dark:text-indigo-400',
+  bg = 'bg-indigo-50 dark:bg-indigo-950/50',
 }: {
   label: string;
   value: React.ReactNode;
@@ -35,7 +35,7 @@ function Stat({
     <Card>
       <CardContent className="flex items-center justify-between p-5">
         <div>
-          <p className="text-sm text-slate-500">{label}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
           <p className={`mt-1 text-2xl font-bold ${color}`}>{value}</p>
         </div>
         <div
@@ -80,7 +80,7 @@ export default function OverviewReportPage(): React.ReactElement {
     >
       {data && (
         <>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Pessoas
           </h2>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -93,15 +93,15 @@ export default function OverviewReportPage(): React.ReactElement {
               label="Membros ativos"
               value={data.members.active}
               icon={Users}
-              color="text-emerald-600"
-              bg="bg-emerald-50"
+              color="text-emerald-600 dark:text-emerald-400"
+              bg="bg-emerald-50 dark:bg-emerald-950/40"
             />
             <Stat
               label="Visitantes"
               value={data.members.visitors}
               icon={Users}
               color="text-amber-600"
-              bg="bg-amber-50"
+              bg="bg-amber-50 dark:bg-amber-950/40"
             />
             <Stat
               label="Em células"
@@ -110,7 +110,7 @@ export default function OverviewReportPage(): React.ReactElement {
             />
           </div>
 
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Financeiro
           </h2>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -118,27 +118,27 @@ export default function OverviewReportPage(): React.ReactElement {
               label="Receitas (total)"
               value={formatCurrency(data.financial.income)}
               icon={TrendingUp}
-              color="text-emerald-600"
-              bg="bg-emerald-50"
+              color="text-emerald-600 dark:text-emerald-400"
+              bg="bg-emerald-50 dark:bg-emerald-950/40"
             />
             <Stat
               label="Despesas (total)"
               value={formatCurrency(data.financial.expense)}
               icon={TrendingDown}
-              color="text-red-600"
-              bg="bg-red-50"
+              color="text-red-600 dark:text-red-400"
+              bg="bg-red-50 dark:bg-red-950/40"
             />
             <Stat
               label="Saldo"
               value={formatCurrency(data.financial.balance)}
               icon={Wallet}
               color={
-                data.financial.balance >= 0 ? 'text-indigo-600' : 'text-red-600'
+                data.financial.balance >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-red-600 dark:text-red-400'
               }
             />
           </div>
 
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Atividades
           </h2>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -170,7 +170,7 @@ export default function OverviewReportPage(): React.ReactElement {
             </CardHeader>
             <CardContent>
               {data.categories.length === 0 ? (
-                <p className="py-4 text-center text-sm text-slate-400">
+                <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
                   Nenhum lançamento registrado.
                 </p>
               ) : (
@@ -186,13 +186,13 @@ export default function OverviewReportPage(): React.ReactElement {
                         >
                           {c.type === 'INCOME' ? 'Receita' : 'Despesa'}
                         </Badge>
-                        <span className="text-slate-700">{c.category}</span>
+                        <span className="text-slate-700 dark:text-slate-300">{c.category}</span>
                       </div>
                       <span
                         className={`font-medium ${
                           c.type === 'INCOME'
-                            ? 'text-emerald-600'
-                            : 'text-red-600'
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-red-600 dark:text-red-400'
                         }`}
                       >
                         {formatCurrency(c.amount)}

@@ -46,13 +46,13 @@ export default function EditCampaignPage(): React.ReactElement {
       <PageHeader title="Editar campanha" description="Atualize a campanha." />
       {loading ? (
         <Card>
-          <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+          <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
             <Loader2 className="h-4 w-4 animate-spin" />
             Carregando...
           </CardContent>
         </Card>
       ) : error ? (
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       ) : campaign ? (

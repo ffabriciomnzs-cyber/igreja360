@@ -134,7 +134,7 @@ export function EventForm({ event }: EventFormProps): React.ReactElement {
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
               {error}
             </div>
           )}
@@ -142,7 +142,7 @@ export function EventForm({ event }: EventFormProps): React.ReactElement {
           <div className="space-y-2">
             <Label>Banner do evento</Label>
             <div className="flex items-center gap-4">
-              <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-md bg-slate-100 text-xs text-slate-400 ring-1 ring-slate-200">
+              <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800 text-xs text-slate-400 dark:text-slate-500 ring-1 ring-slate-200 dark:ring-slate-700">
                 {preview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

@@ -80,13 +80,13 @@ export function RadioPlayer(): React.ReactElement {
         )}
       </button>
 
-      <Radio className="hidden h-4 w-4 text-indigo-500 sm:block" />
+      <Radio className="hidden h-4 w-4 text-indigo-500 dark:text-indigo-400 sm:block" />
 
       <select
         value={current?.url ?? ''}
         onChange={(e) => handleSelect(e.target.value)}
         title="Escolher rádio gospel"
-        className="max-w-[9rem] rounded-md border border-border bg-white px-2 py-1.5 text-sm text-slate-700 sm:max-w-[12rem]"
+        className="max-w-[9rem] rounded-md border border-border bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-700 dark:text-slate-300 sm:max-w-[12rem]"
       >
         <option value="">Rádio gospel…</option>
         {RADIO_STATIONS.map((s) => (

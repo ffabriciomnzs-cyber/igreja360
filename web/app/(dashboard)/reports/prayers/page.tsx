@@ -67,24 +67,24 @@ export default function PrayersReportPage(): React.ReactElement {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Card>
               <CardContent className="p-5">
-                <p className="text-sm text-slate-500">Ativos</p>
-                <p className="mt-1 text-2xl font-bold text-indigo-600">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Ativos</p>
+                <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                   {data.counts.active}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-5">
-                <p className="text-sm text-slate-500">Respondidos</p>
-                <p className="mt-1 text-2xl font-bold text-emerald-600">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Respondidos</p>
+                <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {data.counts.answered}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-5">
-                <p className="text-sm text-slate-500">Arquivados</p>
-                <p className="mt-1 text-2xl font-bold text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Arquivados</p>
+                <p className="mt-1 text-2xl font-bold text-slate-500 dark:text-slate-400">
                   {data.counts.archived}
                 </p>
               </CardContent>

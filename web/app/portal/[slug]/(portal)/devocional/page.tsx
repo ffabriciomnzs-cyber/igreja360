@@ -263,7 +263,7 @@ export default function DevocionalPage(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+      <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
         <Loader2 className="h-4 w-4 animate-spin" />
         Carregando...
       </div>
@@ -273,8 +273,8 @@ export default function DevocionalPage(): React.ReactElement {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">{daily.title}</h1>
-        <p className="text-sm capitalize text-slate-500">{today}</p>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{daily.title}</h1>
+        <p className="text-sm capitalize text-slate-500 dark:text-slate-400">{today}</p>
       </div>
 
       {/* Sequência + histórico da semana */}
@@ -295,7 +295,7 @@ export default function DevocionalPage(): React.ReactElement {
             className={`flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
               completed
                 ? 'bg-white/20 text-white'
-                : 'bg-white text-orange-600 hover:bg-amber-50'
+                : 'bg-white dark:bg-slate-900 text-orange-600 hover:bg-amber-50'
             }`}
           >
             {completing ? (
@@ -317,7 +317,7 @@ export default function DevocionalPage(): React.ReactElement {
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-xs ${
                     done
-                      ? 'bg-white text-orange-600'
+                      ? 'bg-white dark:bg-slate-900 text-orange-600'
                       : isToday
                         ? 'border-2 border-white/70 text-white'
                         : 'bg-white/15 text-white/60'
@@ -342,7 +342,7 @@ export default function DevocionalPage(): React.ReactElement {
           />
           <button
             onClick={share}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-white py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-white dark:bg-slate-900 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
           >
             <Share2 className="h-4 w-4" />
             Compartilhar nas redes
@@ -367,8 +367,8 @@ export default function DevocionalPage(): React.ReactElement {
       </div>
 
       {/* Reflexão */}
-      <div className="rounded-xl border border-border bg-white p-5">
-        <p className="whitespace-pre-line leading-relaxed text-slate-700">
+      <div className="rounded-xl border border-border bg-white dark:bg-slate-900 p-5">
+        <p className="whitespace-pre-line leading-relaxed text-slate-700 dark:text-slate-300">
           {daily.reflection}
         </p>
       </div>
@@ -384,15 +384,15 @@ export default function DevocionalPage(): React.ReactElement {
               onClick={() => react(r.type)}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
                 active
-                  ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
-                  : 'border-border bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300'
+                  : 'border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
               }`}
             >
               <span className="text-base leading-none">{r.emoji}</span>
               <span className="font-medium">{r.label}</span>
               {n > 0 && (
                 <span
-                  className={`text-xs ${active ? 'text-indigo-500' : 'text-slate-400'}`}
+                  className={`text-xs ${active ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}
                 >
                   {n}
                 </span>
@@ -408,29 +408,29 @@ export default function DevocionalPage(): React.ReactElement {
           href={songUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-xl border border-border bg-white p-4 hover:bg-slate-50"
+          className="flex items-center gap-3 rounded-xl border border-border bg-white dark:bg-slate-900 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60"
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-pink-500 text-white">
             <Music className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wide text-slate-400">
+            <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Música do dia
             </p>
-            <p className="truncate font-medium text-slate-900">{daily.song}</p>
+            <p className="truncate font-medium text-slate-900 dark:text-slate-100">{daily.song}</p>
           </div>
         </a>
       )}
 
       {/* Diário / anotações */}
-      <div className="rounded-xl border border-border bg-white p-5">
+      <div className="rounded-xl border border-border bg-white dark:bg-slate-900 p-5">
         <div className="mb-2 flex items-center gap-2">
-          <NotebookPen className="h-4 w-4 text-indigo-600" />
-          <p className="text-sm font-semibold text-slate-800">
+          <NotebookPen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
             Meu diário de hoje
           </p>
         </div>
-        <p className="mb-3 text-xs text-slate-400">
+        <p className="mb-3 text-xs text-slate-400 dark:text-slate-500">
           O que Deus falou com você? (só você vê)
         </p>
         <textarea
@@ -438,11 +438,11 @@ export default function DevocionalPage(): React.ReactElement {
           onChange={(e) => setNote(e.target.value)}
           placeholder="Escreva sua reflexão pessoal..."
           maxLength={2000}
-          className="min-h-[110px] w-full resize-y rounded-lg border border-border bg-slate-50 p-3 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:bg-white"
+          className="min-h-[110px] w-full resize-y rounded-lg border border-border bg-slate-50 dark:bg-slate-950 p-3 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-indigo-400 focus:bg-white"
         />
         <div className="mt-2 flex items-center justify-end gap-3">
           {noteSaved && (
-            <span className="flex items-center gap-1 text-xs text-emerald-600">
+            <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
               <Check className="h-3.5 w-3.5" />
               Salvo
             </span>
@@ -459,14 +459,14 @@ export default function DevocionalPage(): React.ReactElement {
       </div>
 
       {/* Oração coletiva */}
-      <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-5 text-center">
+      <div className="rounded-xl border border-indigo-100 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-950/40 p-5 text-center">
         <button
           onClick={togglePray}
           disabled={saving}
           className={`flex w-full items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold transition-colors ${
             joined
               ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-              : 'border border-indigo-300 bg-white text-indigo-700 hover:bg-indigo-50'
+              : 'border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60'
           }`}
         >
           {saving ? (
@@ -476,10 +476,10 @@ export default function DevocionalPage(): React.ReactElement {
           )}
           {joined ? 'Estou orando 🙏' : 'Estou orando'}
         </button>
-        <p className="mt-3 text-sm text-slate-500">
+        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
           {count > 0 ? (
             <>
-              <strong className="text-indigo-600">{count}</strong>{' '}
+              <strong className="text-indigo-600 dark:text-indigo-400">{count}</strong>{' '}
               {count === 1 ? 'irmão está orando' : 'irmãos estão orando'} hoje
             </>
           ) : (

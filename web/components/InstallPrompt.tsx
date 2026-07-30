@@ -86,27 +86,27 @@ export function InstallPrompt(): React.ReactElement | null {
 
   return (
     <div className="fixed inset-x-0 bottom-20 z-30 mx-auto max-w-2xl px-4">
-      <div className="flex items-start gap-3 rounded-2xl border border-indigo-100 bg-white p-4 shadow-xl">
+      <div className="flex items-start gap-3 rounded-2xl border border-indigo-100 dark:border-indigo-900 bg-white dark:bg-slate-900 p-4 shadow-xl">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
           <Download className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             Instale o app da igreja
           </p>
           {ios ? (
-            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Toque em{' '}
-              <Share className="inline h-3.5 w-3.5 -translate-y-px text-indigo-600" />{' '}
+              <Share className="inline h-3.5 w-3.5 -translate-y-px text-indigo-600 dark:text-indigo-400" />{' '}
               <strong>Compartilhar</strong> na barra do Safari e depois em{' '}
               <span className="whitespace-nowrap">
-                <Plus className="inline h-3.5 w-3.5 -translate-y-px text-indigo-600" />{' '}
+                <Plus className="inline h-3.5 w-3.5 -translate-y-px text-indigo-600 dark:text-indigo-400" />{' '}
                 <strong>“Adicionar à Tela de Início”</strong>
               </span>
               .
             </p>
           ) : (
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               Tenha o portal na tela inicial e abra como um aplicativo.
             </p>
           )}
@@ -122,7 +122,7 @@ export function InstallPrompt(): React.ReactElement | null {
         <button
           onClick={dismiss}
           aria-label="Fechar"
-          className="shrink-0 text-slate-400 hover:text-slate-600"
+          className="shrink-0 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
         >
           <X className="h-4 w-4" />
         </button>

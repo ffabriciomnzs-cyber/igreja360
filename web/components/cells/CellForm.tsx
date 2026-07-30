@@ -112,7 +112,7 @@ export function CellForm({ cell }: CellFormProps): React.ReactElement {
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
               {error}
             </div>
           )}

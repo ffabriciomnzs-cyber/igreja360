@@ -25,14 +25,14 @@ export default function DashboardLayout({
 
   if (loading || !user) {
     return (
-      <div className="flex h-screen items-center justify-center text-slate-400">
+      <div className="flex h-screen items-center justify-center text-slate-400 dark:text-slate-500">
         Carregando...
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 print:h-auto print:overflow-visible">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 print:h-auto print:overflow-visible">
       <div className="print:hidden">
         <Sidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
       </div>

@@ -87,7 +87,7 @@ export default function EventsPage(): React.ReactElement {
               className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
                 when === 'upcoming'
                   ? 'bg-primary text-primary-foreground'
-                  : 'text-slate-600 hover:bg-slate-50'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
               }`}
             >
               Próximos
@@ -97,14 +97,14 @@ export default function EventsPage(): React.ReactElement {
               className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
                 when === 'past'
                   ? 'bg-primary text-primary-foreground'
-                  : 'text-slate-600 hover:bg-slate-50'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
               }`}
             >
               Passados
             </button>
           </div>
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -116,7 +116,7 @@ export default function EventsPage(): React.ReactElement {
       </Card>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -163,25 +163,25 @@ export default function EventsPage(): React.ReactElement {
                 <div className="flex items-start justify-between gap-2">
                   <Link
                     href={`/events/${ev.id}`}
-                    className="font-semibold text-slate-900 hover:text-indigo-600"
+                    className="font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400"
                   >
                     {ev.name}
                   </Link>
                   {ev.type && <Badge variant="default">{ev.type}</Badge>}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <CalendarDays className="h-4 w-4 text-slate-400" />
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                  <CalendarDays className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                   {formatDateTime(ev.date)}
                 </div>
                 {ev.location && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <MapPin className="h-4 w-4 text-slate-400" />
+                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <MapPin className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                     {ev.location}
                   </div>
                 )}
                 {ev.capacity != null && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Users className="h-4 w-4 text-slate-400" />
+                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <Users className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                     {ev.capacity} lugares
                   </div>
                 )}

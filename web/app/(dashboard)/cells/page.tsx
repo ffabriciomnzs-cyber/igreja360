@@ -94,7 +94,7 @@ export default function CellsPage(): React.ReactElement {
       <Card className="mb-4">
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <Input
               value={search}
               onChange={(e) => {
@@ -121,7 +121,7 @@ export default function CellsPage(): React.ReactElement {
       </Card>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -143,7 +143,7 @@ export default function CellsPage(): React.ReactElement {
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     <th className="px-4 py-3 font-medium">Célula</th>
                     <th className="px-4 py-3 font-medium">Líder</th>
                     <th className="px-4 py-3 font-medium">Encontro</th>
@@ -156,32 +156,32 @@ export default function CellsPage(): React.ReactElement {
                   {cells.map((c) => (
                     <tr
                       key={c.id}
-                      className="border-b border-border last:border-0 hover:bg-slate-50"
+                      className="border-b border-border last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                     >
                       <td className="px-4 py-3">
                         <Link
                           href={`/cells/${c.id}`}
-                          className="font-medium text-slate-900 hover:text-indigo-600"
+                          className="font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400"
                         >
                           {c.name}
                         </Link>
                         {c.neighborhood && (
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
                             {c.neighborhood}
                           </p>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                         {c.leaderName ?? '—'}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                         {c.dayOfWeek || c.time
                           ? `${c.dayOfWeek ?? ''}${
                               c.dayOfWeek && c.time ? ' · ' : ''
                             }${c.time ?? ''}`
                           : '—'}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                         {c._count?.members ?? 0}
                       </td>
                       <td className="px-4 py-3">
@@ -229,12 +229,12 @@ export default function CellsPage(): React.ReactElement {
                     <div className="min-w-0">
                       <Link
                         href={`/cells/${c.id}`}
-                        className="font-medium text-slate-900 hover:text-indigo-600"
+                        className="font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400"
                       >
                         {c.name}
                       </Link>
                       {c.neighborhood && (
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {c.neighborhood}
                         </p>
                       )}
@@ -243,7 +243,7 @@ export default function CellsPage(): React.ReactElement {
                       {c.active ? 'Ativa' : 'Inativa'}
                     </Badge>
                   </div>
-                  <div className="mt-2 space-y-0.5 text-xs text-slate-500">
+                  <div className="mt-2 space-y-0.5 text-xs text-slate-500 dark:text-slate-400">
                     <p>Líder: {c.leaderName ?? '—'}</p>
                     <p>
                       Encontro:{' '}
@@ -291,7 +291,7 @@ export default function CellsPage(): React.ReactElement {
       </Card>
 
       {!loading && cells.length > 0 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
           <span>
             {total} {total === 1 ? 'célula' : 'células'}
           </span>

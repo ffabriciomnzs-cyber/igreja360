@@ -161,7 +161,7 @@ export default function BiblePage(): React.ReactElement {
     return (
       <div>
         <PageHeader title="Bíblia" description="Almeida — domínio público." />
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function BiblePage(): React.ReactElement {
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">
+            <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
               Livro
             </label>
             <select
@@ -204,7 +204,7 @@ export default function BiblePage(): React.ReactElement {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">
+            <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
               Capítulo
             </label>
             <select
@@ -223,11 +223,11 @@ export default function BiblePage(): React.ReactElement {
 
         <form onSubmit={handleSearch} className="flex items-end gap-2">
           <div className="flex-1 lg:w-72">
-            <label className="mb-1 block text-xs font-medium text-slate-500">
+            <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
               Buscar (referência ou palavra)
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -250,18 +250,18 @@ export default function BiblePage(): React.ReactElement {
         <Card className="mb-5">
           <CardContent className="p-5">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-medium text-slate-600">
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 {hits.length} resultado(s) em {current?.name}
               </p>
               <button
                 onClick={() => setHits(null)}
-                className="text-xs text-slate-500 hover:text-indigo-600"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400"
               >
                 Fechar
               </button>
             </div>
             {hits.length === 0 ? (
-              <p className="py-4 text-center text-sm text-slate-400">
+              <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
                 Nenhum versículo encontrado neste livro.
               </p>
             ) : (
@@ -270,12 +270,12 @@ export default function BiblePage(): React.ReactElement {
                   <li key={`${h.chapter}-${h.verse}`}>
                     <button
                       onClick={() => goTo(abbrev, h.chapter, h.verse)}
-                      className="text-left text-sm hover:text-indigo-600"
+                      className="text-left text-sm hover:text-indigo-600 dark:hover:text-indigo-400"
                     >
-                      <span className="font-semibold text-indigo-600">
+                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">
                         {h.chapter}:{h.verse}
                       </span>{' '}
-                      <span className="text-slate-600">{h.text}</span>
+                      <span className="text-slate-600 dark:text-slate-300">{h.text}</span>
                     </button>
                   </li>
                 ))}
@@ -289,15 +289,15 @@ export default function BiblePage(): React.ReactElement {
       <Card>
         <CardContent className="p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-              <BookOpen className="h-5 w-5 text-indigo-600" />
+            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               {current?.name} {chapter}
             </h2>
             <div className="flex gap-2">
               <button
                 onClick={() => goTo(abbrev, Math.max(1, chapter - 1))}
                 disabled={chapter <= 1}
-                className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Anterior
@@ -307,7 +307,7 @@ export default function BiblePage(): React.ReactElement {
                   goTo(abbrev, Math.min(current?.chapters ?? 1, chapter + 1))
                 }
                 disabled={chapter >= (current?.chapters ?? 1)}
-                className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 disabled:opacity-40"
               >
                 Próximo
                 <ChevronRight className="h-4 w-4" />
@@ -316,7 +316,7 @@ export default function BiblePage(): React.ReactElement {
           </div>
 
           {loadingBook ? (
-            <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+            <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
               <Loader2 className="h-4 w-4 animate-spin" />
               Carregando...
             </div>
@@ -329,20 +329,20 @@ export default function BiblePage(): React.ReactElement {
                     key={verse}
                     id={`v-${verse}`}
                     className={`group rounded px-2 py-1 ${
-                      highlight === verse ? 'bg-amber-100' : ''
+                      highlight === verse ? 'bg-amber-100 dark:bg-amber-900/50' : ''
                     }`}
                   >
-                    <sup className="mr-1 font-semibold text-indigo-600">
+                    <sup className="mr-1 font-semibold text-indigo-600 dark:text-indigo-400">
                       {verse}
                     </sup>
-                    <span className="text-slate-800">{text}</span>
+                    <span className="text-slate-800 dark:text-slate-200">{text}</span>
                     <button
                       onClick={() => copyVerse(verse, text)}
                       title="Copiar versículo"
-                      className="ml-2 inline-flex translate-y-0.5 text-slate-300 opacity-0 transition-opacity hover:text-indigo-600 group-hover:opacity-100"
+                      className="ml-2 inline-flex translate-y-0.5 text-slate-300 dark:text-slate-600 opacity-0 transition-opacity hover:text-indigo-600 dark:hover:text-indigo-400 group-hover:opacity-100"
                     >
                       {copied === verse ? (
-                        <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       ) : (
                         <Copy className="h-3.5 w-3.5" />
                       )}

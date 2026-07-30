@@ -40,8 +40,8 @@ function Field({
 }): React.ReactElement {
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-0.5 text-sm text-slate-800">{value || '—'}</p>
+      <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
+      <p className="mt-0.5 text-sm text-slate-800 dark:text-slate-200">{value || '—'}</p>
     </div>
   );
 }
@@ -163,7 +163,7 @@ export default function CellDetailPage(): React.ReactElement {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Carregando...
         </CardContent>
@@ -180,7 +180,7 @@ export default function CellDetailPage(): React.ReactElement {
             Voltar
           </Button>
         </Link>
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error ?? 'Célula não encontrada.'}
         </div>
       </div>
@@ -241,7 +241,7 @@ export default function CellDetailPage(): React.ReactElement {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-indigo-600" />
+              <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               Membros ({cell.members.length})
             </CardTitle>
           </CardHeader>
@@ -278,13 +278,13 @@ export default function CellDetailPage(): React.ReactElement {
             </div>
 
             {memberError && (
-              <div className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="mb-3 rounded-md bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                 {memberError}
               </div>
             )}
 
             {cell.members.length === 0 ? (
-              <p className="py-4 text-center text-sm text-slate-400">
+              <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
                 Nenhum membro vinculado ainda.
               </p>
             ) : (
@@ -296,7 +296,7 @@ export default function CellDetailPage(): React.ReactElement {
                   >
                     <Link
                       href={`/members/${m.id}`}
-                      className="flex-1 truncate text-sm font-medium text-slate-800 hover:text-indigo-600"
+                      className="flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400"
                     >
                       {m.name}
                     </Link>
@@ -324,7 +324,7 @@ export default function CellDetailPage(): React.ReactElement {
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-indigo-600" />
+            <CalendarDays className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
             Reuniões ({cell.meetings.length})
           </CardTitle>
           <Button size="sm" onClick={() => setShowForm((s) => !s)}>
@@ -339,7 +339,7 @@ export default function CellDetailPage(): React.ReactElement {
               className="mb-5 rounded-lg border border-border p-4"
             >
               {meetingError && (
-                <div className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="mb-3 rounded-md bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                   {meetingError}
                 </div>
               )}
@@ -402,14 +402,14 @@ export default function CellDetailPage(): React.ReactElement {
           )}
 
           {cell.meetings.length === 0 ? (
-            <p className="py-4 text-center text-sm text-slate-400">
+            <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
               Nenhuma reunião registrada.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     <th className="px-3 py-2 font-medium">Data</th>
                     <th className="px-3 py-2 font-medium">Tema</th>
                     <th className="px-3 py-2 font-medium">Presentes</th>
@@ -422,13 +422,13 @@ export default function CellDetailPage(): React.ReactElement {
                       key={m.id}
                       className="border-b border-border last:border-0"
                     >
-                      <td className="px-3 py-2 text-slate-700">
+                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
                         {formatDate(m.date)}
                       </td>
-                      <td className="px-3 py-2 text-slate-600">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
                         {m.theme || '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-600">
+                      <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
                         {m.attendees ?? '—'}
                       </td>
                       <td className="px-3 py-2">

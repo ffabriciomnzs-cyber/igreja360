@@ -48,9 +48,9 @@ export default function CashflowReportPage(): React.ReactElement {
     ], rows);
 
   const filters = (
-    <div className="flex items-end gap-3 rounded-lg border border-border bg-white p-4">
+    <div className="flex items-end gap-3 rounded-lg border border-border bg-white dark:bg-slate-900 p-4">
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">
+        <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
           Período
         </label>
         <select
@@ -78,7 +78,7 @@ export default function CashflowReportPage(): React.ReactElement {
       <div className="space-y-6">
         <Card>
           <CardContent className="p-5">
-            <div className="mb-4 flex items-center gap-4 text-xs text-slate-500">
+            <div className="mb-4 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
                 Receitas
@@ -112,7 +112,7 @@ export default function CashflowReportPage(): React.ReactElement {
                       title={`Despesas: ${formatCurrency(r.expense)}`}
                     />
                   </div>
-                  <span className="text-xs text-slate-500">{r.label}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{r.label}</span>
                 </div>
               ))}
             </div>
@@ -130,7 +130,7 @@ export default function CashflowReportPage(): React.ReactElement {
               label: 'Receitas',
               align: 'right',
               render: (r) => (
-                <span className="text-emerald-600">
+                <span className="text-emerald-600 dark:text-emerald-400">
                   {formatCurrency(r.income)}
                 </span>
               ),
@@ -140,7 +140,7 @@ export default function CashflowReportPage(): React.ReactElement {
               label: 'Despesas',
               align: 'right',
               render: (r) => (
-                <span className="text-red-600">{formatCurrency(r.expense)}</span>
+                <span className="text-red-600 dark:text-red-400">{formatCurrency(r.expense)}</span>
               ),
             },
             {
@@ -149,7 +149,7 @@ export default function CashflowReportPage(): React.ReactElement {
               align: 'right',
               render: (r) => (
                 <span
-                  className={r.balance >= 0 ? 'text-slate-900' : 'text-red-600'}
+                  className={r.balance >= 0 ? 'text-slate-900 dark:text-slate-100' : 'text-red-600 dark:text-red-400'}
                 >
                   {formatCurrency(r.balance)}
                 </span>

@@ -31,12 +31,12 @@ function Info({
 }): React.ReactElement {
   return (
     <div className="flex items-start gap-3">
-      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
         <Icon className="h-4 w-4" />
       </div>
       <div>
-        <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-        <p className="text-sm text-slate-800">{value || '—'}</p>
+        <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
+        <p className="text-sm text-slate-800 dark:text-slate-200">{value || '—'}</p>
       </div>
     </div>
   );
@@ -70,7 +70,7 @@ export default function EventDetailPage(): React.ReactElement {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Carregando...
         </CardContent>
@@ -90,7 +90,7 @@ export default function EventDetailPage(): React.ReactElement {
           <ArrowLeft className="h-4 w-4" />
           Voltar
         </Button>
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error ?? 'Evento não encontrado.'}
         </div>
       </div>
@@ -120,7 +120,7 @@ export default function EventDetailPage(): React.ReactElement {
       />
 
       {eventPhotoSrc(event) && (
-        <div className="mb-4 flex justify-center overflow-hidden rounded-lg bg-slate-100">
+        <div className="mb-4 flex justify-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={eventPhotoSrc(event) as string}
@@ -168,11 +168,11 @@ export default function EventDetailPage(): React.ReactElement {
           </CardHeader>
           <CardContent>
             {event.description ? (
-              <p className="whitespace-pre-line text-sm text-slate-700">
+              <p className="whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">
                 {event.description}
               </p>
             ) : (
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-400 dark:text-slate-500">
                 Nenhuma descrição informada.
               </p>
             )}

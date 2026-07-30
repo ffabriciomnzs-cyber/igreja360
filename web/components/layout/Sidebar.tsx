@@ -157,7 +157,7 @@ export function Sidebar({
       )}
       <nav
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 md:static md:z-auto md:translate-x-0 md:shadow-none',
+          'fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl transition-transform duration-200 md:static md:z-auto md:translate-x-0 md:shadow-none',
           open ? 'translate-x-0' : '-translate-x-full',
         )}
       >
@@ -174,13 +174,13 @@ export function Sidebar({
               <Church className="h-5 w-5" />
             </span>
           )}
-          <span className="truncate text-base font-bold tracking-tight text-slate-900">
+          <span className="truncate text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {church?.name || 'Igreja360'}
           </span>
           <button
             onClick={onClose}
             aria-label="Fechar menu"
-            className="ml-auto rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 md:hidden"
+            className="ml-auto rounded-md p-1.5 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 md:hidden"
           >
             <X className="h-5 w-5" />
           </button>
@@ -194,7 +194,7 @@ export function Sidebar({
             return (
               <div key={group.title ?? 'top'} className="mb-1">
                 {group.title && (
-                  <p className="mb-1 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="mb-1 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                     {group.title}
                   </p>
                 )}
@@ -210,15 +210,15 @@ export function Sidebar({
                           href={item.href}
                           onClick={onClose}
                           className={cn(
-                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900',
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 dark:text-slate-300 transition-colors duration-150 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100',
                             active &&
-                              'bg-indigo-50 font-medium text-indigo-700 hover:bg-indigo-50 hover:text-indigo-700',
+                              'bg-indigo-50 dark:bg-indigo-950/50 font-medium text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-700 dark:hover:text-indigo-300',
                           )}
                         >
                           <Icon
                             className={cn(
                               'h-4 w-4',
-                              active ? 'text-indigo-600' : 'text-slate-400',
+                              active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500',
                             )}
                           />
                           <span>{item.label}</span>

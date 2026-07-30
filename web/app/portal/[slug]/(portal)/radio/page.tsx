@@ -12,7 +12,7 @@ function Equalizer(): React.ReactElement {
       {[0, 1, 2, 3].map((i) => (
         <span
           key={i}
-          className="w-1 rounded-full bg-white"
+          className="w-1 rounded-full bg-white dark:bg-slate-900"
           style={{
             height: '100%',
             animation: 'eqbar 0.9s ease-in-out infinite',
@@ -30,8 +30,8 @@ export default function PortalRadioPage(): React.ReactElement {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Rádio Gospel 📻</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Rádio Gospel 📻</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Continua tocando enquanto você navega pelo portal.
         </p>
       </div>
@@ -41,7 +41,7 @@ export default function PortalRadioPage(): React.ReactElement {
         <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 p-5 text-white shadow-lg">
           <button
             onClick={toggle}
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-indigo-700 shadow-md transition-transform hover:scale-105"
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-md transition-transform hover:scale-105"
           >
             {loading ? (
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -74,9 +74,9 @@ export default function PortalRadioPage(): React.ReactElement {
               key={station.url}
               onClick={() => select(station)}
               className={cn(
-                'flex w-full items-center gap-3 rounded-2xl border bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md',
+                'flex w-full items-center gap-3 rounded-2xl border bg-white dark:bg-slate-900 p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md',
                 active
-                  ? 'border-indigo-300 ring-1 ring-indigo-200'
+                  ? 'border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-200'
                   : 'border-border',
               )}
             >
@@ -85,7 +85,7 @@ export default function PortalRadioPage(): React.ReactElement {
                   'flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
                   active
                     ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow'
-                    : 'bg-indigo-50 text-indigo-600',
+                    : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400',
                 )}
               >
                 {isLoading ? (
@@ -97,22 +97,22 @@ export default function PortalRadioPage(): React.ReactElement {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-slate-900">
+                <p className="truncate font-semibold text-slate-900 dark:text-slate-100">
                   {station.name}
                 </p>
-                <p className="truncate text-sm text-slate-500">
+                <p className="truncate text-sm text-slate-500 dark:text-slate-400">
                   {station.description}
                 </p>
               </div>
               {isPlaying && (
-                <RadioIcon className="h-4 w-4 shrink-0 text-indigo-500" />
+                <RadioIcon className="h-4 w-4 shrink-0 text-indigo-500 dark:text-indigo-400" />
               )}
             </button>
           );
         })}
       </div>
 
-      <p className="pt-1 text-center text-xs text-slate-400">
+      <p className="pt-1 text-center text-xs text-slate-400 dark:text-slate-500">
         Transmissões de emissoras externas; podem ficar indisponíveis às vezes.
       </p>
     </div>

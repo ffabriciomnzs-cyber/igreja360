@@ -142,8 +142,8 @@ export default function PortalLoginPage(): React.ReactElement {
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-2xl">
-          <div className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-2xl">
+          <div className="mb-5 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
             <button
               onClick={() => {
                 setTab('login');
@@ -152,8 +152,8 @@ export default function PortalLoginPage(): React.ReactElement {
               }}
               className={`rounded-md py-2 text-sm font-medium transition-colors ${
                 tab === 'login'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400'
               }`}
             >
               Entrar
@@ -166,8 +166,8 @@ export default function PortalLoginPage(): React.ReactElement {
               }}
               className={`rounded-md py-2 text-sm font-medium transition-colors ${
                 tab === 'register'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400'
               }`}
             >
               Criar conta
@@ -175,7 +175,7 @@ export default function PortalLoginPage(): React.ReactElement {
           </div>
 
           {error && (
-            <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
               {error}
             </div>
           )}
@@ -183,16 +183,16 @@ export default function PortalLoginPage(): React.ReactElement {
           {pendingMsg ? (
             <div className="py-6 text-center">
               <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
-              <p className="mt-3 font-medium text-slate-900">
+              <p className="mt-3 font-medium text-slate-900 dark:text-slate-100">
                 Cadastro enviado!
               </p>
-              <p className="mt-1 text-sm text-slate-500">{pendingMsg}</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{pendingMsg}</p>
               <button
                 onClick={() => {
                   setPendingMsg(null);
                   setTab('login');
                 }}
-                className="mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                className="mt-4 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
               >
                 Voltar para entrar
               </button>
@@ -200,7 +200,7 @@ export default function PortalLoginPage(): React.ReactElement {
           ) : tab === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   E-mail ou telefone
                 </label>
                 <input
@@ -211,11 +211,11 @@ export default function PortalLoginPage(): React.ReactElement {
                     setLogin((s) => ({ ...s, email: e.target.value }))
                   }
                   placeholder="seu@email.com ou (00) 90000-0000"
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Senha
                 </label>
                 <input
@@ -225,7 +225,7 @@ export default function PortalLoginPage(): React.ReactElement {
                   onChange={(e) =>
                     setLogin((s) => ({ ...s, password: e.target.value }))
                   }
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
               <button
@@ -240,7 +240,7 @@ export default function PortalLoginPage(): React.ReactElement {
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Nome completo
                 </label>
                 <input
@@ -250,11 +250,11 @@ export default function PortalLoginPage(): React.ReactElement {
                   onChange={(e) =>
                     setReg((s) => ({ ...s, name: e.target.value }))
                   }
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Sexo
                 </label>
                 <select
@@ -262,7 +262,7 @@ export default function PortalLoginPage(): React.ReactElement {
                   onChange={(e) =>
                     setReg((s) => ({ ...s, gender: e.target.value }))
                   }
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 >
                   <option value="">Prefiro não informar</option>
                   <option value="MALE">{GENDER_LABELS.MALE}</option>
@@ -270,7 +270,7 @@ export default function PortalLoginPage(): React.ReactElement {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   E-mail
                 </label>
                 <input
@@ -280,11 +280,11 @@ export default function PortalLoginPage(): React.ReactElement {
                   onChange={(e) =>
                     setReg((s) => ({ ...s, email: e.target.value }))
                   }
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Telefone (WhatsApp)
                 </label>
                 <input
@@ -294,15 +294,15 @@ export default function PortalLoginPage(): React.ReactElement {
                     setReg((s) => ({ ...s, phone: e.target.value }))
                   }
                   placeholder="(00) 90000-0000"
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                   Se a igreja já tem seu telefone cadastrado, seu acesso é
                   vinculado ao cadastro existente (sem duplicar).
                 </p>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Senha
                 </label>
                 <input
@@ -312,10 +312,10 @@ export default function PortalLoginPage(): React.ReactElement {
                   onChange={(e) =>
                     setReg((s) => ({ ...s, password: e.target.value }))
                   }
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 Após o cadastro, seu acesso será liberado pela igreja.
               </p>
               <button

@@ -250,15 +250,15 @@ export function WorshipForm({
       </datalist>
 
       {error && (
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* Gerador de sugestão */}
-      <div className="flex flex-col gap-3 rounded-lg border border-indigo-200 bg-indigo-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-lg border border-indigo-200 bg-indigo-50 dark:bg-indigo-950/50 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-2">
-          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600" />
+          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
           <p className="text-sm text-indigo-900">
             Preencha o <strong>título</strong> (e opcionalmente o tema) e gere
             uma sugestão automática de tema, texto-base, ordem do culto e
@@ -359,14 +359,14 @@ export function WorshipForm({
       <Card>
         <CardContent className="space-y-4 p-6">
           <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-2 font-semibold text-slate-900">
-              <ListOrdered className="h-4 w-4 text-indigo-600" />
+            <h3 className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
+              <ListOrdered className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               Ordem do culto
             </h3>
           </div>
 
           {items.length === 0 && (
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-400 dark:text-slate-500">
               Nenhum item ainda. Adicione abaixo ou use uma sugestão.
             </p>
           )}
@@ -378,7 +378,7 @@ export function WorshipForm({
                 className="rounded-lg border border-border p-3"
               >
                 <div className="flex items-start gap-2">
-                  <span className="mt-2 w-5 text-center text-sm font-semibold text-slate-400">
+                  <span className="mt-2 w-5 text-center text-sm font-semibold text-slate-400 dark:text-slate-500">
                     {i + 1}
                   </span>
                   <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-[1fr,1fr,7rem]">
@@ -409,7 +409,7 @@ export function WorshipForm({
                     <button
                       type="button"
                       onClick={() => moveItem(i, -1)}
-                      className="text-slate-400 hover:text-indigo-600"
+                      className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400"
                       title="Subir"
                     >
                       <ArrowUp className="h-4 w-4" />
@@ -417,7 +417,7 @@ export function WorshipForm({
                     <button
                       type="button"
                       onClick={() => moveItem(i, 1)}
-                      className="text-slate-400 hover:text-indigo-600"
+                      className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400"
                       title="Descer"
                     >
                       <ArrowDown className="h-4 w-4" />
@@ -426,7 +426,7 @@ export function WorshipForm({
                   <button
                     type="button"
                     onClick={() => removeItem(i)}
-                    className="mt-0.5 text-slate-400 hover:text-red-600"
+                    className="mt-0.5 text-slate-400 dark:text-slate-500 hover:text-red-600"
                     title="Remover"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -457,7 +457,7 @@ export function WorshipForm({
                 key={s}
                 type="button"
                 onClick={() => addItem(s)}
-                className="rounded-full border border-border px-3 py-1 text-xs text-slate-500 hover:bg-slate-50"
+                className="rounded-full border border-border px-3 py-1 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
                 + {s}
               </button>
@@ -469,13 +469,13 @@ export function WorshipForm({
       {/* Participantes / escala */}
       <Card>
         <CardContent className="space-y-4 p-6">
-          <h3 className="flex items-center gap-2 font-semibold text-slate-900">
-            <UserPlus className="h-4 w-4 text-indigo-600" />
+          <h3 className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
+            <UserPlus className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
             Participantes / escala
           </h3>
 
           {participants.length === 0 && (
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-400 dark:text-slate-500">
               Convide pessoas para participar (pregação, louvor, oração...).
             </p>
           )}
@@ -511,7 +511,7 @@ export function WorshipForm({
                 <button
                   type="button"
                   onClick={() => removeParticipant(i)}
-                  className="flex items-center justify-center px-2 text-slate-400 hover:text-red-600"
+                  className="flex items-center justify-center px-2 text-slate-400 dark:text-slate-500 hover:text-red-600"
                   title="Remover"
                 >
                   <Trash2 className="h-4 w-4" />

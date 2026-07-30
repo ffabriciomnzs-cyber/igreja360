@@ -152,11 +152,11 @@ export default function UsersPage(): React.ReactElement {
         <Card className="mb-4">
           <CardContent className="p-6">
             <form onSubmit={save} className="space-y-4">
-              <p className="font-semibold text-slate-900">
+              <p className="font-semibold text-slate-900 dark:text-slate-100">
                 {editing ? 'Editar usuário' : 'Novo usuário'}
               </p>
               {formError && (
-                <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
                   {formError}
                 </div>
               )}
@@ -228,7 +228,7 @@ export default function UsersPage(): React.ReactElement {
                   />
                 </div>
                 {editing && (
-                  <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                     <input
                       type="checkbox"
                       checked={form.active}
@@ -260,15 +260,15 @@ export default function UsersPage(): React.ReactElement {
       )}
 
       {error ? (
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       ) : loading ? (
         <ListSkeleton />
       ) : users.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-sm text-slate-400">
-            <Users className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+          <CardContent className="py-12 text-center text-sm text-slate-400 dark:text-slate-500">
+            <Users className="mx-auto mb-2 h-8 w-8 text-slate-300 dark:text-slate-600" />
             Nenhum usuário cadastrado.
           </CardContent>
         </Card>
@@ -278,16 +278,16 @@ export default function UsersPage(): React.ReactElement {
             <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-slate-50 text-left">
-                  <th className="px-4 py-3 font-medium text-slate-600">Nome</th>
-                  <th className="px-4 py-3 font-medium text-slate-600">
+                <tr className="border-b border-border bg-slate-50 dark:bg-slate-950 text-left">
+                  <th className="px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Nome</th>
+                  <th className="px-4 py-3 font-medium text-slate-600 dark:text-slate-300">
                     E-mail
                   </th>
-                  <th className="px-4 py-3 font-medium text-slate-600">Papel</th>
-                  <th className="px-4 py-3 font-medium text-slate-600">
+                  <th className="px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Papel</th>
+                  <th className="px-4 py-3 font-medium text-slate-600 dark:text-slate-300">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-right font-medium text-slate-600">
+                  <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">
                     Ações
                   </th>
                 </tr>
@@ -298,15 +298,15 @@ export default function UsersPage(): React.ReactElement {
                     key={u.id}
                     className="border-b border-border last:border-0"
                   >
-                    <td className="px-4 py-3 font-medium text-slate-800">
+                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">
                       {u.name}
                       {u.id === currentUserId && (
-                        <span className="ml-2 text-xs text-slate-400">
+                        <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">
                           (você)
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{u.email}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{u.email}</td>
                     <td className="px-4 py-3">
                       <Badge variant="default">
                         {roleLabel(u.role, u.gender)}
@@ -334,7 +334,7 @@ export default function UsersPage(): React.ReactElement {
                             title="Excluir"
                             onClick={() => remove(u)}
                           >
-                            <Trash2 className="h-4 w-4 text-red-600" />
+                            <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                           </Button>
                         )}
                       </div>
@@ -350,15 +350,15 @@ export default function UsersPage(): React.ReactElement {
                 <div key={u.id} className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-medium text-slate-800">
+                      <p className="font-medium text-slate-800 dark:text-slate-200">
                         {u.name}
                         {u.id === currentUserId && (
-                          <span className="ml-1 text-xs text-slate-400">
+                          <span className="ml-1 text-xs text-slate-400 dark:text-slate-500">
                             (você)
                           </span>
                         )}
                       </p>
-                      <p className="truncate text-xs text-slate-500">
+                      <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                         {u.email}
                       </p>
                     </div>
@@ -386,7 +386,7 @@ export default function UsersPage(): React.ReactElement {
                           title="Excluir"
                           onClick={() => remove(u)}
                         >
-                          <Trash2 className="h-4 w-4 text-red-600" />
+                          <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                         </Button>
                       )}
                     </div>

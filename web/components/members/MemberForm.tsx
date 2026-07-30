@@ -207,13 +207,13 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
               {error}
             </div>
           )}
 
           <div className="flex items-center gap-4">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-50 text-xl font-bold text-indigo-600 ring-1 ring-slate-200">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-xl font-bold text-indigo-600 dark:text-indigo-400 ring-1 ring-slate-200 dark:ring-slate-700">
               {photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -256,7 +256,7 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
                   </Button>
                 )}
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 JPG ou PNG. A imagem é reduzida automaticamente.
               </p>
             </div>
@@ -316,7 +316,7 @@ export function MemberForm({ member }: MemberFormProps): React.ReactElement {
                 <option value="MALE">{GENDER_LABELS.MALE}</option>
                 <option value="FEMALE">{GENDER_LABELS.FEMALE}</option>
               </Select>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 Define o cargo no masculino/feminino (ex.: Pastor/Pastora).
               </p>
             </div>

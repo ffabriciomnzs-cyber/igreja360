@@ -72,7 +72,7 @@ export default function KidsPage(): React.ReactElement {
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 rounded-2xl border border-border bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+              className="flex items-center gap-4 rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
             >
               <div
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow ${item.color}`}
@@ -80,16 +80,16 @@ export default function KidsPage(): React.ReactElement {
                 <Icon className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-900">{item.title}</p>
-                <p className="text-sm text-slate-500">{item.description}</p>
+                <p className="font-semibold text-slate-900 dark:text-slate-100">{item.title}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{item.description}</p>
               </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
+              <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 dark:text-slate-600" />
             </a>
           );
         })}
       </div>
 
-      <p className="pt-1 text-center text-xs text-slate-400">
+      <p className="pt-1 text-center text-xs text-slate-400 dark:text-slate-500">
         Os conteúdos abrem no YouTube. Recomendamos o acompanhamento dos pais.
       </p>
     </div>

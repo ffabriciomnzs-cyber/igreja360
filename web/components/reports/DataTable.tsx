@@ -22,7 +22,7 @@ export function DataTable<T>({
 }): React.ReactElement {
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-white py-12 text-center text-sm text-slate-400">
+      <div className="rounded-lg border border-border bg-white dark:bg-slate-900 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
         {empty}
       </div>
     );
@@ -46,15 +46,15 @@ export function DataTable<T>({
   return (
     <>
       {/* Tabela (desktop/tablet) */}
-      <div className="hidden overflow-x-auto rounded-lg border border-border bg-white md:block">
+      <div className="hidden overflow-x-auto rounded-lg border border-border bg-white dark:bg-slate-900 md:block">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border bg-slate-50">
+            <tr className="border-b border-border bg-slate-50 dark:bg-slate-950">
               {columns.map((c) => (
                 <th
                   key={c.key}
                   className={cn(
-                    'px-4 py-2.5 font-semibold text-slate-600',
+                    'px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-300',
                     alignClass(c.align),
                   )}
                 >
@@ -67,13 +67,13 @@ export function DataTable<T>({
             {rows.map((row, i) => (
               <tr
                 key={rowKey(row, i)}
-                className="border-b border-border last:border-0 hover:bg-slate-50"
+                className="border-b border-border last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
                 {columns.map((c) => (
                   <td
                     key={c.key}
                     className={cn(
-                      'px-4 py-2.5 text-slate-700',
+                      'px-4 py-2.5 text-slate-700 dark:text-slate-300',
                       alignClass(c.align),
                     )}
                   >
@@ -91,17 +91,17 @@ export function DataTable<T>({
         {rows.map((row, i) => (
           <div
             key={rowKey(row, i)}
-            className="rounded-xl border border-border bg-white p-3 shadow-sm"
+            className="rounded-xl border border-border bg-white dark:bg-slate-900 p-3 shadow-sm"
           >
             {columns.map((c) => (
               <div
                 key={c.key}
                 className="flex items-start justify-between gap-3 border-b border-slate-100 py-1.5 text-sm last:border-0"
               >
-                <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-slate-400">
+                <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
                   {c.label}
                 </span>
-                <span className="text-right font-medium text-slate-700">
+                <span className="text-right font-medium text-slate-700 dark:text-slate-300">
                   {cellValue(row, c)}
                 </span>
               </div>

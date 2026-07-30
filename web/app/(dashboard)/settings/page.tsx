@@ -199,7 +199,7 @@ export default function SettingsPage(): React.ReactElement {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Carregando configurações...
         </CardContent>
@@ -222,19 +222,19 @@ export default function SettingsPage(): React.ReactElement {
           <CardContent>
             <form onSubmit={saveChurch} className="space-y-4">
               {churchMsg && (
-                <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="rounded-md bg-emerald-50 dark:bg-emerald-950/40 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
                   {churchMsg}
                 </div>
               )}
               {churchErr && (
-                <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
                   {churchErr}
                 </div>
               )}
               <div className="space-y-2">
                 <Label>Logo da igreja</Label>
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-border bg-slate-50">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-border bg-slate-50 dark:bg-slate-950">
                     {logo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -243,7 +243,7 @@ export default function SettingsPage(): React.ReactElement {
                         className="h-full w-full object-contain"
                       />
                     ) : (
-                      <ChurchIcon className="h-7 w-7 text-slate-300" />
+                      <ChurchIcon className="h-7 w-7 text-slate-300 dark:text-slate-600" />
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -276,7 +276,7 @@ export default function SettingsPage(): React.ReactElement {
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Aparece no menu lateral. Use PNG ou JPG quadrado.
                 </p>
               </div>
@@ -343,7 +343,7 @@ export default function SettingsPage(): React.ReactElement {
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Aparece só na carteirinha (sobre o fundo roxo). Se a imagem
                   tiver fundo preto, clique em &quot;Deixar fundo
                   transparente&quot;. Se vazia, usa a logo principal.
@@ -441,12 +441,12 @@ export default function SettingsPage(): React.ReactElement {
           <CardContent>
             <form onSubmit={saveProfile} className="space-y-4">
               {profileMsg && (
-                <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="rounded-md bg-emerald-50 dark:bg-emerald-950/40 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
                   {profileMsg}
                 </div>
               )}
               {profileErr && (
-                <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
                   {profileErr}
                 </div>
               )}
@@ -473,11 +473,11 @@ export default function SettingsPage(): React.ReactElement {
                   <option value="MALE">Masculino</option>
                   <option value="FEMALE">Feminino</option>
                 </Select>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   Usado para tratar você corretamente (ex.: Pastor/Pastora).
                 </p>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 O e-mail de login é gerenciado pelo administrador em Usuários.
               </p>
               <Button type="submit" className="w-full" disabled={savingProfile}>
@@ -495,12 +495,12 @@ export default function SettingsPage(): React.ReactElement {
           <CardContent>
             <form onSubmit={savePassword} className="space-y-4">
               {pwdMsg && (
-                <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="rounded-md bg-emerald-50 dark:bg-emerald-950/40 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
                   {pwdMsg}
                 </div>
               )}
               {pwdErr && (
-                <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
                   {pwdErr}
                 </div>
               )}
@@ -536,7 +536,7 @@ export default function SettingsPage(): React.ReactElement {
       </div>
 
       {church && (
-        <p className="mt-4 text-xs text-slate-400">
+        <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
           Identificador da igreja: {church.slug}
         </p>
       )}

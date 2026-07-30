@@ -140,7 +140,7 @@ export default function MembersPage(): React.ReactElement {
       <Card className="mb-4">
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <Input
               value={search}
               onChange={(e) => {
@@ -170,7 +170,7 @@ export default function MembersPage(): React.ReactElement {
       </Card>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -192,7 +192,7 @@ export default function MembersPage(): React.ReactElement {
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     <th className="px-4 py-3 font-medium">Nome</th>
                     <th className="px-4 py-3 font-medium">Contato</th>
                     <th className="px-4 py-3 font-medium">Cargo</th>
@@ -205,29 +205,29 @@ export default function MembersPage(): React.ReactElement {
                   {members.map((m) => (
                     <tr
                       key={m.id}
-                      className="border-b border-border last:border-0 hover:bg-slate-50"
+                      className="border-b border-border last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                     >
                       <td className="px-4 py-3">
                         <Link
                           href={`/members/${m.id}`}
-                          className="font-medium text-slate-900 hover:text-indigo-600"
+                          className="font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400"
                         >
                           {m.name}
                         </Link>
                         {m.city && (
-                          <p className="text-xs text-slate-500">{m.city}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{m.city}</p>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                         {m.email && <p>{m.email}</p>}
                         {m.phone && (
-                          <p className="text-xs text-slate-500">{m.phone}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{m.phone}</p>
                         )}
                         {!m.email && !m.phone && (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400 dark:text-slate-500">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                         {m.role ? roleLabel(m.role, m.gender) : '—'}
                       </td>
                       <td className="px-4 py-3">
@@ -235,7 +235,7 @@ export default function MembersPage(): React.ReactElement {
                           {STATUS_LABELS[m.status]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                         {m.joinedAt ? formatDate(m.joinedAt) : '—'}
                       </td>
                       <td className="px-4 py-3">
@@ -278,24 +278,24 @@ export default function MembersPage(): React.ReactElement {
                     <div className="min-w-0">
                       <Link
                         href={`/members/${m.id}`}
-                        className="font-medium text-slate-900 hover:text-indigo-600"
+                        className="font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400"
                       >
                         {m.name}
                       </Link>
                       {m.city && (
-                        <p className="text-xs text-slate-500">{m.city}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{m.city}</p>
                       )}
                     </div>
                     <Badge variant={STATUS_VARIANTS[m.status]}>
                       {STATUS_LABELS[m.status]}
                     </Badge>
                   </div>
-                  <div className="mt-2 space-y-0.5 text-sm text-slate-600">
+                  <div className="mt-2 space-y-0.5 text-sm text-slate-600 dark:text-slate-300">
                     {m.email && <p className="truncate">{m.email}</p>}
                     {m.phone && (
-                      <p className="text-xs text-slate-500">{m.phone}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{m.phone}</p>
                     )}
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {m.role ? roleLabel(m.role, m.gender) : 'Sem cargo'} · Entrada:{' '}
                       {m.joinedAt ? formatDate(m.joinedAt) : '—'}
                     </p>
@@ -336,7 +336,7 @@ export default function MembersPage(): React.ReactElement {
       </Card>
 
       {!loading && members.length > 0 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
           <span>
             {total} {total === 1 ? 'membro' : 'membros'}
           </span>

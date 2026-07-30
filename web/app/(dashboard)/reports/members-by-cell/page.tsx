@@ -55,23 +55,23 @@ export default function MembersByCellReportPage(): React.ReactElement {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Card>
               <CardContent className="p-5">
-                <p className="text-sm text-slate-500">Células</p>
-                <p className="mt-1 text-2xl font-bold text-slate-900">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Células</p>
+                <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">
                   {data.cells.length}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-5">
-                <p className="text-sm text-slate-500">Membros em células</p>
-                <p className="mt-1 text-2xl font-bold text-emerald-600">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Membros em células</p>
+                <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {totalInCells}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-5">
-                <p className="text-sm text-slate-500">Sem célula</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Sem célula</p>
                 <p className="mt-1 text-2xl font-bold text-amber-600">
                   {data.withoutCell}
                 </p>

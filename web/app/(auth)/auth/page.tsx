@@ -64,8 +64,8 @@ export default function AuthPage(): React.ReactElement {
 
       <main className="flex w-full items-center justify-center p-8 lg:w-1/2">
         <div className="w-full max-w-sm">
-          <h2 className="text-2xl font-bold text-slate-900">Bem-vindo de volta</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Bem-vindo de volta</h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Entre com suas credenciais para acessar o painel.
           </p>
 
@@ -98,7 +98,7 @@ export default function AuthPage(): React.ReactElement {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                   aria-label={showPassword ? 'Ocultar senha' : 'Ver senha'}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -107,7 +107,7 @@ export default function AuthPage(): React.ReactElement {
             </div>
 
             {error && (
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+              <p className="rounded-md bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-600 dark:text-red-400">
                 {error}
               </p>
             )}
@@ -118,7 +118,7 @@ export default function AuthPage(): React.ReactElement {
 
             <button
               type="button"
-              className="block w-full text-center text-sm text-indigo-600 hover:underline"
+              className="block w-full text-center text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
             >
               Esqueci minha senha
             </button>

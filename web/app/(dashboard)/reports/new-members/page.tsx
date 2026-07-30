@@ -67,7 +67,7 @@ export default function NewMembersReportPage(): React.ReactElement {
           {data.monthly.length > 0 && (
             <Card>
               <CardContent className="p-5">
-                <p className="mb-4 text-sm font-medium text-slate-600">
+                <p className="mb-4 text-sm font-medium text-slate-600 dark:text-slate-300">
                   Entradas por mês
                 </p>
                 <div className="flex h-40 items-end gap-3">
@@ -76,7 +76,7 @@ export default function NewMembersReportPage(): React.ReactElement {
                       key={m.key}
                       className="flex flex-1 flex-col items-center gap-1"
                     >
-                      <span className="text-xs font-medium text-slate-700">
+                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                         {m.count}
                       </span>
                       <div className="flex w-full flex-1 items-end">
@@ -88,7 +88,7 @@ export default function NewMembersReportPage(): React.ReactElement {
                           }}
                         />
                       </div>
-                      <span className="text-xs text-slate-500">{m.label}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{m.label}</span>
                     </div>
                   ))}
                 </div>

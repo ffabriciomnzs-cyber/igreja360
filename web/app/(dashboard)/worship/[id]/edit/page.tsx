@@ -47,12 +47,12 @@ export default function EditWorshipPage(): React.ReactElement {
       <PageHeader title="Editar culto" description="Atualize o planejamento." />
 
       {loading ? (
-        <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500 dark:text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
           Carregando...
         </div>
       ) : error || !service ? (
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error ?? 'Culto não encontrado.'}
         </div>
       ) : (

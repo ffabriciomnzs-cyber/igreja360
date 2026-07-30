@@ -68,7 +68,7 @@ export default function CommunicationsPage(): React.ReactElement {
       />
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -96,7 +96,7 @@ export default function CommunicationsPage(): React.ReactElement {
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-slate-900">{c.title}</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100">{c.title}</h3>
                     <Badge variant="default">
                       {COMMUNICATION_TYPE_LABELS[c.type] ?? c.type}
                     </Badge>
@@ -122,10 +122,10 @@ export default function CommunicationsPage(): React.ReactElement {
                     </Button>
                   </div>
                 </div>
-                <p className="mt-2 whitespace-pre-line text-sm text-slate-600">
+                <p className="mt-2 whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">
                   {c.content}
                 </p>
-                <p className="mt-3 text-xs text-slate-400">
+                <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
                   {formatDate(c.createdAt)}
                 </p>
               </CardContent>

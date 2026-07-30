@@ -47,9 +47,9 @@ export function PeriodFilter({
   onChange: (p: Period) => void;
 }): React.ReactElement {
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-white p-4">
+    <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-white dark:bg-slate-900 p-4">
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">
+        <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
           De
         </label>
         <input
@@ -60,7 +60,7 @@ export function PeriodFilter({
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">
+        <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
           Até
         </label>
         <input
@@ -76,7 +76,7 @@ export function PeriodFilter({
             key={p.label}
             type="button"
             onClick={() => onChange(p.build())}
-            className="rounded-md border border-border px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+            className="rounded-md border border-border px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
           >
             {p.label}
           </button>

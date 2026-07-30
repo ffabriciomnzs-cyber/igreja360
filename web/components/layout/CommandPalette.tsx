@@ -126,13 +126,13 @@ export function CommandPalette(): React.ReactElement | null {
         role="dialog"
         aria-label="Busca global"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200"
+        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-2xl ring-1 ring-slate-200 dark:ring-slate-700"
       >
         <div className="flex items-center gap-2.5 border-b border-slate-100 px-4">
           {busy ? (
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-slate-400" />
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-slate-400 dark:text-slate-500" />
           ) : (
-            <Search className="h-4 w-4 shrink-0 text-slate-400" />
+            <Search className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
           )}
           <input
             ref={inputRef}
@@ -153,18 +153,18 @@ export function CommandPalette(): React.ReactElement | null {
             placeholder="Buscar membro, evento, culto, campanha..."
             className="w-full bg-transparent py-3.5 text-sm outline-none placeholder:text-slate-400"
           />
-          <kbd className="hidden shrink-0 rounded border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 sm:block">
+          <kbd className="hidden shrink-0 rounded border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 sm:block">
             ESC
           </kbd>
         </div>
 
         <div className="max-h-[50vh] overflow-y-auto p-2">
           {query.trim().length < 2 ? (
-            <p className="px-3 py-8 text-center text-sm text-slate-400">
+            <p className="px-3 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
               Digite ao menos 2 letras para buscar.
             </p>
           ) : hits.length === 0 && !busy ? (
-            <p className="px-3 py-8 text-center text-sm text-slate-400">
+            <p className="px-3 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
               Nada encontrado para “{query.trim()}”.
             </p>
           ) : (
@@ -175,7 +175,7 @@ export function CommandPalette(): React.ReactElement | null {
               return (
                 <div key={`${hit.type}-${hit.id}`}>
                   {isFirstOfType && (
-                    <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                       {meta.label}
                     </p>
                   )}
@@ -184,31 +184,31 @@ export function CommandPalette(): React.ReactElement | null {
                     onMouseEnter={() => setSelected(i)}
                     className={cn(
                       'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left',
-                      i === selected ? 'bg-indigo-50' : 'hover:bg-slate-50',
+                      i === selected ? 'bg-indigo-50 dark:bg-indigo-950/50' : 'hover:bg-slate-50 dark:hover:bg-slate-800/60',
                     )}
                   >
                     <span
                       className={cn(
                         'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
                         i === selected
-                          ? 'bg-indigo-100 text-indigo-600'
-                          : 'bg-slate-100 text-slate-500',
+                          ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
                       )}
                     >
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-slate-800">
+                      <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-200">
                         {hit.title}
                       </span>
                       {hit.subtitle && (
-                        <span className="block truncate text-xs text-slate-500">
+                        <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
                           {hit.subtitle}
                         </span>
                       )}
                     </span>
                     {i === selected && (
-                      <CornerDownLeft className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                      <CornerDownLeft className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
                     )}
                   </button>
                 </div>

@@ -191,10 +191,10 @@ export default function ImportMembersPage(): React.ReactElement {
           <CardContent className="space-y-4 py-10 text-center">
             <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
             <div>
-              <p className="text-lg font-semibold text-slate-900">
+              <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 Importação concluída!
               </p>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 {result.created} membro(s) cadastrado(s)
                 {result.skipped > 0
                   ? ` · ${result.skipped} linha(s) ignorada(s) (sem nome)`
@@ -231,12 +231,12 @@ export default function ImportMembersPage(): React.ReactElement {
                 onChange={handleFile}
               />
               <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border py-10 text-center">
-                <FileSpreadsheet className="h-10 w-10 text-slate-300" />
+                <FileSpreadsheet className="h-10 w-10 text-slate-300 dark:text-slate-600" />
                 <div>
-                  <p className="text-sm font-medium text-slate-700">
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     {fileName || 'Nenhum arquivo selecionado'}
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     Colunas reconhecidas: NOME, DATA NASCIMENTO, CPF, RG,
                     TELEFONE, E-MAIL, BATISMO, ESTADO CIVIL, PROFISSÃO,
                     NATURALIDADE, UF.
@@ -252,10 +252,10 @@ export default function ImportMembersPage(): React.ReactElement {
                 </Button>
               </div>
               {parseInfo && (
-                <p className="mt-3 text-sm text-slate-600">{parseInfo}</p>
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{parseInfo}</p>
               )}
               {error && (
-                <div className="mt-3 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mt-3 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
                   {error}
                 </div>
               )}
@@ -268,20 +268,20 @@ export default function ImportMembersPage(): React.ReactElement {
                 <CardContent className="overflow-x-auto p-0">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border bg-slate-50 text-left">
-                        <th className="px-4 py-2.5 font-semibold text-slate-600">
+                      <tr className="border-b border-border bg-slate-50 dark:bg-slate-950 text-left">
+                        <th className="px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-300">
                           Nome
                         </th>
-                        <th className="px-4 py-2.5 font-semibold text-slate-600">
+                        <th className="px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-300">
                           Nascimento
                         </th>
-                        <th className="px-4 py-2.5 font-semibold text-slate-600">
+                        <th className="px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-300">
                           Telefone
                         </th>
-                        <th className="px-4 py-2.5 font-semibold text-slate-600">
+                        <th className="px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-300">
                           Cidade
                         </th>
-                        <th className="px-4 py-2.5 font-semibold text-slate-600">
+                        <th className="px-4 py-2.5 font-semibold text-slate-600 dark:text-slate-300">
                           Profissão
                         </th>
                       </tr>
@@ -292,19 +292,19 @@ export default function ImportMembersPage(): React.ReactElement {
                           key={i}
                           className="border-b border-border last:border-0"
                         >
-                          <td className="px-4 py-2.5 text-slate-800">
+                          <td className="px-4 py-2.5 text-slate-800 dark:text-slate-200">
                             {r.name}
                           </td>
-                          <td className="px-4 py-2.5 text-slate-600">
+                          <td className="px-4 py-2.5 text-slate-600 dark:text-slate-300">
                             {r.birthDate ? formatDate(r.birthDate) : '—'}
                           </td>
-                          <td className="px-4 py-2.5 text-slate-600">
+                          <td className="px-4 py-2.5 text-slate-600 dark:text-slate-300">
                             {r.phone ?? '—'}
                           </td>
-                          <td className="px-4 py-2.5 text-slate-600">
+                          <td className="px-4 py-2.5 text-slate-600 dark:text-slate-300">
                             {r.city ?? '—'}
                           </td>
-                          <td className="px-4 py-2.5 text-slate-600">
+                          <td className="px-4 py-2.5 text-slate-600 dark:text-slate-300">
                             {r.profession ?? '—'}
                           </td>
                         </tr>
@@ -312,7 +312,7 @@ export default function ImportMembersPage(): React.ReactElement {
                     </tbody>
                   </table>
                   {rows.length > 12 && (
-                    <p className="px-4 py-2 text-xs text-slate-400">
+                    <p className="px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
                       + {rows.length - 12} membro(s) não exibido(s) na prévia.
                     </p>
                   )}
