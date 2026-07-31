@@ -38,8 +38,16 @@ interface Today {
 interface RankRow {
   position: number;
   name: string;
+  photo: string | null;
   points: number;
   me: boolean;
+}
+
+/** Iniciais para o avatar de quem não tem foto. */
+function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/);
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
 }
 
 interface Ranking {
@@ -303,6 +311,18 @@ export default function ArenaPage(): React.ReactElement {
               >
                 <span className="w-7 text-center text-sm font-bold text-slate-500 dark:text-slate-400">
                   {MEDALHAS[linha.position - 1] ?? `${linha.position}º`}
+                </span>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 text-xs font-bold text-indigo-600 dark:bg-indigo-900/60 dark:text-indigo-300">
+                  {linha.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={linha.photo}
+                      alt={linha.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    iniciais(linha.name)
+                  )}
                 </span>
                 <span
                   className={cn(
