@@ -6,11 +6,15 @@ import {
   IsString,
   MaxLength,
   MinLength,
+  Matches,
 } from 'class-validator';
 import { Gender, MemberRole, MemberStatus } from '@prisma/client';
 
 export class CreateMemberDto {
   @IsString({ message: 'O nome é obrigatório.' })
+  // Bloqueia e-mail digitado no campo nome (aconteceu de verdade: o
+  // cadastro ficava exibindo o e-mail na carteirinha e no ranking).
+  @Matches(/^[^@]*$/, { message: 'O campo nome não pode conter um e-mail — informe o nome da pessoa.' })
   @MinLength(2, { message: 'O nome deve ter ao menos 2 caracteres.' })
   @MaxLength(120, { message: 'O nome é muito longo.' })
   name!: string;

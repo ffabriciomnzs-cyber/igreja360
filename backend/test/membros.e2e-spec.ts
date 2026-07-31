@@ -271,3 +271,53 @@ describe('Membros', () => {
     });
   });
 });
+
+describe('Nome não pode ser e-mail (validação nos 3 caminhos)', () => {
+  let app: NestFastifyApplication;
+  let A: IgrejaFixture;
+
+  beforeAll(async () => {
+    app = await createTestApp();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    await resetDb(prismaOf(app));
+    A = await criarIgreja(app, 'Igreja A');
+  });
+
+  it('auto-cadastro do portal recusa e-mail no campo nome', async () => {
+    const res = await req(app, 'POST', '/v1/member-auth/register', undefined, {
+      slug: A.slug,
+      name: 'fulano@teste.local',
+      email: 'fulano@teste.local',
+      password: 'Senha@123',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toContain('nome');
+  });
+
+  it('edição de perfil recusa e-mail no campo nome', async () => {
+    const res = await req(app, 'PATCH', '/v1/member-auth/profile', A.memberToken, {
+      name: 'novo@email.com',
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('cadastro pelo admin recusa e-mail no campo nome', async () => {
+    const res = await req(app, 'POST', '/v1/members', A.adminToken, {
+      name: 'pessoa@igreja.com',
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('nomes normais continuam passando', async () => {
+    const res = await req(app, 'POST', '/v1/members', A.adminToken, {
+      name: "Maria D'Ávila de Souza",
+    });
+    expect([200, 201]).toContain(res.statusCode);
+  });
+});
