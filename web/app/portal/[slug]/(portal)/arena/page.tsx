@@ -137,7 +137,7 @@ export default function ArenaPage(): React.ReactElement {
           Arena Bíblica
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          5 perguntas por dia · 10 pontos por acerto · valendo o topo do
+          12 perguntas por dia · 10 pontos por acerto · valendo o topo do
           ranking!
         </p>
       </div>

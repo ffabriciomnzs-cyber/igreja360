@@ -8,6 +8,7 @@ import {
   IgrejaFixture,
 } from './helpers';
 import { QUESTIONS } from '../src/arena/questions';
+import { perguntasDoDia } from '../src/arena/arena.service';
 
 interface TodayQuestion {
   id: string;
@@ -48,16 +49,21 @@ describe('Arena Bíblica', () => {
     };
   }
 
+  /**
+   * Gabarito DO DIA: as alternativas chegam embaralhadas por (dia, igreja),
+   * então o índice correto vem do sorteio do dia — não do banco cru.
+   */
   function gabarito(questionId: string): number {
-    const q = QUESTIONS.find((x) => x.id === questionId);
-    if (!q) throw new Error(`pergunta ${questionId} não existe no banco`);
+    const day = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
+    const q = perguntasDoDia(day, A.churchId).find((x) => x.id === questionId);
+    if (!q) throw new Error(`pergunta ${questionId} não está no dia de hoje`);
     return q.answer;
   }
 
   describe('Desafio do dia', () => {
     it('devolve 5 perguntas SEM o gabarito', async () => {
       const { questions } = await hoje();
-      expect(questions).toHaveLength(5);
+      expect(questions).toHaveLength(12);
       for (const q of questions) {
         expect(q.options).toHaveLength(4);
         expect(q.answered).toBeNull();
@@ -255,5 +261,66 @@ describe('Arena Bíblica', () => {
       expect(r.top).toHaveLength(0);
       expect(r.me.position).toBeNull();
     });
+  });
+});
+
+describe('Banco e rodízio de perguntas', () => {
+
+  it('o banco tem 200 perguntas válidas e sem duplicatas', () => {
+    expect(QUESTIONS.length).toBe(200);
+    const ids = new Set(QUESTIONS.map((q) => q.id));
+    expect(ids.size).toBe(200);
+    const textos = new Set(QUESTIONS.map((q) => q.question));
+    expect(textos.size).toBe(200);
+    for (const q of QUESTIONS) {
+      expect(q.options).toHaveLength(4);
+      expect(new Set(q.options).size).toBe(4); // alternativas não se repetem
+      expect(q.answer).toBeGreaterThanOrEqual(0);
+      expect(q.answer).toBeLessThanOrEqual(3);
+      expect(q.ref.length).toBeGreaterThan(2);
+    }
+  });
+
+  it('não repete NENHUMA pergunta dentro de um ciclo inteiro (16 dias)', () => {
+    // 200 perguntas / 12 por dia = ciclo de 16 dias. Dias do mesmo ciclo não
+    // podem compartilhar pergunta — era exatamente o bug reclamado pelo
+    // cliente no segundo dia de uso.
+    const vistos = new Set<string>();
+    const base = Date.parse('2026-09-02T00:00:00Z'); // dentro de um ciclo
+    const diasPorCiclo = Math.floor(200 / 12);
+    const inicioCiclo =
+      Math.floor(Math.floor(base / 86_400_000) / diasPorCiclo) *
+      diasPorCiclo *
+      86_400_000;
+    for (let d = 0; d < diasPorCiclo; d++) {
+      const day = new Date(inicioCiclo + d * 86_400_000)
+        .toISOString()
+        .slice(0, 10);
+      for (const q of perguntasDoDia(day, 'igreja-x')) {
+        expect(vistos.has(q.id)).toBe(false);
+        vistos.add(q.id);
+      }
+    }
+    expect(vistos.size).toBe(12 * diasPorCiclo);
+  });
+
+  it('igrejas diferentes recebem sorteios diferentes no mesmo dia', () => {
+    const a = perguntasDoDia('2026-09-02', 'igreja-a').map((q) => q.id);
+    const b = perguntasDoDia('2026-09-02', 'igreja-b').map((q) => q.id);
+    expect(a).not.toEqual(b);
+  });
+
+  it('as alternativas vêm embaralhadas mas a correção continua certa', () => {
+    const original = new Map(QUESTIONS.map((q) => [q.id, q]));
+    let algumaOrdemMudou = false;
+    for (const q of perguntasDoDia('2026-09-02', 'igreja-x')) {
+      const banco = original.get(q.id)!;
+      // mesmo conteúdo, possivelmente outra ordem
+      expect([...q.options].sort()).toEqual([...banco.options].sort());
+      // o índice remapeado aponta para o MESMO texto correto do banco
+      expect(q.options[q.answer]).toBe(banco.options[banco.answer]);
+      if (q.options.join('|') !== banco.options.join('|')) algumaOrdemMudou = true;
+    }
+    expect(algumaOrdemMudou).toBe(true);
   });
 });

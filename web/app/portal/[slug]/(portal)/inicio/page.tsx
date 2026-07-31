@@ -18,6 +18,7 @@ import { memberApi } from '@/lib/member-api';
 import { formatCurrency } from '@/lib/utils';
 import { useCached } from '@/lib/use-cached';
 import { EnableNotifications } from '@/components/portal/EnableNotifications';
+import { Swords, Trophy } from 'lucide-react';
 
 interface PortalHome {
   announcements: {
@@ -99,6 +100,106 @@ function DateBadge({ iso }: { iso: string }): React.ReactElement {
   );
 }
 
+
+interface ArenaRankRow {
+  position: number;
+  name: string;
+  photo: string | null;
+  points: number;
+  me: boolean;
+}
+interface ArenaRanking {
+  top: ArenaRankRow[];
+  me: { position: number | null; points: number };
+}
+
+function arenaIniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/);
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+}
+
+/** Pódio do mês na Início: mostra o topo e convida para o desafio do dia. */
+function ArenaDestaque({ base }: { base: string }): React.ReactElement | null {
+  const { data } = useCached<ArenaRanking>('arena-ranking-mes', () =>
+    memberApi
+      .get<ArenaRanking>('/member-auth/arena/ranking', {
+        params: { period: 'month' },
+      })
+      .then((r) => r.data),
+  );
+
+  const podio = data?.top.slice(0, 3) ?? [];
+  const MEDALHAS = ['🥇', '🥈', '🥉'];
+
+  return (
+    <Link
+      href={`${base}/arena`}
+      className="block rounded-2xl border border-indigo-100 bg-white p-4 transition-colors hover:border-indigo-300 dark:border-indigo-900 dark:bg-slate-900 dark:hover:border-indigo-700"
+    >
+      <div className="flex items-center justify-between">
+        <p className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
+          <Swords className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+          Arena Bíblica
+        </p>
+        <span className="flex items-center gap-1 rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white">
+          Jogar hoje
+        </span>
+      </div>
+
+      {podio.length === 0 ? (
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+          12 perguntas por dia. Seja a primeira pessoa no ranking do mês! 🏆
+        </p>
+      ) : (
+        <div className="mt-3 space-y-1.5">
+          {podio.map((linha, i) => (
+            <div key={linha.position} className="flex items-center gap-2.5">
+              <span className="w-6 text-center text-sm">{MEDALHAS[i]}</span>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-600 dark:bg-indigo-900/60 dark:text-indigo-300">
+                {linha.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={linha.photo}
+                    alt={linha.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  arenaIniciais(linha.name)
+                )}
+              </span>
+              <span
+                className={
+                  'min-w-0 flex-1 truncate text-sm ' +
+                  (linha.me
+                    ? 'font-bold text-indigo-700 dark:text-indigo-300'
+                    : 'text-slate-700 dark:text-slate-300')
+                }
+              >
+                {linha.name}
+                {linha.me ? ' (você)' : ''}
+              </span>
+              <span className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                {linha.points}
+                <span className="ml-0.5 text-[10px] font-normal text-slate-400 dark:text-slate-500">
+                  pts
+                </span>
+              </span>
+            </div>
+          ))}
+          {data?.me.position != null && data.me.position > 3 && (
+            <p className="pt-1 text-xs text-slate-500 dark:text-slate-400">
+              <Trophy className="mr-1 inline h-3 w-3 text-amber-500" />
+              Você está em {data.me.position}º com {data.me.points} pts —
+              responda hoje e suba!
+            </p>
+          )}
+        </div>
+      )}
+    </Link>
+  );
+}
+
 export default function PortalInicioPage(): React.ReactElement {
   const params = useParams();
   const slug = String(params.slug);
@@ -156,6 +257,9 @@ export default function PortalInicioPage(): React.ReactElement {
           </span>
         </Link>
       </div>
+
+      {/* Arena: pódio do mês na abertura — competição à vista todo dia */}
+      <ArenaDestaque base={base} />
 
       {/* Avisos */}
       {data.announcements.length > 0 && (

@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { QUESTIONS, ArenaQuestion } from './questions';
 
-const PERGUNTAS_POR_DIA = 5;
+const PERGUNTAS_POR_DIA = 12;
 const PONTOS_POR_ACERTO = 10;
 
 /** "AAAA-MM-DD" no fuso de Brasília — o dia vira à meia-noite BRT, não UTC. */
@@ -25,26 +25,75 @@ function fnv1a(texto: string): number {
   return h >>> 0;
 }
 
+/** Gerador determinístico (xorshift32) a partir de uma semente. */
+function criaPrng(semente: number): () => number {
+  let s = semente || 1; // xorshift trava em 0
+  return () => {
+    s ^= s << 13;
+    s ^= s >>> 17;
+    s ^= s << 5;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function embaralhado<T>(itens: T[], rand: () => number): T[] {
+  const arr = [...itens];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/** Dias corridos desde a época Unix para a data "AAAA-MM-DD". */
+function numeroDoDia(day: string): number {
+  return Math.floor(Date.parse(`${day}T00:00:00Z`) / 86_400_000);
+}
+
 /**
- * As 5 perguntas do dia. Determinístico por (dia + igreja): todo mundo da
- * MESMA igreja vê as MESMAS perguntas no mesmo dia — isso gera a conversa
+ * Embaralha as ALTERNATIVAS da pergunta (determinístico por dia+igreja+id).
+ * Sem isso, quem decorasse "a certa é sempre a B" pontuaria sem ler — e o
+ * índice correto é remapeado junto, então a correção continua batendo.
+ */
+function comOpcoesEmbaralhadas(
+  q: ArenaQuestion,
+  day: string,
+  churchId: string,
+): ArenaQuestion {
+  const rand = criaPrng(fnv1a(`${day}|${churchId}|${q.id}`));
+  const perm = embaralhado([0, 1, 2, 3], rand);
+  return {
+    ...q,
+    options: perm.map((i) => q.options[i]) as ArenaQuestion['options'],
+    answer: perm.indexOf(q.answer) as ArenaQuestion['answer'],
+  };
+}
+
+/**
+ * As perguntas do dia, em RODÍZIO SEM REPETIÇÃO:
+ *
+ * O banco inteiro é embaralhado uma vez por CICLO (semente = ciclo + igreja) e
+ * consumido em fatias de 12 por dia. Nenhuma pergunta repete até o banco todo
+ * rodar (~banco/12 dias); no ciclo seguinte, novo embaralhamento. Todo mundo
+ * da MESMA igreja vê as MESMAS perguntas no dia — é o que gera a conversa
  * ("acertou a 3?") — e igrejas diferentes veem sorteios diferentes.
  */
 export function perguntasDoDia(day: string, churchId: string): ArenaQuestion[] {
-  let semente = fnv1a(`${day}|${churchId}`);
-  const proximaAleatoria = () => {
-    // xorshift32: rápido, determinístico e suficiente para embaralhar.
-    semente ^= semente << 13;
-    semente ^= semente >>> 17;
-    semente ^= semente << 5;
-    return (semente >>> 0) / 0xffffffff;
-  };
-  const indices = QUESTIONS.map((_, i) => i);
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(proximaAleatoria() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
-  return indices.slice(0, PERGUNTAS_POR_DIA).map((i) => QUESTIONS[i]);
+  const total = QUESTIONS.length;
+  const diasPorCiclo = Math.floor(total / PERGUNTAS_POR_DIA);
+  const dia = numeroDoDia(day);
+  const ciclo = Math.floor(dia / diasPorCiclo);
+  const posicaoNoCiclo = ((dia % diasPorCiclo) + diasPorCiclo) % diasPorCiclo;
+
+  const rand = criaPrng(fnv1a(`ciclo:${ciclo}|${churchId}`));
+  const indices = embaralhado(
+    QUESTIONS.map((_, i) => i),
+    rand,
+  );
+  const inicio = posicaoNoCiclo * PERGUNTAS_POR_DIA;
+  return indices
+    .slice(inicio, inicio + PERGUNTAS_POR_DIA)
+    .map((i) => comOpcoesEmbaralhadas(QUESTIONS[i], day, churchId));
 }
 
 @Injectable()

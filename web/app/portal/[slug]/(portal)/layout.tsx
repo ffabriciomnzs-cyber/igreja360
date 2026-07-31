@@ -10,6 +10,7 @@ import {
   getMemberToken,
   getStoredMember,
   clearMemberSession,
+  updateStoredMember,
 } from '@/lib/member-api';
 import { cn } from '@/lib/utils';
 import { InstallPrompt } from '@/components/InstallPrompt';
@@ -29,8 +30,17 @@ export default function PortalLayout({
   const [ready, setReady] = useState(false);
   const [churchName, setChurchName] = useState('');
   const [churchLogo, setChurchLogo] = useState('');
-  const memberName = getStoredMember()?.name ?? '';
+  // Estado (não leitura direta): a saudação precisa reagir quando o membro
+  // edita o nome no Perfil (evento 'igreja360:member-updated').
+  const [memberName, setMemberName] = useState('');
   const firstName = memberName.split(' ')[0];
+
+  useEffect(() => {
+    const ler = (): void => setMemberName(getStoredMember()?.name ?? '');
+    ler();
+    window.addEventListener('igreja360:member-updated', ler);
+    return () => window.removeEventListener('igreja360:member-updated', ler);
+  }, []);
 
   useEffect(() => {
     if (!getMemberToken()) {
@@ -39,13 +49,19 @@ export default function PortalLayout({
     }
     let mounted = true;
     memberApi
-      .get<{ church: { name: string; logo: string | null } | null }>(
-        '/member-auth/me',
-      )
+      .get<{
+        member: { name: string } | null;
+        church: { name: string; logo: string | null } | null;
+      }>('/member-auth/me')
       .then(({ data }) => {
         if (!mounted) return;
         setChurchName(data.church?.name ?? '');
         setChurchLogo(data.church?.logo ?? '');
+        // Autocorrige a cópia local: quem editou o nome (ou tinha cache velho)
+        // vê a saudação certa já nesta visita, sem sair e entrar.
+        if (data.member?.name) {
+          updateStoredMember({ name: data.member.name });
+        }
       })
       .catch(() => {
         clearMemberSession();

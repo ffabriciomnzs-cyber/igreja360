@@ -44,6 +44,19 @@ export function getStoredMember(): PortalMember | null {
   }
 }
 
+/**
+ * Atualiza a cópia local do membro (nome etc.) e avisa quem exibe esses dados
+ * (ex.: a saudação do cabeçalho). Sem isso, editar o perfil só mudava o banco
+ * e o cabeçalho ficava com o valor antigo até o próximo login.
+ */
+export function updateStoredMember(patch: Partial<PortalMember>): void {
+  if (typeof window === 'undefined') return;
+  const atual = getStoredMember();
+  if (!atual) return;
+  window.localStorage.setItem(MEMBER_KEY, JSON.stringify({ ...atual, ...patch }));
+  window.dispatchEvent(new Event('igreja360:member-updated'));
+}
+
 export function clearMemberSession(): void {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(MEMBER_TOKEN_KEY);

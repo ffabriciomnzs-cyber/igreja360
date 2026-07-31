@@ -15,7 +15,7 @@ import {
   Bell,
   ChevronRight,
 } from 'lucide-react';
-import { memberApi } from '@/lib/member-api';
+import { memberApi, updateStoredMember } from '@/lib/member-api';
 import { fileToCompressedDataUrl } from '@/lib/image';
 import { formatDate } from '@/lib/utils';
 import {
@@ -159,6 +159,8 @@ export default function PerfilPage(): React.ReactElement {
         photo: form.photo,
       });
       setMe(data);
+      // Sincroniza a saudação do cabeçalho na hora (cópia local + evento).
+      updateStoredMember({ name: data.member.name });
       setEditing(false);
     } catch {
       /* ignora */
