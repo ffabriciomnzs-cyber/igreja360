@@ -218,6 +218,7 @@ model Member {
   joinedAt  DateTime?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+  arenaAnswers ArenaAnswer[]
 
   @@index([churchId])
   @@index([cellId])
@@ -420,4 +421,24 @@ enum WorshipStatus {
   PLANNED
   DONE
   CANCELED
+}
+
+// Arena Bíblica: resposta de um membro a uma pergunta do desafio diário.
+// Pontos são calculados NO SERVIDOR (a alternativa correta nunca vai ao
+// cliente). Única por (memberId, day, questionId): uma tentativa por pergunta.
+model ArenaAnswer {
+  id         String   @id @default(cuid())
+  churchId   String
+  memberId   String
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  day        String   // "AAAA-MM-DD" no fuso de Brasília
+  questionId String
+  choice     Int
+  correct    Boolean
+  points     Int
+  createdAt  DateTime @default(now())
+
+  @@unique([memberId, day, questionId])
+  @@index([churchId, day])
+  @@index([churchId, memberId])
 }
