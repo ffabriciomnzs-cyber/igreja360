@@ -1,6 +1,17 @@
 'use client';
 
-import { Music, BookOpen, Tv, Sparkles, Star, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { Music, BookOpen, Tv, Sparkles, Star, ChevronRight, Gamepad2 } from 'lucide-react';
+
+// Jogos feitos por nós: rodam no próprio aparelho, sem anúncio e sem sair
+// do portal — diferente dos conteúdos abaixo, que abrem no YouTube.
+const JOGOS = [
+  { emoji: '🃏', titulo: 'Memória', rota: 'memoria' },
+  { emoji: '⭐', titulo: 'Quiz Kids', rota: 'quiz' },
+  { emoji: '📖', titulo: 'Ordene a História', rota: 'historia' },
+  { emoji: '🔍', titulo: 'Ache o Intruso', rota: 'intruso' },
+];
 
 interface KidsItem {
   title: string;
@@ -50,6 +61,7 @@ const KIDS_ITEMS: KidsItem[] = [
 ];
 
 export default function KidsPage(): React.ReactElement {
+  const slug = String(useParams()?.slug ?? '');
   return (
     <div className="space-y-5">
       {/* Hero */}
@@ -62,6 +74,30 @@ export default function KidsPage(): React.ReactElement {
           </p>
         </div>
       </div>
+
+      {/* Joguinhos */}
+      <section>
+        <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-fuchsia-500 text-white">
+            <Gamepad2 className="h-4 w-4" />
+          </span>
+          Joguinhos
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          {JOGOS.map((j) => (
+            <Link
+              key={j.rota}
+              href={`/portal/${slug}/kids/jogos/${j.rota}`}
+              className="rounded-3xl border-2 border-fuchsia-100 bg-white p-4 text-center shadow-sm transition-transform active:scale-95 dark:border-fuchsia-900/60 dark:bg-slate-900"
+            >
+              <span className="text-4xl">{j.emoji}</span>
+              <span className="mt-1.5 block text-sm font-bold text-slate-800 dark:text-slate-200">
+                {j.titulo}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-3">
         {KIDS_ITEMS.map((item) => {
