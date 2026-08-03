@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { RadioPlayerProvider } from '@/components/portal/radio-player';
 import { RadioMiniBar } from '@/components/portal/RadioMiniBar';
+import { PortalTour } from '@/components/portal/PortalTour';
+import { iniciaCapturaInstalacao } from '@/lib/install';
 
 export default function PortalLayout({
   children,
@@ -36,6 +38,8 @@ export default function PortalLayout({
   const firstName = memberName.split(' ')[0];
 
   useEffect(() => {
+    // Captura o prompt de instalação (Android) para o tour e o banner usarem.
+    iniciaCapturaInstalacao();
     const ler = (): void => setMemberName(getStoredMember()?.name ?? '');
     ler();
     window.addEventListener('igreja360:member-updated', ler);
@@ -111,6 +115,7 @@ export default function PortalLayout({
           </div>
           <Link
             href={`${base}/perfil`}
+            data-tour="perfil"
             className="min-w-0 flex-1 rounded-lg px-1 py-0.5 -mx-1 transition-colors hover:bg-white/10"
           >
             <p className="truncate text-sm font-semibold leading-tight">
@@ -137,6 +142,7 @@ export default function PortalLayout({
 
       <InstallPrompt />
       <RadioMiniBar />
+      <PortalTour />
 
       <nav className="fixed inset-x-0 bottom-0 z-30 px-3 pb-3">
         <div className="mx-auto flex max-w-md items-center justify-around rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-[0_8px_30px_rgba(15,23,42,0.15)] backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/95">
@@ -147,6 +153,10 @@ export default function PortalLayout({
               <Link
                 key={item.href}
                 href={item.href}
+                data-tour={item.label
+                  .toLowerCase()
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')}
                 className="flex flex-1 flex-col items-center gap-1 py-1"
               >
                 <span

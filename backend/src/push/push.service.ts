@@ -15,6 +15,7 @@ export const NOTIFY_CATEGORIES = [
   'events',
   'campaigns',
   'birthdays',
+  'arena',
 ] as const;
 export type NotifyCategory = (typeof NOTIFY_CATEGORIES)[number];
 

@@ -24,4 +24,8 @@ export class NotifyPrefsDto {
   @IsOptional()
   @IsBoolean()
   birthdays?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  arena?: boolean;
 }

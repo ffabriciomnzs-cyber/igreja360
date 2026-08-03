@@ -42,6 +42,7 @@ describe('Notificações', () => {
         events: true,
         campaigns: true,
         birthdays: true,
+        arena: true,
       });
     });
 

@@ -25,7 +25,8 @@ type Category =
   | 'worship'
   | 'events'
   | 'campaigns'
-  | 'birthdays';
+  | 'birthdays'
+  | 'arena';
 type Prefs = Record<Category, boolean>;
 
 const CATEGORIAS: { key: Category; label: string; hint: string }[] = [
@@ -50,6 +51,11 @@ const CATEGORIAS: { key: Category; label: string; hint: string }[] = [
     label: 'Aniversariantes',
     hint: 'Quem faz aniversário hoje',
   },
+  {
+    key: 'arena',
+    label: 'Arena Bíblica',
+    hint: 'Quando alguém assume o topo do ranking',
+  },
 ];
 
 const PADRAO: Prefs = {
@@ -58,6 +64,7 @@ const PADRAO: Prefs = {
   events: true,
   campaigns: true,
   birthdays: true,
+  arena: true,
 };
 
 export default function NotificacoesPage(): React.ReactElement {

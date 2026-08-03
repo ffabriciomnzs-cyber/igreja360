@@ -324,3 +324,91 @@ describe('Banco e rodízio de perguntas', () => {
     expect(algumaOrdemMudou).toBe(true);
   });
 });
+
+describe('Push de novo líder do mês', () => {
+  let app: NestFastifyApplication;
+  let A: IgrejaFixture;
+
+  beforeAll(async () => {
+    app = await createTestApp();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    await resetDb(prismaOf(app));
+    A = await criarIgreja(app, 'Igreja A');
+  });
+
+  function gabaritoDe(questionId: string): number {
+    const day = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
+    const q = perguntasDoDia(day, A.churchId).find((x) => x.id === questionId);
+    if (!q) throw new Error('pergunta fora do dia');
+    return q.answer;
+  }
+
+  it('notifica quando alguém assume o topo — e só na ULTRAPASSAGEM', async () => {
+    const { PushService } = await import('../src/push/push.service');
+    const push = app.get(PushService);
+    const avisos: string[] = [];
+    jest
+      .spyOn(push, 'notifyChurch')
+      .mockImplementation(async (_c, titulo, corpo, cat) => {
+        avisos.push(`${cat}|${titulo}|${corpo}`);
+      });
+
+    const res = await req(
+      app,
+      'GET',
+      '/v1/member-auth/arena/today',
+      A.memberToken,
+    );
+    const questions = JSON.parse(res.body).questions as { id: string }[];
+
+    // 1º acerto: vira o primeiro líder do mês → notifica.
+    await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
+      questionId: questions[0].id,
+      choice: gabaritoDe(questions[0].id),
+    });
+    // 2º acerto: JÁ era líder → não notifica de novo.
+    await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
+      questionId: questions[1].id,
+      choice: gabaritoDe(questions[1].id),
+    });
+    // O aviso é disparado sem bloquear a resposta: dá um instante.
+    await new Promise((r) => setTimeout(r, 100));
+
+    const doLider = avisos.filter((a) => a.startsWith('arena|'));
+    expect(doLider).toHaveLength(1);
+    expect(doLider[0]).toContain('Novo líder');
+    expect(doLider[0]).toContain('Membro Igreja A');
+  });
+
+  it('erro não dispara aviso de líder', async () => {
+    const { PushService } = await import('../src/push/push.service');
+    const push = app.get(PushService);
+    const avisos: string[] = [];
+    jest
+      .spyOn(push, 'notifyChurch')
+      .mockImplementation(async (_c, t) => {
+        avisos.push(t);
+      });
+
+    const res = await req(
+      app,
+      'GET',
+      '/v1/member-auth/arena/today',
+      A.memberToken,
+    );
+    const q = (JSON.parse(res.body).questions as { id: string }[])[0];
+    const errada = (gabaritoDe(q.id) + 1) % 4;
+    await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
+      questionId: q.id,
+      choice: errada,
+    });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(avisos).toHaveLength(0);
+  });
+});

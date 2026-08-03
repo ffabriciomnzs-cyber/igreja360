@@ -428,6 +428,21 @@ export default function PerfilPage(): React.ReactElement {
         <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
       </Link>
 
+      {/* Rever o passeio guiado do primeiro acesso */}
+      <button
+        onClick={() => {
+          try {
+            localStorage.removeItem('igreja360.tour.done');
+          } catch {
+            /* ignora */
+          }
+          window.dispatchEvent(new Event('igreja360:abrir-tour'));
+        }}
+        className="w-full rounded-2xl border border-border bg-white p-3 text-center text-sm font-medium text-indigo-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-indigo-400 dark:hover:bg-slate-800/60"
+      >
+        Rever o tour do portal
+      </button>
+
       {/* Pedidos de oração */}
       <section>
         <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">

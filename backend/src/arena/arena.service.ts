@@ -4,6 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { PushService } from '../push/push.service';
 import { QUESTIONS, ArenaQuestion } from './questions';
 
 const PERGUNTAS_POR_DIA = 12;
@@ -98,7 +99,10 @@ export function perguntasDoDia(day: string, churchId: string): ArenaQuestion[] {
 
 @Injectable()
 export class ArenaService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly push: PushService,
+  ) {}
 
   /** Desafio de hoje: perguntas SEM a resposta + o que o membro já respondeu. */
   async today(churchId: string, memberId: string) {
@@ -169,7 +173,58 @@ export class ArenaService {
       throw err;
     }
 
+    // Pontuou? Confere se acabou de assumir o topo do mês — se sim, avisa a
+    // igreja. Best-effort: nunca atrasa nem quebra a resposta da pergunta.
+    if (correct) {
+      void this.avisaSeNovoLider(churchId, memberId, points).catch(
+        () => undefined,
+      );
+    }
+
     return { correct, points, answer: pergunta.answer, ref: pergunta.ref };
+  }
+
+  /**
+   * Detecta a TROCA de líder do mês: notifica só quando este acerto fez o
+   * membro cruzar para o 1º lugar (antes dele estava alguém — ou ninguém).
+   * Empate não conta como ultrapassagem, então não há spam de ping-pong.
+   */
+  private async avisaSeNovoLider(
+    churchId: string,
+    memberId: string,
+    pontosGanhos: number,
+  ): Promise<void> {
+    const mesInicio = `${hojeBrt().slice(0, 7)}-01`;
+    const somas = await this.prisma.arenaAnswer.groupBy({
+      by: ['memberId'],
+      where: { churchId, day: { gte: mesInicio } },
+      _sum: { points: true },
+    });
+
+    const minha = somas.find((s) => s.memberId === memberId)?._sum.points ?? 0;
+    const maiorDosOutros = Math.max(
+      0,
+      ...somas
+        .filter((s) => s.memberId !== memberId)
+        .map((s) => s._sum.points ?? 0),
+    );
+
+    const lideraAgora = minha > maiorDosOutros;
+    const jaLiderava = minha - pontosGanhos > maiorDosOutros;
+    if (!lideraAgora || jaLiderava) return;
+
+    const membro = await this.prisma.member.findUnique({
+      where: { id: memberId },
+      select: { name: true },
+    });
+    if (!membro) return;
+
+    await this.push.notifyChurch(
+      churchId,
+      '🏆 Novo líder na Arena!',
+      `${membro.name} assumiu o topo do ranking com ${minha} pontos. Quem alcança?`,
+      'arena',
+    );
   }
 
   /**
