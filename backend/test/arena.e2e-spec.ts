@@ -61,7 +61,7 @@ describe('Arena Bíblica', () => {
   }
 
   describe('Desafio do dia', () => {
-    it('devolve 5 perguntas SEM o gabarito', async () => {
+    it('devolve 12 perguntas SEM o gabarito', async () => {
       const { questions } = await hoje();
       expect(questions).toHaveLength(12);
       for (const q of questions) {
@@ -266,12 +266,12 @@ describe('Arena Bíblica', () => {
 
 describe('Banco e rodízio de perguntas', () => {
 
-  it('o banco tem 200 perguntas válidas e sem duplicatas', () => {
-    expect(QUESTIONS.length).toBe(200);
+  it('o banco tem 260 perguntas válidas e sem duplicatas', () => {
+    expect(QUESTIONS.length).toBe(260);
     const ids = new Set(QUESTIONS.map((q) => q.id));
-    expect(ids.size).toBe(200);
+    expect(ids.size).toBe(QUESTIONS.length);
     const textos = new Set(QUESTIONS.map((q) => q.question));
-    expect(textos.size).toBe(200);
+    expect(textos.size).toBe(QUESTIONS.length);
     for (const q of QUESTIONS) {
       expect(q.options).toHaveLength(4);
       expect(new Set(q.options).size).toBe(4); // alternativas não se repetem
@@ -287,7 +287,7 @@ describe('Banco e rodízio de perguntas', () => {
     // cliente no segundo dia de uso.
     const vistos = new Set<string>();
     const base = Date.parse('2026-09-02T00:00:00Z'); // dentro de um ciclo
-    const diasPorCiclo = Math.floor(200 / 12);
+    const diasPorCiclo = Math.floor(QUESTIONS.length / 12);
     const inicioCiclo =
       Math.floor(Math.floor(base / 86_400_000) / diasPorCiclo) *
       diasPorCiclo *
