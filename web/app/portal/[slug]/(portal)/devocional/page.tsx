@@ -12,8 +12,6 @@ import {
   Check,
   Flame,
   NotebookPen,
-  Play,
-  Square,
   Route,
   X,
   Sparkles,
@@ -33,7 +31,10 @@ import {
   TRAIL_LENGTH,
 } from '@/lib/devotional-trails';
 import { questionFor } from '@/lib/devotional-questions';
-import { speak, stopSpeaking, speechSupported } from '@/lib/speak';
+import {
+  DevocionalIntro,
+  ABRIR_INTRO_DEVOCIONAL,
+} from '@/components/portal/DevocionalIntro';
 import { generateVerseImage } from '@/lib/verse-image';
 
 interface TrailState {
@@ -122,9 +123,6 @@ export default function DevocionalPage(): React.ReactElement {
   const [trailPicker, setTrailPicker] = useState(false);
   const [trailBusy, setTrailBusy] = useState(false);
 
-  const [speaking, setSpeaking] = useState(false);
-  const [canSpeak, setCanSpeak] = useState(false);
-
   // Cache + revalidação: ao voltar para o Devocional a tela abre na hora.
   const { data: initial, loading } = useCached<DevotionalResponse>(
     DEVOTIONAL_CACHE_KEY,
@@ -155,11 +153,6 @@ export default function DevocionalPage(): React.ReactElement {
     setChurchName(initial.churchName ?? '');
     setTrail(initial.trail ?? null);
   }, [initial]);
-
-  useEffect(() => {
-    setCanSpeak(speechSupported());
-    return () => stopSpeaking();
-  }, []);
 
   // Leitura de hoje: da trilha, se houver uma em andamento; senão a do dia.
   const trilhaAtiva = trail && !trail.finished ? trailById(trail.id) : null;
@@ -198,19 +191,6 @@ export default function DevocionalPage(): React.ReactElement {
       mounted = false;
     };
   }, [daily.text, daily.ref, daily.title, churchName]);
-
-  function toggleSpeak(): void {
-    if (speaking) {
-      stopSpeaking();
-      setSpeaking(false);
-      return;
-    }
-    setSpeaking(true);
-    speak(
-      `${daily.title}. ${daily.text}. ${daily.ref}. ${daily.thought} ${daily.reflection}`,
-      () => setSpeaking(false),
-    );
-  }
 
   async function togglePray(): Promise<void> {
     setSaving(true);
@@ -375,6 +355,8 @@ export default function DevocionalPage(): React.ReactElement {
 
   return (
     <div className="space-y-4">
+      <DevocionalIntro />
+
       {/* Capa: a Palavra é a primeira coisa que se vê */}
       <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-800 shadow-lg">
         <div className="p-6">
@@ -415,40 +397,14 @@ export default function DevocionalPage(): React.ReactElement {
           <p className="mt-3 text-sm text-indigo-200">{daily.ref}</p>
         </div>
 
-        {/* Ouvir + ler na Bíblia */}
-        <div className="flex items-center gap-2 border-t border-white/15 px-4 py-3">
-          {canSpeak && (
-            <button
-              onClick={toggleSpeak}
-              className="flex flex-1 items-center gap-2.5 rounded-xl bg-white/10 px-3 py-2.5 text-left text-white hover:bg-white/20"
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20">
-                {speaking ? (
-                  <Square className="h-3.5 w-3.5" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-medium">
-                  {speaking ? 'Parar' : 'Ouvir'}
-                </span>
-                <span className="block text-[11px] text-indigo-200">
-                  {speaking ? 'lendo para você' : `${minutos} min`}
-                </span>
-              </span>
-            </button>
-          )}
-          <Link
-            href={`/portal/${slug}/biblia?ref=${encodeURIComponent(daily.ref)}`}
-            className={`flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-3 text-sm font-medium text-white hover:bg-white/20 ${
-              canSpeak ? '' : 'flex-1 justify-center'
-            }`}
-          >
-            <BookOpen className="h-4 w-4" />
-            Ler na Bíblia
-          </Link>
-        </div>
+        {/* Ler o capítulo na Bíblia */}
+        <Link
+          href={`/portal/${slug}/biblia?ref=${encodeURIComponent(daily.ref)}`}
+          className="flex items-center justify-center gap-2 border-t border-white/15 px-4 py-3.5 text-sm font-medium text-white hover:bg-white/10"
+        >
+          <BookOpen className="h-4 w-4" />
+          Ler na Bíblia
+        </Link>
       </div>
 
       {/* Pensamento de hoje — a frase que vira print */}
@@ -742,6 +698,16 @@ export default function DevocionalPage(): React.ReactElement {
           </div>
         </div>
       </div>
+
+      {/* Rever o explicativo do devocional */}
+      <button
+        onClick={() =>
+          window.dispatchEvent(new Event(ABRIR_INTRO_DEVOCIONAL))
+        }
+        className="w-full rounded-2xl border border-border bg-white p-3 text-center text-sm font-medium text-indigo-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-indigo-400 dark:hover:bg-slate-800/60"
+      >
+        Como funciona o devocional
+      </button>
 
       {/* Imagem para compartilhar */}
       {genImage && (
