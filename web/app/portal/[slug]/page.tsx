@@ -12,7 +12,7 @@ import {
 import { PORTAL_BG_VIDEO } from '@/lib/portal-config';
 import { GENDER_LABELS } from '@/lib/members';
 
-type Tab = 'login' | 'register';
+type Tab = 'login' | 'register' | 'reset';
 
 export default function PortalLoginPage(): React.ReactElement {
   const params = useParams();
@@ -25,6 +25,8 @@ export default function PortalLoginPage(): React.ReactElement {
   const [pendingMsg, setPendingMsg] = useState<string | null>(null);
 
   const [login, setLogin] = useState({ email: '', password: '' });
+  const [resetId, setResetId] = useState('');
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
   const [reg, setReg] = useState({
     name: '',
     email: '',
@@ -67,6 +69,23 @@ export default function PortalLoginPage(): React.ReactElement {
       router.push(`/portal/${slug}/inicio`);
     } catch (err) {
       setError(memberApiError(err));
+      setLoading(false);
+    }
+  }
+
+  async function handleResetRequest(e: React.FormEvent): Promise<void> {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const { data } = await memberApi.post<{ message: string }>(
+        '/member-auth/password-reset-request',
+        { slug, identifier: resetId.trim() },
+      );
+      setResetMsg(data.message);
+    } catch (err) {
+      setError(memberApiError(err));
+    } finally {
       setLoading(false);
     }
   }
@@ -227,6 +246,20 @@ export default function PortalLoginPage(): React.ReactElement {
                   }
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 />
+                <div className="mt-1.5 text-right">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTab('reset');
+                      setError(null);
+                      setResetMsg(null);
+                      setResetId(login.email);
+                    }}
+                    className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                  >
+                    Esqueci minha senha
+                  </button>
+                </div>
               </div>
               <button
                 type="submit"
@@ -237,6 +270,64 @@ export default function PortalLoginPage(): React.ReactElement {
                 Entrar
               </button>
             </form>
+          ) : tab === 'reset' ? (
+            resetMsg ? (
+              <div className="py-6 text-center">
+                <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
+                <p className="mt-3 font-medium text-slate-900 dark:text-slate-100">
+                  Pedido enviado!
+                </p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{resetMsg}</p>
+                <button
+                  onClick={() => {
+                    setResetMsg(null);
+                    setTab('login');
+                  }}
+                  className="mt-4 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                >
+                  Voltar para entrar
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleResetRequest} className="space-y-4">
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  Informe o e-mail ou telefone do seu cadastro. A secretaria da
+                  igreja será avisada e vai gerar uma senha temporária para
+                  você.
+                </p>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    E-mail ou telefone
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={resetId}
+                    onChange={(e) => setResetId(e.target.value)}
+                    placeholder="seu@email.com ou (00) 90000-0000"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:from-indigo-700 hover:to-violet-700 disabled:opacity-60"
+                >
+                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Pedir redefinição
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTab('login');
+                    setError(null);
+                  }}
+                  className="w-full text-center text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                >
+                  Voltar
+                </button>
+              </form>
+            )
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>

@@ -182,6 +182,53 @@ export class MemberAuthService {
     };
   }
 
+  // "Esqueci minha senha" da tela de entrada. A resposta é SEMPRE a mesma,
+  // exista ou não o cadastro — impede descobrir e-mails/telefones válidos.
+  async requestPasswordReset(dto: { slug: string; identifier: string }) {
+    const generic = {
+      message:
+        'Se encontrarmos o seu cadastro, a secretaria da igreja será avisada para gerar uma senha temporária para você.',
+    };
+
+    let church;
+    try {
+      church = await this.churchBySlug(dto.slug.trim());
+    } catch {
+      return generic;
+    }
+
+    const identifier = dto.identifier.trim();
+    let member = null;
+    if (identifier.includes('@')) {
+      member = await this.prisma.member.findFirst({
+        where: { churchId: church.id, email: identifier.toLowerCase() },
+      });
+    } else {
+      const key = phoneKey(identifier);
+      if (key) {
+        const candidates = await this.prisma.member.findMany({
+          where: {
+            churchId: church.id,
+            phone: { not: null },
+            passwordHash: { not: null },
+          },
+        });
+        member = candidates.find((c) => phoneKey(c.phone) === key) ?? null;
+      }
+    }
+    if (!member?.passwordHash) return generic;
+
+    const pendente = await this.prisma.passwordResetRequest.findFirst({
+      where: { memberId: member.id, status: 'PENDING' },
+    });
+    if (!pendente) {
+      await this.prisma.passwordResetRequest.create({
+        data: { churchId: church.id, memberId: member.id },
+      });
+    }
+    return generic;
+  }
+
   async changePassword(
     memberId: string,
     dto: { currentPassword: string; newPassword: string },

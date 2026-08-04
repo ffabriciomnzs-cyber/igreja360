@@ -64,6 +64,17 @@ export class MembersController {
     return this.membersService.merge(user.churchId, dto.keepId, dto.dropId);
   }
 
+  @Get('portal/reset-requests')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.PASTOR,
+    UserRole.SECRETARY,
+  )
+  resetRequests(@CurrentUser() user: AuthUser) {
+    return this.membersService.resetRequests(user.churchId);
+  }
+
   @Get('portal/pending')
   @Roles(
     UserRole.SUPER_ADMIN,

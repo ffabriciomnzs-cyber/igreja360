@@ -129,4 +129,76 @@ describe('Senha do portal do membro', () => {
       expect(res.statusCode).toBe(401);
     });
   });
+
+  describe('Esqueci minha senha (tela de entrada)', () => {
+    function pedir(identifier: string, slug?: string) {
+      return req(app, 'POST', '/v1/member-auth/password-reset-request', undefined, {
+        slug: slug ?? A.slug,
+        identifier,
+      });
+    }
+
+    function listar(token: string) {
+      return req(app, 'GET', '/v1/members/portal/reset-requests', token);
+    }
+
+    it('cria o pedido e ele aparece para a secretaria', async () => {
+      const res = await pedir(A.memberEmail);
+      expect(res.statusCode).toBe(200);
+
+      const lista = JSON.parse((await listar(A.adminToken)).body);
+      expect(lista).toHaveLength(1);
+      expect(lista[0].member.email).toBe(A.memberEmail);
+    });
+
+    it('acha o membro pelo telefone com formatação diferente', async () => {
+      await prismaOf(app).member.update({
+        where: { id: A.memberId },
+        data: { phone: '(11) 97777-1234' },
+      });
+      const res = await pedir('5511977771234');
+      expect(res.statusCode).toBe(200);
+
+      const lista = JSON.parse((await listar(A.adminToken)).body);
+      expect(lista).toHaveLength(1);
+    });
+
+    it('responde IGUAL para cadastro inexistente (sem vazar quem existe) e não cria pedido', async () => {
+      const ok = await pedir(A.memberEmail);
+      const fake = await pedir('nao-existe@teste.local');
+      expect(fake.statusCode).toBe(200);
+      expect(fake.body).toBe(ok.body);
+
+      const lista = JSON.parse((await listar(A.adminToken)).body);
+      expect(lista).toHaveLength(1); // só o pedido real
+    });
+
+    it('não duplica pedido pendente do mesmo membro', async () => {
+      await pedir(A.memberEmail);
+      await pedir(A.memberEmail);
+      const lista = JSON.parse((await listar(A.adminToken)).body);
+      expect(lista).toHaveLength(1);
+    });
+
+    it('gerar a senha temporária fecha o pedido', async () => {
+      await pedir(A.memberEmail);
+      const res = await req(
+        app,
+        'POST',
+        `/v1/members/${A.memberId}/portal/reset-password`,
+        A.adminToken,
+      );
+      expect(res.statusCode).toBe(201);
+
+      const lista = JSON.parse((await listar(A.adminToken)).body);
+      expect(lista).toHaveLength(0);
+    });
+
+    it('admin de outra igreja não vê os pedidos', async () => {
+      await pedir(A.memberEmail);
+      const B = await criarIgreja(app, 'Igreja B');
+      const lista = JSON.parse((await listar(B.adminToken)).body);
+      expect(lista).toHaveLength(0);
+    });
+  });
 });

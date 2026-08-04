@@ -255,6 +255,17 @@ export class MembersService {
     return { success: true, status };
   }
 
+  // Pedidos de "esqueci minha senha" feitos na tela de entrada do portal.
+  async resetRequests(churchId: string) {
+    return this.prisma.passwordResetRequest.findMany({
+      where: { churchId, status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        member: { select: { id: true, name: true, email: true, phone: true } },
+      },
+    });
+  }
+
   // Gera uma senha temporária para o membro que esqueceu a senha do portal.
   // A senha é retornada UMA única vez para o admin repassar ao membro;
   // guardamos apenas o hash.
@@ -280,6 +291,11 @@ export class MembersService {
     await this.prisma.member.update({
       where: { id: member.id },
       data: { passwordHash: await bcrypt.hash(tempPassword, 10) },
+    });
+    // Fecha os pedidos de "esqueci minha senha" que esse membro tiver aberto.
+    await this.prisma.passwordResetRequest.updateMany({
+      where: { memberId: member.id, status: 'PENDING' },
+      data: { status: 'DONE', resolvedAt: new Date() },
     });
 
     return {
