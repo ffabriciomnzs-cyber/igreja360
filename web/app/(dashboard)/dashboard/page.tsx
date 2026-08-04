@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { PortalPendingAlert } from '@/components/PortalPendingAlert';
+import { AdminNotifyCard } from '@/components/AdminNotifyCard';
 import { api } from '@/lib/api';
 import { cn, formatDate, formatDateTime, formatCurrency } from '@/lib/utils';
 import { getStoredUser, type AuthUser } from '@/lib/auth';
@@ -217,6 +219,9 @@ export default function DashboardPage(): React.ReactElement {
           )}
         </p>
       </div>
+
+      <PortalPendingAlert />
+      <AdminNotifyCard />
 
       {/* Ações rápidas: o que mais se faz no dia a dia, a um clique. */}
       <div className="mb-6 flex flex-wrap gap-2">

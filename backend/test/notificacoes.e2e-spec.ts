@@ -109,9 +109,12 @@ describe('Notificações', () => {
       // O VAPID está desligado no teste, então instrumentamos a consulta:
       // o que importa é QUEM sobra depois do filtro de preferência.
       const prisma = prismaOf(app);
-      const subs = await prisma.pushSubscription.findMany({
-        where: { churchId: A.churchId },
-      });
+      // Só aparelhos de membros — o painel tem caixa própria (userId).
+      const subs = (
+        await prisma.pushSubscription.findMany({
+          where: { churchId: A.churchId, memberId: { not: null } },
+        })
+      ).map((s) => ({ ...s, memberId: s.memberId as string }));
       if (!categoria) return subs.length;
       const membros = await prisma.member.findMany({
         where: { id: { in: subs.map((s) => s.memberId) } },

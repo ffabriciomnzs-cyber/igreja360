@@ -154,10 +154,13 @@ model DevotionalPlanDay {
   @@index([planId])
 }
 
+// Inscrição de notificação de UM aparelho. É de um membro do portal
+// (memberId) OU de uma conta do painel (userId) — nunca dos dois.
 model PushSubscription {
   id        String   @id @default(cuid())
   churchId  String
-  memberId  String
+  memberId  String?
+  userId    String?
   endpoint  String   @unique
   p256dh    String
   auth      String
@@ -165,6 +168,7 @@ model PushSubscription {
 
   @@index([churchId])
   @@index([memberId])
+  @@index([userId])
 }
 
 model DevotionalPlanProgress {

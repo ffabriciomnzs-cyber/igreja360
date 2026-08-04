@@ -11,6 +11,7 @@ import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { MemberRegisterDto } from './dto/member-register.dto';
 import { MemberLoginDto } from './dto/member-login.dto';
+import { PushService } from '../push/push.service';
 
 function onlyDigits(v?: string | null): string {
   return (v ?? '').replace(/\D/g, '');
@@ -30,6 +31,7 @@ export class MemberAuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly push: PushService,
   ) {}
 
   private async churchBySlug(slug: string) {
@@ -225,6 +227,15 @@ export class MemberAuthService {
       await this.prisma.passwordResetRequest.create({
         data: { churchId: church.id, memberId: member.id },
       });
+      // Avisa a secretaria no celular. Best-effort: se o push falhar, o
+      // pedido continua na lista do painel.
+      void this.push
+        .notifyPortalManagers(church.id, {
+          title: 'Pedido de nova senha',
+          body: `${member.name} esqueceu a senha do portal e precisa de uma senha temporária.`,
+          url: '/members/portal-requests',
+        })
+        .catch(() => undefined);
     }
     return generic;
   }

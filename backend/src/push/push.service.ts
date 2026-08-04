@@ -67,8 +67,74 @@ export class PushService {
         p256dh: sub.keys.p256dh,
         auth: sub.keys.auth,
       },
-      update: { churchId, memberId, p256dh: sub.keys.p256dh, auth: sub.keys.auth },
+      update: {
+        churchId,
+        memberId,
+        userId: null,
+        p256dh: sub.keys.p256dh,
+        auth: sub.keys.auth,
+      },
     });
+  }
+
+  /** Inscrição de um aparelho de conta do PAINEL (pastor/secretaria/admin). */
+  async saveUserSubscription(
+    churchId: string,
+    userId: string,
+    sub: { endpoint: string; keys: { p256dh: string; auth: string } },
+  ): Promise<void> {
+    if (!sub?.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) return;
+    await this.prisma.pushSubscription.upsert({
+      where: { endpoint: sub.endpoint },
+      create: {
+        churchId,
+        userId,
+        endpoint: sub.endpoint,
+        p256dh: sub.keys.p256dh,
+        auth: sub.keys.auth,
+      },
+      update: {
+        churchId,
+        userId,
+        memberId: null,
+        p256dh: sub.keys.p256dh,
+        auth: sub.keys.auth,
+      },
+    });
+  }
+
+  /** O aparelho já está inscrito para receber avisos do painel? */
+  async userHasSubscription(userId: string, endpoint: string): Promise<boolean> {
+    const found = await this.prisma.pushSubscription.findFirst({
+      where: { userId, endpoint },
+      select: { id: true },
+    });
+    return !!found;
+  }
+
+  /**
+   * Avisa quem cuida do portal no painel (admin/pastor/secretaria).
+   * Usado, por exemplo, quando um membro pede redefinição de senha.
+   */
+  async notifyPortalManagers(
+    churchId: string,
+    payload: PushPayload,
+  ): Promise<void> {
+    if (!this.configured) return;
+    const gestores = await this.prisma.user.findMany({
+      where: {
+        churchId,
+        active: true,
+        role: { in: ['SUPER_ADMIN', 'ADMIN', 'PASTOR', 'SECRETARY'] },
+      },
+      select: { id: true },
+    });
+    if (!gestores.length) return;
+
+    const subs = await this.prisma.pushSubscription.findMany({
+      where: { churchId, userId: { in: gestores.map((g) => g.id) } },
+    });
+    await this.deliver(subs, payload);
   }
 
   /** Preferências do membro, já com o padrão (tudo ligado) preenchido. */
@@ -142,14 +208,15 @@ export class PushService {
     category?: NotifyCategory,
   ): Promise<void> {
     if (!this.configured) return;
+    // Só aparelhos de MEMBROS: contas do painel (userId) têm avisos próprios.
     let subs = await this.prisma.pushSubscription.findMany({
-      where: { churchId },
+      where: { churchId, memberId: { not: null } },
     });
 
     // Respeita quem desligou essa categoria em Perfil → Notificações.
     if (category && subs.length) {
       const members = await this.prisma.member.findMany({
-        where: { id: { in: subs.map((s) => s.memberId) } },
+        where: { id: { in: subs.map((s) => s.memberId as string) } },
         select: { id: true, notifyPrefs: true },
       });
       const optedOut = new Set(
@@ -157,9 +224,17 @@ export class PushService {
           .filter((m) => !wantsCategory(m.notifyPrefs, category))
           .map((m) => m.id),
       );
-      subs = subs.filter((s) => !optedOut.has(s.memberId));
+      subs = subs.filter((s) => !optedOut.has(s.memberId as string));
     }
 
+    await this.deliver(subs, payload);
+  }
+
+  /** Entrega o payload e limpa inscrições que o navegador já descartou. */
+  private async deliver(
+    subs: { id: string; endpoint: string; p256dh: string; auth: string }[],
+    payload: PushPayload,
+  ): Promise<void> {
     const body = JSON.stringify(payload);
     await Promise.all(
       subs.map((s) =>

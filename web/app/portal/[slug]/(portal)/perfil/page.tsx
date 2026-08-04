@@ -15,6 +15,7 @@ import {
   Bell,
   ChevronRight,
   Lock,
+  PlayCircle,
 } from 'lucide-react';
 import { memberApi, memberApiError, updateStoredMember } from '@/lib/member-api';
 import { fileToCompressedDataUrl } from '@/lib/image';
@@ -460,6 +461,23 @@ export default function PerfilPage(): React.ReactElement {
           <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Notificações</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Escolha o que receber no celular
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
+      </Link>
+
+      {/* Ajuda em vídeo */}
+      <Link
+        href={`/portal/${slug}/ajuda`}
+        className="flex items-center gap-3 rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+          <PlayCircle className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Ajuda em vídeo</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Aprenda a usar o app em poucos minutos
           </p>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />

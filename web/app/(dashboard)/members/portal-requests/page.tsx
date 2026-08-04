@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ListSkeleton } from '@/components/ui/skeleton';
+import { AdminNotifyCard } from '@/components/AdminNotifyCard';
 import { api, extractApiError } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 
@@ -80,6 +81,8 @@ export default function PortalRequestsPage(): React.ReactElement {
         `/members/${reqRow.member.id}/portal/reset-password`,
       );
       setTempPasswords((prev) => ({ ...prev, [reqRow.id]: data.tempPassword }));
+      // Atualiza o contador da barra lateral (o pedido saiu da fila).
+      window.dispatchEvent(new Event('igreja360:portal-requests-updated'));
     } catch (err) {
       setError(extractApiError(err));
     } finally {
@@ -110,6 +113,8 @@ export default function PortalRequestsPage(): React.ReactElement {
         title="Solicitações de acesso"
         description="Membros que se cadastraram no portal e aguardam liberação."
       />
+
+      <AdminNotifyCard />
 
       {error && (
         <div className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">

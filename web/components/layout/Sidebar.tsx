@@ -21,6 +21,7 @@ import {
   BookOpen,
   ClipboardList,
   UserCog,
+  PlayCircle,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -83,6 +84,7 @@ const groups: NavGroup[] = [
       { href: '/reports', label: 'Relatórios', icon: FileText },
       { href: '/users', label: 'Usuários', icon: UserCog, adminOnly: true },
       { href: '/settings', label: 'Configurações', icon: Settings },
+      { href: '/ajuda', label: 'Ajuda em vídeo', icon: PlayCircle },
     ],
   },
 ];
@@ -106,16 +108,23 @@ export function Sidebar({
     setIsAdmin(ADMIN_ROLES.includes(role));
   }, []);
 
-  // Contador de solicitações de acesso ao portal (badge no item Membros).
+  // Badge no item Membros: cadastros aguardando liberação + pedidos de
+  // redefinição de senha (ambos resolvidos em Solicitações de acesso).
   useEffect(() => {
     const role = getStoredUser()?.role ?? '';
     if (!REQUEST_ROLES.includes(role)) return;
     let mounted = true;
     const load = () =>
-      api
-        .get<unknown[]>('/members/portal/pending')
-        .then(({ data }) => {
-          if (mounted) setPendingRequests(Array.isArray(data) ? data.length : 0);
+      Promise.all([
+        api.get<unknown[]>('/members/portal/pending'),
+        api.get<unknown[]>('/members/portal/reset-requests'),
+      ])
+        .then(([acessos, senhas]) => {
+          if (!mounted) return;
+          const total =
+            (Array.isArray(acessos.data) ? acessos.data.length : 0) +
+            (Array.isArray(senhas.data) ? senhas.data.length : 0);
+          setPendingRequests(total);
         })
         .catch(() => undefined);
     load();
