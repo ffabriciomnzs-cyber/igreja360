@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { api } from '@/lib/api';
 import { ChurchSettings } from '@/lib/settings';
 import { getStoredUser } from '@/lib/auth';
+import { usePortalRequests } from '@/lib/use-portal-requests';
 import {
   LayoutDashboard,
   Users,
@@ -27,7 +28,6 @@ import {
 import { cn } from '@/lib/utils';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'PASTOR'];
-const REQUEST_ROLES = ['SUPER_ADMIN', 'ADMIN', 'PASTOR', 'SECRETARY'];
 
 interface NavItem {
   href: string;
@@ -101,40 +101,12 @@ export function Sidebar({
   const pathname = usePathname();
   const [church, setChurch] = useState<ChurchSettings | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [pendingRequests, setPendingRequests] = useState(0);
+  // Badge no item Membros: cadastros aguardando liberação + pedidos de senha.
+  const { total: pendingRequests } = usePortalRequests();
 
   useEffect(() => {
     const role = getStoredUser()?.role ?? '';
     setIsAdmin(ADMIN_ROLES.includes(role));
-  }, []);
-
-  // Badge no item Membros: cadastros aguardando liberação + pedidos de
-  // redefinição de senha (ambos resolvidos em Solicitações de acesso).
-  useEffect(() => {
-    const role = getStoredUser()?.role ?? '';
-    if (!REQUEST_ROLES.includes(role)) return;
-    let mounted = true;
-    const load = () =>
-      Promise.all([
-        api.get<unknown[]>('/members/portal/pending'),
-        api.get<unknown[]>('/members/portal/reset-requests'),
-      ])
-        .then(([acessos, senhas]) => {
-          if (!mounted) return;
-          const total =
-            (Array.isArray(acessos.data) ? acessos.data.length : 0) +
-            (Array.isArray(senhas.data) ? senhas.data.length : 0);
-          setPendingRequests(total);
-        })
-        .catch(() => undefined);
-    load();
-    const timer = setInterval(load, 60000);
-    window.addEventListener('igreja360:portal-requests-updated', load);
-    return () => {
-      mounted = false;
-      clearInterval(timer);
-      window.removeEventListener('igreja360:portal-requests-updated', load);
-    };
   }, []);
 
   useEffect(() => {

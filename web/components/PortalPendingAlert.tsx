@@ -1,12 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { KeyRound, UserPlus, ChevronRight } from 'lucide-react';
-import { api } from '@/lib/api';
-import { getStoredUser } from '@/lib/auth';
-
-const ROLES_AVISADOS = ['SUPER_ADMIN', 'ADMIN', 'PASTOR', 'SECRETARY'];
+import { usePortalRequests } from '@/lib/use-portal-requests';
 
 /**
  * Aviso no topo do painel quando há gente esperando: cadastro para liberar ou
@@ -14,33 +10,7 @@ const ROLES_AVISADOS = ['SUPER_ADMIN', 'ADMIN', 'PASTOR', 'SECRETARY'];
  * e passava despercebido.
  */
 export function PortalPendingAlert(): React.ReactElement | null {
-  const [acessos, setAcessos] = useState(0);
-  const [senhas, setSenhas] = useState(0);
-
-  useEffect(() => {
-    const role = getStoredUser()?.role ?? '';
-    if (!ROLES_AVISADOS.includes(role)) return;
-    let mounted = true;
-    const load = () =>
-      Promise.all([
-        api.get<unknown[]>('/members/portal/pending'),
-        api.get<unknown[]>('/members/portal/reset-requests'),
-      ])
-        .then(([a, s]) => {
-          if (!mounted) return;
-          setAcessos(Array.isArray(a.data) ? a.data.length : 0);
-          setSenhas(Array.isArray(s.data) ? s.data.length : 0);
-        })
-        .catch(() => undefined);
-    load();
-    const timer = setInterval(load, 60000);
-    window.addEventListener('igreja360:portal-requests-updated', load);
-    return () => {
-      mounted = false;
-      clearInterval(timer);
-      window.removeEventListener('igreja360:portal-requests-updated', load);
-    };
-  }, []);
+  const { acessos, senhas } = usePortalRequests();
 
   if (!acessos && !senhas) return null;
 

@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { api, extractApiError } from '@/lib/api';
+import { usePortalRequests } from '@/lib/use-portal-requests';
 import { formatDate } from '@/lib/utils';
 import {
   Member,
@@ -43,16 +44,8 @@ export default function MembersPage(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [pendingRequests, setPendingRequests] = useState(0);
-
-  useEffect(() => {
-    api
-      .get<unknown[]>('/members/portal/pending')
-      .then(({ data }) =>
-        setPendingRequests(Array.isArray(data) ? data.length : 0),
-      )
-      .catch(() => undefined);
-  }, []);
+  // Conta cadastros a liberar E pedidos de senha (mesmo número da barra lateral).
+  const { total: pendingRequests } = usePortalRequests();
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
