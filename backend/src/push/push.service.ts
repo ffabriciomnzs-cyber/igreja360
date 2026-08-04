@@ -16,6 +16,7 @@ export const NOTIFY_CATEGORIES = [
   'campaigns',
   'birthdays',
   'arena',
+  'devotional',
 ] as const;
 export type NotifyCategory = (typeof NOTIFY_CATEGORIES)[number];
 
@@ -182,6 +183,8 @@ export class PushService {
     title: string,
     body: string,
     category?: NotifyCategory,
+    // Aba do portal que o clique deve abrir (padrão: a Início).
+    path = 'inicio',
   ): Promise<void> {
     try {
       const church = await this.prisma.church.findUnique({
@@ -193,7 +196,7 @@ export class PushService {
         {
           title,
           body,
-          url: church?.slug ? `/portal/${church.slug}/inicio` : undefined,
+          url: church?.slug ? `/portal/${church.slug}/${path}` : undefined,
         },
         category,
       );

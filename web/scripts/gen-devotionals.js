@@ -235,7 +235,7 @@ const ENTRIES = [
   E('Efésios 6:10', 'Fortes no Senhor', 'Fortalecei-vos no Senhor e na força do Seu poder. A batalha não se vence com força própria.\n\nVista hoje a força que vem de Deus.', 'Fé'),
   E('Salmos 116:7', 'Volta ao descanso', 'Volta, minha alma, ao teu descanso, pois o Senhor te fez bem. Recontar as bênçãos acalma o coração.\n\nLembre-se hoje do bem que Deus já te fez.', 'Descansa'),
   E('Números 6:24-26', 'A bênção do Senhor', 'O Senhor te abençoe e te guarde; faça resplandecer o Seu rosto sobre ti e te dê a paz. Essa é a vontade de Deus para você.\n\nReceba hoje essa bênção.', 'Emmanuel'),
-  E('Salmos climax 147:11', 'O agrado do Senhor', 'O Senhor se agrada dos que O temem e esperam na Sua bondade. A sua esperança alegra o coração de Deus.\n\nEspere hoje na bondade dEle.', 'Grande é o Senhor'),
+  E('Salmos 147:11', 'O agrado do Senhor', 'O Senhor se agrada dos que O temem e esperam na Sua bondade. A sua esperança alegra o coração de Deus.\n\nEspere hoje na bondade dEle.', 'Grande é o Senhor'),
   E('Romanos 12:12', 'Alegres na esperança', 'Alegrai-vos na esperança, sede pacientes na tribulação e perseverai na oração. Três âncoras para qualquer dia.\n\nPratique hoje esses três verbos.', 'Alegria'),
   E('Salmos 4:8', 'Em paz me deito', 'Em paz me deito e logo pego no sono, porque só Tu, Senhor, me fazes habitar em segurança.\n\nEntregue a noite a Deus e descanse.', 'Deus da Minha Paz'),
   E('1 João 3:1', 'Filhos de Deus', 'Vede que grande amor o Pai nos deu, a ponto de sermos chamados filhos de Deus. E nós o somos.\n\nViva hoje a partir dessa identidade.', 'Ousado Amor'),
@@ -251,7 +251,7 @@ const ENTRIES = [
   E('Filipenses 4:11', 'Aprender o contentamento', 'Paulo aprendeu a contentar-se em qualquer situação. O contentamento é um caminho, não um dom instantâneo.\n\nPratique hoje agradecer pelo que você já tem.', 'Gratidão'),
   E('Salmos racional 34:10', 'Nada falta aos que buscam', 'Os que buscam ao Senhor de nada têm falta de bem. A prioridade certa não deixa faltar o essencial.\n\nBusque a Deus hoje acima de tudo.', 'Consagração'),
   E('João 1:12', 'Autoridade de filhos', 'A todos os que O receberam, deu o direito de serem feitos filhos de Deus. Recebê-lo é ganhar uma nova família.\n\nViva hoje como filho amado.', 'Digno é o Senhor'),
-  E('Salmos axis 91:14', 'Porque me amou', 'Porque tanto me amou, Eu o livrarei e o porei em lugar seguro, diz o Senhor. O amor a Deus atrai o cuidado dEle.\n\nAproxime-se hoje de quem te ama primeiro.', 'Lugar Secreto'),
+  E('Salmos 91:14', 'Porque me amou', 'Porque tanto me amou, Eu o livrarei e o porei em lugar seguro, diz o Senhor. O amor a Deus atrai o cuidado dEle.\n\nAproxime-se hoje de quem te ama primeiro.', 'Lugar Secreto'),
   E('Provérbios 22:6', 'Ensina a criança', 'Instrui a criança no caminho em que deve andar, e nem quando envelhecer se desviará. O que se semeia cedo dá fruto tarde.\n\nInvista hoje na fé de quem está ao seu redor.', 'Tua Palavra'),
   E('Salmos 40:5', 'Maravilhas incontáveis', 'Muitas são as maravilhas que Deus tem feito; são tantas que não se podem contar. A vida está cheia de bondade dEle.\n\nConte hoje algumas dessas maravilhas.', 'Grande é o Senhor'),
   E('2 Pedro 3:9', 'Deus não se atrasa', 'O Senhor não retarda a Sua promessa; Ele é paciente, não querendo que ninguém se perca.\n\nO que parece demora pode ser a paciência amorosa de Deus.', 'Tu és Fiel Senhor'),
@@ -263,35 +263,107 @@ const ENTRIES = [
   E('Hebreus 13:5', 'Contentamento e presença', 'Sede sem avareza, contentes com o que tendes, pois Deus disse: "não te deixarei, nem te desampararei".\n\nA maior riqueza é a presença dEle: você a tem hoje.', 'Emmanuel'),
   E('Salmos 133:1', 'Que bom viver unidos', 'Oh, quão bom e agradável é viverem unidos os irmãos! A unidade é lugar onde Deus derrama bênção.\n\nBusque hoje a paz e a comunhão com os seus.', 'Deus é Amor'),
   E('Isaías 41:13', 'Eu te seguro pela mão', 'Eu, o Senhor teu Deus, te seguro pela tua mão direita e te digo: não temas, eu te ajudo.\n\nCaminhe hoje de mãos dadas com Deus.', 'Deus Está Aqui'),
-  E('Salmos axis2 34:17', 'O Senhor ouve e livra', 'Os justos clamam, e o Senhor os ouve e os livra de todas as suas angústias. Nenhum clamor sincero se perde.\n\nApresente hoje a Deus a sua angústia.', 'Preciso de Ti'),
+  E('Salmos 34:17', 'O Senhor ouve e livra', 'Os justos clamam, e o Senhor os ouve e os livra de todas as suas angústias. Nenhum clamor sincero se perde.\n\nApresente hoje a Deus a sua angústia.', 'Preciso de Ti'),
   E('Lucas 1:37', 'Nada é impossível a Deus', 'Para Deus não há nada impossível. O que a razão descarta, o poder dEle realiza.\n\nEntregue hoje o impossível nas mãos do Deus que tudo pode.', 'Deus do Impossível'),
-  E('Salmos axis3 62:8', 'Derrama o coração', 'Confia nEle em todo o tempo, ó povo; derramai perante Ele o vosso coração, pois Deus é o nosso refúgio.\n\nAbra hoje o coração diante do Senhor.', 'Me Derramar'),
+  E('Salmos 62:8', 'Derrama o coração', 'Confia nEle em todo o tempo, ó povo; derramai perante Ele o vosso coração, pois Deus é o nosso refúgio.\n\nAbra hoje o coração diante do Senhor.', 'Me Derramar'),
   E('Colossenses 1:17', 'Nele tudo subsiste', 'Ele é antes de todas as coisas, e nEle tudo subsiste. O que parece solto está seguro nas mãos de Cristo.\n\nDescanse: Ele sustenta o seu mundo hoje.', 'Tu Reinas'),
-  E('Salmos axis4 84:5', 'Força que vem de Ti', 'Bem-aventurado o homem cuja força está em Deus. A verdadeira energia brota da dependência dEle.\n\nBusque hoje força na presença do Senhor.', 'Preciso de Ti'),
+  E('Salmos 84:5', 'Força que vem de Ti', 'Bem-aventurado o homem cuja força está em Deus. A verdadeira energia brota da dependência dEle.\n\nBusque hoje força na presença do Senhor.', 'Preciso de Ti'),
   E('Tiago 1:17', 'Toda boa dádiva', 'Toda boa dádiva vem do alto, do Pai das luzes, em quem não há mudança. Deus é a fonte constante do bem.\n\nAgradeça hoje reconhecendo de onde vêm as coisas boas.', 'Gratidão'),
-  E('Salmos axis5 143:6', 'Estendo as mãos', 'Estendo as mãos para Ti; a minha alma tem sede de Ti como terra sedenta. O desejo por Deus é oração.\n\nBusque hoje saciar a sede na presença dEle.', 'Me Derramar'),
+  E('Salmos 143:6', 'Estendo as mãos', 'Estendo as mãos para Ti; a minha alma tem sede de Ti como terra sedenta. O desejo por Deus é oração.\n\nBusque hoje saciar a sede na presença dEle.', 'Me Derramar'),
   E('Mateus 5:16', 'Brilhe a vossa luz', 'Assim brilhe a vossa luz diante dos homens, para que vejam as boas obras e glorifiquem o Pai.\n\nDeixe a sua vida apontar para Deus hoje.', 'Brilha Jesus'),
-  E('Salmos axis6 climax 118:14', 'Minha força e cântico', 'O Senhor é a minha força e o meu cântico; Ele se tornou a minha salvação. A alegria e a força têm a mesma fonte.\n\nCante hoje sobre o que Deus é para você.', 'Tu Reinas'),
+  E('Salmos 118:14', 'Minha força e cântico', 'O Senhor é a minha força e o meu cântico; Ele se tornou a minha salvação. A alegria e a força têm a mesma fonte.\n\nCante hoje sobre o que Deus é para você.', 'Tu Reinas'),
   E('1 Crônicas 16:11', 'Buscai o Senhor', 'Buscai o Senhor e a Sua força; buscai a Sua face continuamente. A busca não é evento único, é hábito diário.\n\nProcure a presença de Deus hoje.', 'Consagração'),
-  E('Salmos axis7 axis 91:15', 'Eu o atenderei', 'Ele me invocará, e Eu o atenderei; estarei com ele na angústia e o livrarei. Deus responde e permanece.\n\nChame por Ele hoje com confiança.', 'Preciso de Ti'),
+  E('Salmos 91:15', 'Eu o atenderei', 'Ele me invocará, e Eu o atenderei; estarei com ele na angústia e o livrarei. Deus responde e permanece.\n\nChame por Ele hoje com confiança.', 'Preciso de Ti'),
   E('Efésios 2:10', 'Feitura de Deus', 'Somos feitura de Deus, criados em Cristo para boas obras que Ele preparou. A sua vida tem propósito planejado.\n\nAnde hoje na direção do propósito de Deus.', 'Digno é o Senhor'),
-  E('Salmos axis8 axis 34:5', 'Olham e ficam radiantes', 'Os que olham para Deus ficam radiantes, e o seu rosto jamais será coberto de vergonha.\n\nDirija hoje o seu olhar para Ele.', 'Grande é o Senhor'),
+  E('Salmos 34:5', 'Olham e ficam radiantes', 'Os que olham para Deus ficam radiantes, e o seu rosto jamais será coberto de vergonha.\n\nDirija hoje o seu olhar para Ele.', 'Grande é o Senhor'),
   E('Josué 1:8', 'Medite na Palavra', 'Medita na Palavra dia e noite, para cumpri-la; então farás prosperar o teu caminho. A Palavra guia e sustenta.\n\nGuarde hoje um versículo no coração.', 'Tua Palavra'),
-  E('Salmos axis9 axis 31:3', 'Rocha e fortaleza', 'Tu és a minha rocha e a minha fortaleza; por amor do teu nome, guia-me e encaminha-me.\n\nPeça direção a Deus e siga seguro.', 'Tu Reinas'),
+  E('Salmos 31:3', 'Rocha e fortaleza', 'Tu és a minha rocha e a minha fortaleza; por amor do teu nome, guia-me e encaminha-me.\n\nPeça direção a Deus e siga seguro.', 'Tu Reinas'),
   E('1 Coríntios 16:14', 'Tudo com amor', 'Todas as vossas coisas sejam feitas com amor. O amor é o tempero que dá sabor a tudo o que fazemos.\n\nColoque amor em cada tarefa de hoje.', 'Ousado Amor'),
-  E('Salmos axis10 axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis 5:12', 'Cercados de bênção', 'Tu, Senhor, abençoas o justo e o cercas do teu favor como um escudo. O favor de Deus envolve a sua vida.\n\nComece o dia debaixo da bênção do Senhor.', 'Grande é o Senhor'),
+  E('Salmos 5:12', 'Cercados de bênção', 'Tu, Senhor, abençoas o justo e o cercas do teu favor como um escudo. O favor de Deus envolve a sua vida.\n\nComece o dia debaixo da bênção do Senhor.', 'Grande é o Senhor'),
   E('Isaías 26:4', 'Confiai perpetuamente', 'Confiai no Senhor perpetuamente, porque o Senhor Deus é uma rocha eterna. A confiança nEle nunca é investimento perdido.\n\nApoie hoje o seu peso nessa Rocha.', 'Tu Reinas'),
-  E('Salmos axis11 axis axis axis axis 108:1', 'Firme está o meu coração', 'Firme está o meu coração, ó Deus; cantarei e entoarei louvores. A adoração firma o que estava vacilante.\n\nComece hoje decidindo louvar.', 'Tu Reinas'),
+  E('Salmos 108:1', 'Firme está o meu coração', 'Firme está o meu coração, ó Deus; cantarei e entoarei louvores. A adoração firma o que estava vacilante.\n\nComece hoje decidindo louvar.', 'Tu Reinas'),
   E('Romanos 8:31', 'Se Deus é por nós', 'Se Deus é por nós, quem será contra nós? Nenhuma oposição é maior que a presença dEle ao seu lado.\n\nEncare o dia com essa certeza.', 'Deus é Deus'),
-  E('Salmos axis12 axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis 42:8', 'Cântico de noite', 'De dia o Senhor manda a Sua benignidade; de noite, o Seu cântico está comigo. Há graça para o dia e canção para a noite.\n\nDeixe Deus preencher a sua noite hoje.', 'Deus da Minha Paz'),
+  E('Salmos 42:8', 'Cântico de noite', 'De dia o Senhor manda a Sua benignidade; de noite, o Seu cântico está comigo. Há graça para o dia e canção para a noite.\n\nDeixe Deus preencher a sua noite hoje.', 'Deus da Minha Paz'),
   E('1 Timóteo 6:6', 'Grande ganho', 'A piedade com contentamento é grande fonte de lucro. Ter a Deus e um coração satisfeito já é riqueza.\n\nCultive hoje gratidão em vez de ansiedade.', 'Gratidão'),
-  E('Salmos axis13 axis axis axis axis axis axis axis axis 63:3', 'Melhor que a vida', 'A tua benignidade é melhor do que a vida; por isso os meus lábios te louvarão. O amor de Deus vale mais que tudo.\n\nLouve hoje por esse amor.', 'Ousado Amor'),
+  E('Salmos 63:3', 'Melhor que a vida', 'A tua benignidade é melhor do que a vida; por isso os meus lábios te louvarão. O amor de Deus vale mais que tudo.\n\nLouve hoje por esse amor.', 'Ousado Amor'),
   E('Mateus 28:6', 'Ele ressuscitou', 'Ele não está aqui; ressuscitou como havia dito. O túmulo vazio é a garantia da nossa esperança.\n\nViva hoje na força da ressurreição.', 'Ele Vive'),
-  E('Salmos axis14 axis 91:5', 'Não temerás de noite', 'Não temerás os terrores da noite, nem a seta que voa de dia. A proteção de Deus cobre todas as horas.\n\nDescanse sob o cuidado dEle hoje.', 'Lugar Secreto'),
+  E('Salmos 91:5', 'Não temerás de noite', 'Não temerás os terrores da noite, nem a seta que voa de dia. A proteção de Deus cobre todas as horas.\n\nDescanse sob o cuidado dEle hoje.', 'Lugar Secreto'),
   E('João 8:32', 'A verdade liberta', 'Conhecereis a verdade, e a verdade vos libertará. Em Cristo, a verdade quebra as correntes da mentira.\n\nCaminhe hoje na liberdade que Ele dá.', 'Rendido Estou'),
-  E('Salmos axis15 axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis axis 30:11', 'Pranto em dança', 'Deus mudou o meu pranto em dança, tirou o meu luto e me cingiu de alegria. Ele é especialista em virar o jogo.\n\nEntregue hoje o seu pranto e espere a dança.', 'Alegria'),
+  E('Salmos 30:11', 'Pranto em dança', 'Deus mudou o meu pranto em dança, tirou o meu luto e me cingiu de alegria. Ele é especialista em virar o jogo.\n\nEntregue hoje o seu pranto e espere a dança.', 'Alegria'),
   E('Deuteronômio 31:8', 'Ele vai adiante', 'O Senhor vai adiante de ti; Ele será contigo, não te deixará; não temas nem te espantes. O caminho já tem companhia.\n\nSiga hoje sabendo que Deus vai à frente.', 'Emmanuel'),
 ];
+
+/* Palavras "de conteúdo" de um texto, sem acento nem pontuação. */
+const palavras = (s) =>
+  s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length > 3);
+
+/* Quanto da frase já está no versículo (0 a 1). */
+function repeteVersiculo(frase, versiculo) {
+  const noVersiculo = new Set(palavras(versiculo));
+  const daFrase = palavras(frase);
+  if (!daFrase.length) return 0;
+  return daFrase.filter((w) => noVersiculo.has(w)).length / daFrase.length;
+}
+
+/*
+ * Separa o "pensamento do dia" (frase curta em destaque, feita para
+ * compartilhar) do corpo da reflexão. Sem trabalho manual: é a primeira frase
+ * da reflexão — a não ser que ela só repita o versículo, caso em que pegamos a
+ * seguinte, senão a tela mostraria a mesma coisa duas vezes.
+ */
+function separaPensamento(reflection, versiculo) {
+  const paragrafos = reflection.split('\n\n');
+  // Todas as frases, guardando de qual parágrafo cada uma veio.
+  const frases = [];
+  paragrafos.forEach((p, iPar) => {
+    (p.match(/[^.!?]+[.!?]+/g) ?? [p]).forEach((f) => {
+      if (f.trim()) frases.push({ texto: f.trim(), par: iPar });
+    });
+  });
+  if (!frases.length) {
+    return { thought: reflection.trim(), body: '' };
+  }
+
+  // O pensamento precisa ACRESCENTAR algo ao versículo: repetir a mesma frase
+  // logo abaixo dele empobrece a tela. Procura a primeira frase que traga
+  // conteúdo próprio e se sustente sozinha.
+  let i = frases.findIndex(
+    (f) => f.texto.length >= 24 && repeteVersiculo(f.texto, versiculo) <= 0.44,
+  );
+  if (i < 0) i = 0;
+
+  // Frase curta demais não se sustenta sozinha ("E nós o somos."): junta com a
+  // vizinha do mesmo parágrafo.
+  const usadas = [i];
+  if (frases[i].texto.length < 24) {
+    const vizinha = i > 0 ? i - 1 : i + 1;
+    if (frases[vizinha] && frases[vizinha].par === frases[i].par) {
+      usadas.push(vizinha);
+    }
+  }
+  usadas.sort((a, b) => a - b);
+
+  const thought = usadas.map((k) => frases[k].texto).join(' ');
+
+  // Remonta o corpo preservando os parágrafos originais.
+  const body = paragrafos
+    .map((_, iPar) =>
+      frases
+        .filter((f, k) => f.par === iPar && !usadas.includes(k))
+        .map((f) => f.texto)
+        .join(' '),
+    )
+    .filter(Boolean)
+    .join('\n\n');
+
+  return { thought, body };
+}
 
 const seen = new Set();
 const errors = [];
@@ -302,7 +374,15 @@ ENTRIES.forEach((e, i) => {
     const { text, canonRef } = verseText(e.ref);
     if (seen.has(canonRef)) dups.push(canonRef);
     seen.add(canonRef);
-    out.push({ title: e.title, ref: canonRef, text, reflection: e.reflection, song: e.song });
+    const { thought, body } = separaPensamento(e.reflection, text);
+    out.push({
+      title: e.title,
+      ref: canonRef,
+      text,
+      thought,
+      reflection: body,
+      song: e.song,
+    });
   } catch (err) {
     errors.push(`[#${i}] "${e.ref}" -> ${err.message}`);
   }
@@ -329,6 +409,7 @@ export interface DailyDevotional {
   title: string;
   ref: string;
   text: string;
+  thought: string;
   reflection: string;
   song?: string;
 }

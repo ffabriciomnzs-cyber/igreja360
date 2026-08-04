@@ -36,8 +36,34 @@ export class NotificationsScheduler {
   /** Todo dia às 8h de Brasília: lembretes do dia. */
   @Cron('0 8 * * *', { timeZone: TZ })
   async dailyDigest(): Promise<void> {
+    await this.devotionalReminder();
     await this.worshipReminders();
     await this.birthdayReminders();
+  }
+
+  /**
+   * "Sua palavra de hoje" — o empurrãozinho que traz o membro de volta ao
+   * devocional. O texto do dia mora no app (biblioteca embutida), então o
+   * aviso é o convite; o conteúdo ele vê ao abrir.
+   */
+  private async devotionalReminder(): Promise<void> {
+    try {
+      const igrejas = await this.prisma.church.findMany({
+        select: { id: true },
+      });
+      for (const igreja of igrejas) {
+        await this.push.notifyChurch(
+          igreja.id,
+          '📖 Sua palavra de hoje',
+          'O devocional de hoje já está no app. São 2 minutos.',
+          'devotional',
+          'devocional',
+        );
+      }
+      this.logger.log(`Lembrete de devocional: ${igrejas.length} igreja(s).`);
+    } catch (err) {
+      this.logger.warn(`Falha no lembrete de devocional: ${String(err)}`);
+    }
   }
 
   /** "Hoje tem culto" — só para cultos planejados com data de hoje. */

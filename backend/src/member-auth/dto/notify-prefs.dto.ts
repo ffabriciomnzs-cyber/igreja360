@@ -28,4 +28,8 @@ export class NotifyPrefsDto {
   @IsOptional()
   @IsBoolean()
   arena?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  devotional?: boolean;
 }

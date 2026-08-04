@@ -43,6 +43,7 @@ describe('Notificações', () => {
         campaigns: true,
         birthdays: true,
         arena: true,
+        devotional: true,
       });
     });
 
@@ -256,17 +257,37 @@ describe('Notificações', () => {
       expect(aniversario).not.toContain('Outro Dia');
     });
 
-    it('não notifica igreja que não tem nada hoje', async () => {
+    it('sem culto nem aniversário, sai só o lembrete do devocional', async () => {
       const enviados: string[] = [];
       const push = app.get(PushService);
       jest
         .spyOn(push, 'notifyChurch')
-        .mockImplementation(async () => {
-          enviados.push('x');
+        .mockImplementation(async (_c, titulo, corpo, categoria) => {
+          enviados.push(`${titulo}|${corpo}|${categoria}`);
         });
 
       await app.get(NotificationsScheduler).dailyDigest();
-      expect(enviados).toHaveLength(0);
+
+      // O devocional existe todo dia — é o único aviso garantido.
+      expect(enviados).toHaveLength(1);
+      expect(enviados[0]).toContain('palavra de hoje');
+      expect(enviados[0]).toContain('devotional');
+      expect(enviados.some((e) => e.includes('⛪') || e.includes('🎂'))).toBe(
+        false,
+      );
+    });
+
+    it('o lembrete do devocional abre a aba do devocional', async () => {
+      const destinos: string[] = [];
+      const push = app.get(PushService);
+      jest
+        .spyOn(push, 'notifyChurch')
+        .mockImplementation(async (_c, titulo, _b, _cat, path) => {
+          if (titulo.includes('palavra de hoje')) destinos.push(String(path));
+        });
+
+      await app.get(NotificationsScheduler).dailyDigest();
+      expect(destinos).toEqual(['devocional']);
     });
   });
 

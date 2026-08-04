@@ -1,5 +1,41 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+
+// Trilhas temáticas do devocional. O conteúdo mora no app
+// (web/lib/devotional-trails.ts) — aqui só validamos o id e o tamanho.
+const TRAIL_IDS = [
+  'ansiedade',
+  'paz',
+  'fe',
+  'gratidao',
+  'recomeco',
+  'forca',
+] as const;
+const TRAIL_LENGTH = 7;
+
+/*
+ * `position` = quantos dias da trilha já foram concluídos.
+ * `todayIndex` = qual dia a tela deve MOSTRAR hoje. Se o membro já concluiu
+ * hoje, ele continua vendo a leitura de hoje (position - 1) em vez de a de
+ * amanhã aparecer adiantada.
+ */
+function trailPayload(
+  row: { trailId: string; position: number; lastDay: string | null },
+  today: string,
+) {
+  const jaLeuHoje = row.lastDay === today;
+  return {
+    id: row.trailId,
+    position: row.position,
+    todayIndex: jaLeuHoje ? Math.max(0, row.position - 1) : row.position,
+    length: TRAIL_LENGTH,
+    finished: row.position >= TRAIL_LENGTH,
+  };
+}
 
 function brToday(): string {
   const br = new Date(Date.now() - 3 * 60 * 60 * 1000);
@@ -51,6 +87,7 @@ export class PortalService {
       reactionRows,
       completions,
       church,
+      trail,
     ] = await this.prisma.$transaction([
         this.prisma.devotionalPrayer.count({ where: { churchId, day } }),
         this.prisma.devotionalPrayer.findUnique({
@@ -92,6 +129,10 @@ export class PortalService {
           where: { id: churchId },
           select: { name: true },
         }),
+        this.prisma.memberDevotionalTrail.findUnique({
+          where: { memberId },
+          select: { trailId: true, position: true, lastDay: true },
+        }),
       ]);
 
     const completedDays = new Set(completions.map((c) => c.day));
@@ -111,6 +152,7 @@ export class PortalService {
       reactions,
       myReaction: myReaction?.type ?? null,
       churchName: church?.name ?? null,
+      trail: trail ? trailPayload(trail, day) : null,
     };
   }
 
@@ -121,6 +163,19 @@ export class PortalService {
       create: { churchId, memberId, day },
       update: {},
     });
+
+    // Trilha avança no máximo 1 dia por dia — mesmo que o membro conclua duas
+    // vezes (dois aparelhos, recarregou a página), `lastDay` segura.
+    const trail = await this.prisma.memberDevotionalTrail.findUnique({
+      where: { memberId },
+    });
+    if (trail && trail.lastDay !== day && trail.position < TRAIL_LENGTH) {
+      await this.prisma.memberDevotionalTrail.update({
+        where: { memberId },
+        data: { position: trail.position + 1, lastDay: day },
+      });
+    }
+
     const completions = await this.prisma.devotionalCompletion.findMany({
       where: { memberId },
       select: { day: true },
@@ -132,7 +187,38 @@ export class PortalService {
       completed: true,
       streak: computeStreak(set, day),
       history: recentHistory(set, day),
+      trail: await this.currentTrail(memberId),
     };
+  }
+
+  /** Trilha ativa do membro, no formato que o app consome. */
+  private async currentTrail(memberId: string) {
+    const row = await this.prisma.memberDevotionalTrail.findUnique({
+      where: { memberId },
+      select: { trailId: true, position: true, lastDay: true },
+    });
+    return row ? trailPayload(row, brToday()) : null;
+  }
+
+  /** Começa (ou troca de) trilha, sempre do dia 1. */
+  async startTrail(churchId: string, memberId: string, trailId: string) {
+    if (!(TRAIL_IDS as readonly string[]).includes(trailId)) {
+      throw new BadRequestException('Trilha inválida.');
+    }
+    await this.prisma.memberDevotionalTrail.upsert({
+      where: { memberId },
+      create: { churchId, memberId, trailId },
+      update: { trailId, position: 0, lastDay: null, startedAt: new Date() },
+    });
+    return this.currentTrail(memberId);
+  }
+
+  /** Sai da trilha e volta ao devocional do dia. */
+  async leaveTrail(memberId: string) {
+    await this.prisma.memberDevotionalTrail
+      .delete({ where: { memberId } })
+      .catch(() => undefined);
+    return { trail: null };
   }
 
   async saveNote(churchId: string, memberId: string, text: string) {

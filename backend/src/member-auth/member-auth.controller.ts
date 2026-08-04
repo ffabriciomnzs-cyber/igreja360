@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -124,6 +125,26 @@ export class MemberAuthController {
   @UseGuards(MemberJwtGuard)
   complete(@CurrentMember() member: MemberPrincipal) {
     return this.portal.complete(member.churchId, member.id);
+  }
+
+  @Post('devotional/trail')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  startTrail(
+    @CurrentMember() member: MemberPrincipal,
+    @Body() body: { trailId?: string },
+  ) {
+    return this.portal.startTrail(
+      member.churchId,
+      member.id,
+      String(body?.trailId ?? ''),
+    );
+  }
+
+  @Delete('devotional/trail')
+  @UseGuards(MemberJwtGuard)
+  leaveTrail(@CurrentMember() member: MemberPrincipal) {
+    return this.portal.leaveTrail(member.id);
   }
 
   @Post('devotional/note')

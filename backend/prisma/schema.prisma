@@ -171,6 +171,21 @@ model PushSubscription {
   @@index([userId])
 }
 
+// Trilha temática do devocional que o membro está seguindo (7 dias). Os temas
+// e o conteúdo moram no app; aqui guardamos só QUAL trilha e em que dia ele
+// está. `lastDay` garante que a trilha avança no máximo uma vez por dia.
+model MemberDevotionalTrail {
+  id        String   @id @default(cuid())
+  churchId  String
+  memberId  String   @unique
+  trailId   String
+  position  Int      @default(0)
+  lastDay   String?
+  startedAt DateTime @default(now())
+
+  @@index([churchId])
+}
+
 model DevotionalPlanProgress {
   id        String   @id @default(cuid())
   churchId  String
