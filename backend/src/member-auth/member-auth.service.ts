@@ -181,4 +181,30 @@ export class MemberAuthService {
       },
     };
   }
+
+  async changePassword(
+    memberId: string,
+    dto: { currentPassword: string; newPassword: string },
+  ) {
+    const member = await this.prisma.member.findUnique({
+      where: { id: memberId },
+    });
+    if (!member?.passwordHash) {
+      throw new UnauthorizedException('Conta sem acesso ao portal.');
+    }
+    const ok = await bcrypt.compare(dto.currentPassword, member.passwordHash);
+    if (!ok) {
+      throw new UnauthorizedException('A senha atual está incorreta.');
+    }
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException(
+        'A nova senha precisa ser diferente da atual.',
+      );
+    }
+    await this.prisma.member.update({
+      where: { id: member.id },
+      data: { passwordHash: await bcrypt.hash(dto.newPassword, 10) },
+    });
+    return { message: 'Senha alterada com sucesso.' };
+  }
 }

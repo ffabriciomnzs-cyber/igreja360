@@ -14,8 +14,9 @@ import {
   BadgeCheck,
   Bell,
   ChevronRight,
+  Lock,
 } from 'lucide-react';
-import { memberApi, updateStoredMember } from '@/lib/member-api';
+import { memberApi, memberApiError, updateStoredMember } from '@/lib/member-api';
 import { fileToCompressedDataUrl } from '@/lib/image';
 import { formatDate } from '@/lib/utils';
 import {
@@ -90,6 +91,14 @@ export default function PerfilPage(): React.ReactElement {
     photo: '',
   });
   const photoRef = useRef<HTMLInputElement>(null);
+
+  const [pwdOpen, setPwdOpen] = useState(false);
+  const [pwdAtual, setPwdAtual] = useState('');
+  const [pwdNova, setPwdNova] = useState('');
+  const [pwdConfirma, setPwdConfirma] = useState('');
+  const [pwdSaving, setPwdSaving] = useState(false);
+  const [pwdErro, setPwdErro] = useState('');
+  const [pwdOk, setPwdOk] = useState(false);
 
   const [prayers, setPrayers] = useState<Prayer[]>([]);
   const [pTitle, setPTitle] = useState('');
@@ -166,6 +175,34 @@ export default function PerfilPage(): React.ReactElement {
       /* ignora */
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function changePassword(): Promise<void> {
+    setPwdErro('');
+    setPwdOk(false);
+    if (pwdNova.length < 6) {
+      setPwdErro('A nova senha deve ter ao menos 6 caracteres.');
+      return;
+    }
+    if (pwdNova !== pwdConfirma) {
+      setPwdErro('A confirmação não confere com a nova senha.');
+      return;
+    }
+    setPwdSaving(true);
+    try {
+      await memberApi.patch('/member-auth/password', {
+        currentPassword: pwdAtual,
+        newPassword: pwdNova,
+      });
+      setPwdOk(true);
+      setPwdAtual('');
+      setPwdNova('');
+      setPwdConfirma('');
+    } catch (err) {
+      setPwdErro(memberApiError(err));
+    } finally {
+      setPwdSaving(false);
     }
   }
 
@@ -427,6 +464,93 @@ export default function PerfilPage(): React.ReactElement {
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
       </Link>
+
+      {/* Alterar senha */}
+      <section data-tour="senha">
+        <button
+          onClick={() => {
+            setPwdOpen((v) => !v);
+            setPwdErro('');
+            setPwdOk(false);
+          }}
+          className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white dark:bg-slate-900 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+            <Lock className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Alterar senha</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Troque a senha de acesso ao portal
+            </p>
+          </div>
+          <ChevronRight
+            className={`h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500 transition-transform ${pwdOpen ? 'rotate-90' : ''}`}
+          />
+        </button>
+
+        {pwdOpen && (
+          <div className="mt-2 space-y-3 rounded-2xl border border-border bg-white dark:bg-slate-900 p-4">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                Senha atual
+              </label>
+              <input
+                type="password"
+                value={pwdAtual}
+                onChange={(e) => setPwdAtual(e.target.value)}
+                autoComplete="current-password"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                Nova senha
+              </label>
+              <input
+                type="password"
+                value={pwdNova}
+                onChange={(e) => setPwdNova(e.target.value)}
+                autoComplete="new-password"
+                placeholder="Mínimo de 6 caracteres"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                Confirmar nova senha
+              </label>
+              <input
+                type="password"
+                value={pwdConfirma}
+                onChange={(e) => setPwdConfirma(e.target.value)}
+                autoComplete="new-password"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+
+            {pwdErro && (
+              <p className="rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400">
+                {pwdErro}
+              </p>
+            )}
+            {pwdOk && (
+              <p className="rounded-lg bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                Senha alterada com sucesso! Use a nova senha no próximo acesso.
+              </p>
+            )}
+
+            <button
+              onClick={changePassword}
+              disabled={pwdSaving || !pwdAtual || !pwdNova || !pwdConfirma}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {pwdSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Salvar nova senha
+            </button>
+          </div>
+        )}
+      </section>
 
       {/* Rever o passeio guiado do primeiro acesso */}
       <button

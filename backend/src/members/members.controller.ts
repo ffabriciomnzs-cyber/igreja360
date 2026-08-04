@@ -97,6 +97,17 @@ export class MembersController {
     return this.membersService.setPortalStatus(user.churchId, id, 'REJECTED');
   }
 
+  @Post(':id/portal/reset-password')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.PASTOR,
+    UserRole.SECRETARY,
+  )
+  resetPortalPassword(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.membersService.resetPortalPassword(user.churchId, id);
+  }
+
   @Get(':id/card')
   card(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.membersService.card(user.churchId, id);

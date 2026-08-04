@@ -18,6 +18,7 @@ import { DevotionalNoteDto } from './dto/devotional-note.dto';
 import { DevotionalReactDto } from './dto/devotional-react.dto';
 import { CreatePrayerDto } from './dto/create-prayer.dto';
 import { UpdateMemberProfileDto } from './dto/update-member-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { NotifyPrefsDto } from './dto/notify-prefs.dto';
 import { MemberJwtGuard, MemberPrincipal } from './member-jwt.guard';
 import { CurrentMember } from './current-member.decorator';
@@ -142,6 +143,17 @@ export class MemberAuthController {
     @Body() dto: DevotionalReactDto,
   ) {
     return this.portal.react(member.churchId, member.id, dto.type);
+  }
+
+  // Mesma cadência do login: dificulta tentativa de adivinhar a senha atual.
+  @Throttle(THROTTLE_LOGIN)
+  @Patch('password')
+  @UseGuards(MemberJwtGuard)
+  changePassword(
+    @CurrentMember() member: MemberPrincipal,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.memberAuth.changePassword(member.id, dto);
   }
 
   @Patch('profile')

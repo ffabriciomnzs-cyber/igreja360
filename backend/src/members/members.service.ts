@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { randomInt } from 'crypto';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
@@ -251,6 +253,40 @@ export class MembersService {
       data: { portalStatus: status },
     });
     return { success: true, status };
+  }
+
+  // Gera uma senha temporária para o membro que esqueceu a senha do portal.
+  // A senha é retornada UMA única vez para o admin repassar ao membro;
+  // guardamos apenas o hash.
+  async resetPortalPassword(churchId: string, id: string) {
+    const member = await this.prisma.member.findFirst({
+      where: { id, churchId },
+      select: { id: true, name: true, passwordHash: true, portalStatus: true },
+    });
+    if (!member) throw new NotFoundException('Membro não encontrado.');
+    if (!member.passwordHash) {
+      throw new BadRequestException(
+        'Este membro ainda não tem acesso ao portal. Peça para ele se cadastrar na tela de entrada.',
+      );
+    }
+
+    // Sem caracteres ambíguos (0/O, 1/l/I) para facilitar a leitura por telefone.
+    const alfabeto = 'abcdefghjkmnpqrstuvwxyz23456789';
+    let tempPassword = '';
+    for (let i = 0; i < 10; i++) {
+      tempPassword += alfabeto[randomInt(alfabeto.length)];
+    }
+
+    await this.prisma.member.update({
+      where: { id: member.id },
+      data: { passwordHash: await bcrypt.hash(tempPassword, 10) },
+    });
+
+    return {
+      tempPassword,
+      message:
+        'Senha temporária gerada. Informe ao membro e oriente a trocá-la no Perfil após entrar.',
+    };
   }
 
   async card(churchId: string, id: string) {
