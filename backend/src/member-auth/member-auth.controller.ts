@@ -173,6 +173,13 @@ export class MemberAuthController {
     return this.portal.updateProfile(member.id, dto);
   }
 
+  // Mural da tela inicial: só pedidos compartilhados pela própria igreja.
+  @Get('prayers/shared')
+  @UseGuards(MemberJwtGuard)
+  sharedPrayers(@CurrentMember() member: MemberPrincipal) {
+    return this.portal.sharedPrayers(member.churchId);
+  }
+
   @Get('prayers')
   @UseGuards(MemberJwtGuard)
   myPrayers(@CurrentMember() member: MemberPrincipal) {

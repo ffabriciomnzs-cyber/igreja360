@@ -453,6 +453,52 @@ export class PortalService {
     });
   }
 
+  /**
+   * Mural de oração da tela inicial: só os pedidos que o autor marcou como
+   * compartilhados (`PUBLIC`) e que seguem ativos. Pedido privado NUNCA sai
+   * daqui — ele fica só para a liderança, no painel.
+   */
+  async sharedPrayers(churchId: string) {
+    const prayers = await this.prisma.prayer.findMany({
+      where: { churchId, visibility: 'PUBLIC', status: 'ACTIVE' },
+      orderBy: { createdAt: 'desc' },
+      take: 15,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        createdAt: true,
+        memberId: true,
+      },
+    });
+    if (!prayers.length) return [];
+
+    // Prayer.memberId não tem relation no schema — busca os nomes à parte.
+    const ids = prayers
+      .map((p) => p.memberId)
+      .filter((id): id is string => !!id);
+    const membros = ids.length
+      ? await this.prisma.member.findMany({
+          where: { id: { in: ids }, churchId },
+          select: { id: true, name: true, photo: true },
+        })
+      : [];
+    const porId = new Map(membros.map((m) => [m.id, m]));
+
+    return prayers.map((p) => {
+      const autor = p.memberId ? porId.get(p.memberId) : undefined;
+      return {
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        createdAt: p.createdAt,
+        // Só o primeiro nome: o pedido é público para a igreja, não um cadastro.
+        authorName: autor?.name?.trim().split(/\s+/)[0] ?? null,
+        authorPhoto: autor?.photo ?? null,
+      };
+    });
+  }
+
   async myPrayers(memberId: string) {
     return this.prisma.prayer.findMany({
       where: { memberId },

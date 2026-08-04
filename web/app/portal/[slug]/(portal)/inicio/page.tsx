@@ -18,6 +18,7 @@ import { memberApi } from '@/lib/member-api';
 import { formatCurrency } from '@/lib/utils';
 import { useCached } from '@/lib/use-cached';
 import { EnableNotifications } from '@/components/portal/EnableNotifications';
+import { MuralOracao } from '@/components/portal/MuralOracao';
 import { Swords, Trophy } from 'lucide-react';
 
 interface PortalHome {
@@ -282,6 +283,9 @@ export default function PortalInicioPage(): React.ReactElement {
           </div>
         </section>
       )}
+
+      {/* Oração: o pedido fica à mão na abertura, sem entrar no Perfil */}
+      <MuralOracao />
 
       {/* Campanhas */}
       <section>
