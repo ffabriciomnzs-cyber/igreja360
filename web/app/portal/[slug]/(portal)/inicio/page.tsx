@@ -443,13 +443,17 @@ export default function PortalInicioPage(): React.ReactElement {
                   href={`${base}/eventos/${ev.id}`}
                   className="block overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-colors hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60"
                 >
+                  {/* Cartaz INTEIRO, na proporção em que a igreja criou (uns
+                      são quadrados, outros em pé): cortar escondia parte da
+                      arte. O teto de altura evita que um cartaz muito
+                      comprido tome a tela toda. */}
                   {cartaz && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={cartaz}
                       alt={ev.name}
                       loading="lazy"
-                      className="h-40 w-full bg-slate-100 object-cover dark:bg-slate-800"
+                      className="max-h-[440px] w-full bg-slate-100 object-contain dark:bg-slate-800"
                     />
                   )}
                   <div className="flex gap-3 p-3">
