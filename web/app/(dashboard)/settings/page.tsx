@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { api, extractApiError } from '@/lib/api';
+import { AgendaFixa } from '@/components/settings/AgendaFixa';
 import { fileToCompressedDataUrl, removeDarkBackground } from '@/lib/image';
 import { getStoredUser, updateStoredUser } from '@/lib/auth';
 import { ChurchSettings } from '@/lib/settings';
@@ -433,6 +434,8 @@ export default function SettingsPage(): React.ReactElement {
             </form>
           </CardContent>
         </Card>
+
+        <AgendaFixa />
 
         <Card>
           <CardHeader>

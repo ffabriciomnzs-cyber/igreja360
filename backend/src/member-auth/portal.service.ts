@@ -72,6 +72,23 @@ function recentHistory(days: Set<string>, today: string): string[] {
   return out;
 }
 
+/**
+ * Acrescenta `photoUrl` do evento (endereço público, cacheável) SEM carregar o
+ * base64 da imagem. O `?v=` muda quando a foto muda, então o cache do celular
+ * nunca mostra cartaz velho. Mesma regra do painel (events.service.ts).
+ */
+function comFotoUrl<T extends { id: string; photoUpdatedAt: Date | null }>(
+  evento: T,
+) {
+  const { photoUpdatedAt, ...resto } = evento;
+  return {
+    ...resto,
+    photoUrl: photoUpdatedAt
+      ? `/public/events/${evento.id}/photo?v=${photoUpdatedAt.getTime()}`
+      : null,
+  };
+}
+
 @Injectable()
 export class PortalService {
   constructor(private readonly prisma: PrismaService) {}
@@ -380,7 +397,7 @@ export class PortalService {
 
   async home(churchId: string) {
     const now = new Date();
-    const [worship, events, campaigns, announcements] =
+    const [worship, events, campaigns, announcements, schedules] =
       await this.prisma.$transaction([
       this.prisma.worshipService.findMany({
         where: { churchId, date: { gte: now } },
@@ -398,12 +415,16 @@ export class PortalService {
         where: { churchId, date: { gte: now } },
         orderBy: { date: 'asc' },
         take: 10,
+        // `photo` (base64) NUNCA entra aqui: a tela busca a imagem pela URL
+        // pública, que o navegador cacheia. Ver withPhotoUrl().
         select: {
           id: true,
           name: true,
           date: true,
+          endDate: true,
           location: true,
           type: true,
+          photoUpdatedAt: true,
         },
       }),
       this.prisma.campaign.findMany({
@@ -430,11 +451,23 @@ export class PortalService {
           createdAt: true,
         },
       }),
+      this.prisma.serviceSchedule.findMany({
+        where: { churchId, active: true },
+        orderBy: [{ order: 'asc' }, { weekday: 'asc' }, { time: 'asc' }],
+        select: {
+          id: true,
+          weekday: true,
+          time: true,
+          name: true,
+          note: true,
+        },
+      }),
     ]);
 
     return {
       worship,
-      events,
+      events: events.map(comFotoUrl),
+      schedules,
       announcements,
       campaigns: campaigns.map((c) => {
         const goal = Number(c.goal ?? 0);
@@ -450,6 +483,26 @@ export class PortalService {
         };
       }),
     };
+  }
+
+  /** Detalhe de um evento para o portal — escopado pela igreja do membro. */
+  async event(churchId: string, eventId: string) {
+    const evento = await this.prisma.event.findFirst({
+      where: { id: eventId, churchId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        date: true,
+        endDate: true,
+        location: true,
+        capacity: true,
+        type: true,
+        photoUpdatedAt: true,
+      },
+    });
+    if (!evento) throw new NotFoundException('Evento não encontrado.');
+    return comFotoUrl(evento);
   }
 
   async me(memberId: string) {
@@ -544,7 +597,7 @@ export class PortalService {
    * compartilhados (`PUBLIC`) e que seguem ativos. Pedido privado NUNCA sai
    * daqui — ele fica só para a liderança, no painel.
    */
-  async sharedPrayers(churchId: string) {
+  async sharedPrayers(churchId: string, memberId: string) {
     const prayers = await this.prisma.prayer.findMany({
       where: { churchId, visibility: 'PUBLIC', status: 'ACTIVE' },
       orderBy: { createdAt: 'desc' },
@@ -558,6 +611,24 @@ export class PortalService {
       },
     });
     if (!prayers.length) return [];
+
+    const ids_pedidos = prayers.map((p) => p.id);
+    const [contagens, meus] = await this.prisma.$transaction([
+      this.prisma.prayerIntercession.groupBy({
+        by: ['prayerId'],
+        where: { prayerId: { in: ids_pedidos } },
+        _count: true,
+        orderBy: { prayerId: 'asc' },
+      }),
+      this.prisma.prayerIntercession.findMany({
+        where: { prayerId: { in: ids_pedidos }, memberId },
+        select: { prayerId: true },
+      }),
+    ]);
+    const totalPorPedido = new Map(
+      contagens.map((c) => [c.prayerId, c._count as number]),
+    );
+    const meusPedidos = new Set(meus.map((m) => m.prayerId));
 
     // Prayer.memberId não tem relation no schema — busca os nomes à parte.
     const ids = prayers
@@ -581,8 +652,45 @@ export class PortalService {
         // Só o primeiro nome: o pedido é público para a igreja, não um cadastro.
         authorName: autor?.name?.trim().split(/\s+/)[0] ?? null,
         authorPhoto: autor?.photo ?? null,
+        prayingCount: totalPorPedido.get(p.id) ?? 0,
+        iAmPraying: meusPedidos.has(p.id),
+        isMine: p.memberId === memberId,
       };
     });
+  }
+
+  /**
+   * "Estou orando por você": entra ou sai do pedido de outro irmão.
+   * Só vale para pedido compartilhado (PUBLIC) da própria igreja.
+   */
+  async togglePrayerIntercession(
+    churchId: string,
+    memberId: string,
+    prayerId: string,
+  ) {
+    const pedido = await this.prisma.prayer.findFirst({
+      where: { id: prayerId, churchId, visibility: 'PUBLIC' },
+      select: { id: true },
+    });
+    if (!pedido) throw new NotFoundException('Pedido não encontrado.');
+
+    const existente = await this.prisma.prayerIntercession.findUnique({
+      where: { prayerId_memberId: { prayerId, memberId } },
+    });
+    if (existente) {
+      await this.prisma.prayerIntercession.delete({
+        where: { id: existente.id },
+      });
+    } else {
+      await this.prisma.prayerIntercession.create({
+        data: { churchId, prayerId, memberId },
+      });
+    }
+
+    const prayingCount = await this.prisma.prayerIntercession.count({
+      where: { prayerId },
+    });
+    return { prayingCount, iAmPraying: !existente };
   }
 
   async myPrayers(memberId: string) {

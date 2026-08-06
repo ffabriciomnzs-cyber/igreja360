@@ -101,6 +101,12 @@ export class MemberAuthController {
     return this.portal.home(member.churchId);
   }
 
+  @Get('events/:id')
+  @UseGuards(MemberJwtGuard)
+  event(@CurrentMember() member: MemberPrincipal, @Param('id') id: string) {
+    return this.portal.event(member.churchId, id);
+  }
+
   @Get('me')
   @UseGuards(MemberJwtGuard)
   me(@CurrentMember() member: MemberPrincipal) {
@@ -198,7 +204,18 @@ export class MemberAuthController {
   @Get('prayers/shared')
   @UseGuards(MemberJwtGuard)
   sharedPrayers(@CurrentMember() member: MemberPrincipal) {
-    return this.portal.sharedPrayers(member.churchId);
+    return this.portal.sharedPrayers(member.churchId, member.id);
+  }
+
+  // "Estou orando por você" — entra/sai do pedido de outro irmão.
+  @Post('prayers/:id/praying')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  togglePraying(
+    @CurrentMember() member: MemberPrincipal,
+    @Param('id') id: string,
+  ) {
+    return this.portal.togglePrayerIntercession(member.churchId, member.id, id);
   }
 
   @Get('prayers')

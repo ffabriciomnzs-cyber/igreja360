@@ -11,6 +11,9 @@ interface SharedPrayer {
   createdAt: string;
   authorName: string | null;
   authorPhoto: string | null;
+  prayingCount: number;
+  iAmPraying: boolean;
+  isMine: boolean;
 }
 
 function iniciais(nome: string): string {
@@ -74,6 +77,35 @@ export function MuralOracao(): React.ReactElement {
       /* ignora */
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function alternaOracao(pedido: SharedPrayer): Promise<void> {
+    // Responde na hora e conserta depois se a API recusar — o toque não pode
+    // parecer travado.
+    setLista((atual) =>
+      atual.map((p) =>
+        p.id === pedido.id
+          ? {
+              ...p,
+              iAmPraying: !p.iAmPraying,
+              prayingCount: p.prayingCount + (p.iAmPraying ? -1 : 1),
+            }
+          : p,
+      ),
+    );
+    try {
+      const { data } = await memberApi.post<{
+        prayingCount: number;
+        iAmPraying: boolean;
+      }>(`/member-auth/prayers/${pedido.id}/praying`);
+      setLista((atual) =>
+        atual.map((p) => (p.id === pedido.id ? { ...p, ...data } : p)),
+      );
+    } catch {
+      setLista((atual) =>
+        atual.map((p) => (p.id === pedido.id ? { ...pedido } : p)),
+      );
     }
   }
 
@@ -181,6 +213,37 @@ export function MuralOracao(): React.ReactElement {
                   <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
                     {p.authorName ?? 'Um irmão'} · {quando(p.createdAt)}
                   </p>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    {p.isMine ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-700 dark:bg-teal-950/50 dark:text-teal-300">
+                        <HandHeart className="h-3.5 w-3.5" />
+                        {p.prayingCount > 0
+                          ? `${p.prayingCount} ${p.prayingCount === 1 ? 'irmão está orando' : 'irmãos estão orando'} por você`
+                          : 'Seu pedido'}
+                      </span>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => alternaOracao(p)}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            p.iAmPraying
+                              ? 'bg-teal-600 text-white hover:bg-teal-700'
+                              : 'border border-teal-200 text-teal-700 hover:bg-teal-50 dark:border-teal-800 dark:text-teal-300 dark:hover:bg-teal-950/50'
+                          }`}
+                        >
+                          <HandHeart className="h-3.5 w-3.5" />
+                          {p.iAmPraying ? 'Estou orando' : 'Vou orar'}
+                        </button>
+                        {p.prayingCount > 0 && (
+                          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                            {p.prayingCount}{' '}
+                            {p.prayingCount === 1 ? 'orando' : 'orando'}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </li>
             ))}

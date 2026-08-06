@@ -30,6 +30,24 @@ model Church {
   communications Communication[]
   prayers        Prayer[]
   worshipServices WorshipService[]
+  serviceSchedules ServiceSchedule[]
+}
+
+// Agenda FIXA da igreja: "toda terça, quinta e domingo tem culto no mesmo
+// horário". Não gera registros de culto — é o quadro de horários que o membro
+// vê no portal, sem depender de alguém cadastrar cada semana.
+model ServiceSchedule {
+  id       String  @id @default(cuid())
+  churchId String
+  church   Church  @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  weekday  Int // 0 = domingo … 6 = sábado
+  time     String // "19:30"
+  name     String // "Culto de ensino"
+  note     String? // "Somente jovens", "Ceia no 1º domingo"
+  active   Boolean @default(true)
+  order    Int     @default(0)
+
+  @@index([churchId, active])
 }
 
 model User {
@@ -399,7 +417,22 @@ model Prayer {
   status      PrayerStatus @default(ACTIVE)
   visibility  String       @default("PUBLIC")
   createdAt   DateTime     @default(now())
+  intercessions PrayerIntercession[]
 
+  @@index([churchId])
+}
+
+// "Estou orando por você": um membro se junta ao pedido de outro. Um por
+// membro por pedido — o toque de novo desfaz.
+model PrayerIntercession {
+  id        String   @id @default(cuid())
+  churchId  String
+  prayerId  String
+  prayer    Prayer   @relation(fields: [prayerId], references: [id], onDelete: Cascade)
+  memberId  String
+  createdAt DateTime @default(now())
+
+  @@unique([prayerId, memberId])
   @@index([churchId])
 }
 

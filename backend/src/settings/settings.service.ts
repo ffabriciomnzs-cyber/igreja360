@@ -73,6 +73,53 @@ export class SettingsService {
     return { success: true };
   }
 
+  /** Agenda fixa de cultos da igreja (quadro semanal do portal). */
+  async getSchedules(churchId: string) {
+    return this.prisma.serviceSchedule.findMany({
+      where: { churchId },
+      orderBy: [{ order: 'asc' }, { weekday: 'asc' }, { time: 'asc' }],
+      select: {
+        id: true,
+        weekday: true,
+        time: true,
+        name: true,
+        note: true,
+        active: true,
+      },
+    });
+  }
+
+  /**
+   * Substitui a agenda inteira pela lista enviada. É a operação que a tela de
+   * Configurações usa (a pessoa mexe nas linhas e salva tudo de uma vez).
+   */
+  async replaceSchedules(
+    churchId: string,
+    schedules: {
+      weekday: number;
+      time: string;
+      name: string;
+      note?: string;
+      active?: boolean;
+    }[],
+  ) {
+    await this.prisma.$transaction([
+      this.prisma.serviceSchedule.deleteMany({ where: { churchId } }),
+      this.prisma.serviceSchedule.createMany({
+        data: schedules.map((s, i) => ({
+          churchId,
+          weekday: s.weekday,
+          time: s.time,
+          name: s.name.trim(),
+          note: s.note?.trim() || null,
+          active: s.active ?? true,
+          order: i,
+        })),
+      }),
+    ]);
+    return this.getSchedules(churchId);
+  }
+
   async updateProfile(userId: string, dto: UpdateProfileDto) {
     const data: Prisma.UserUpdateInput = {};
     if (dto.name !== undefined) data.name = dto.name.trim();

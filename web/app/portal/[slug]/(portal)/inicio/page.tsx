@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import {
   Loader2,
   CalendarDays,
+  CalendarClock,
   ClipboardList,
   Megaphone,
   BookOpen,
@@ -19,7 +20,10 @@ import { formatCurrency } from '@/lib/utils';
 import { useCached } from '@/lib/use-cached';
 import { EnableNotifications } from '@/components/portal/EnableNotifications';
 import { MuralOracao } from '@/components/portal/MuralOracao';
+import { eventPhotoSrc } from '@/lib/events';
 import { Swords, Trophy } from 'lucide-react';
+
+const DIAS_CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 interface PortalHome {
   announcements: {
@@ -40,8 +44,17 @@ interface PortalHome {
     id: string;
     name: string;
     date: string;
+    endDate: string | null;
     location: string | null;
     type: string | null;
+    photoUrl: string | null;
+  }[];
+  schedules: {
+    id: string;
+    weekday: number;
+    time: string;
+    name: string;
+    note: string | null;
   }[];
   campaigns: {
     id: string;
@@ -338,6 +351,39 @@ export default function PortalInicioPage(): React.ReactElement {
         )}
       </section>
 
+      {/* Agenda fixa: o que se repete toda semana */}
+      {data.schedules?.length > 0 && (
+        <section>
+          <SectionTitle icon={CalendarClock} color="bg-violet-500">
+            Agenda da semana
+          </SectionTitle>
+          <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:divide-slate-800 dark:bg-slate-900">
+            {data.schedules.map((h) => (
+              <div key={h.id} className="flex items-center gap-3 p-3">
+                <div className="flex h-11 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-950/40">
+                  <span className="text-[11px] font-bold uppercase leading-none text-violet-600 dark:text-violet-300">
+                    {DIAS_CURTOS[h.weekday]}
+                  </span>
+                  <span className="mt-0.5 text-xs font-semibold leading-none text-violet-500 dark:text-violet-400">
+                    {h.time}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">
+                    {h.name}
+                  </p>
+                  {h.note && (
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                      {h.note}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Próximos cultos */}
       <section>
         <SectionTitle icon={ClipboardList} color="bg-indigo-500">
@@ -389,26 +435,44 @@ export default function PortalInicioPage(): React.ReactElement {
           </p>
         ) : (
           <div className="space-y-2.5">
-            {data.events.map((ev) => (
-              <div
-                key={ev.id}
-                className="flex gap-3 rounded-2xl border border-border bg-white dark:bg-slate-900 p-3 shadow-sm"
-              >
-                <DateBadge iso={ev.date} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">{ev.name}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400 dark:text-slate-500">
-                    <span>{dateBadge(ev.date).time}</span>
-                    {ev.location && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {ev.location}
-                      </span>
-                    )}
+            {data.events.map((ev) => {
+              const cartaz = eventPhotoSrc(ev);
+              return (
+                <Link
+                  key={ev.id}
+                  href={`${base}/eventos/${ev.id}`}
+                  className="block overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-colors hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60"
+                >
+                  {cartaz && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={cartaz}
+                      alt={ev.name}
+                      loading="lazy"
+                      className="h-40 w-full bg-slate-100 object-cover dark:bg-slate-800"
+                    />
+                  )}
+                  <div className="flex gap-3 p-3">
+                    <DateBadge iso={ev.date} />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-slate-900 dark:text-slate-100">
+                        {ev.name}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400 dark:text-slate-500">
+                        <span>{dateBadge(ev.date).time}</span>
+                        {ev.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {ev.location}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 self-center text-slate-300 dark:text-slate-600" />
                   </div>
-                </div>
-              </div>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>
