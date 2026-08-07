@@ -113,6 +113,24 @@ export class PushService {
     return !!found;
   }
 
+  /** Avisa quem cuida do dinheiro (tesoureiro, pastor, admin). */
+  async notifyTreasury(churchId: string, payload: PushPayload): Promise<void> {
+    if (!this.configured) return;
+    const responsaveis = await this.prisma.user.findMany({
+      where: {
+        churchId,
+        active: true,
+        role: { in: ['SUPER_ADMIN', 'ADMIN', 'PASTOR', 'TREASURER'] },
+      },
+      select: { id: true },
+    });
+    if (!responsaveis.length) return;
+    const subs = await this.prisma.pushSubscription.findMany({
+      where: { churchId, userId: { in: responsaveis.map((r) => r.id) } },
+    });
+    await this.deliver(subs, payload);
+  }
+
   /**
    * Avisa quem cuida do portal no painel (admin/pastor/secretaria).
    * Usado, por exemplo, quando um membro pede redefinição de senha.

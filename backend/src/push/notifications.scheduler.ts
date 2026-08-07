@@ -37,6 +37,7 @@ export class NotificationsScheduler {
   @Cron('0 8 * * *', { timeZone: TZ })
   async dailyDigest(): Promise<void> {
     await this.devotionalReminder();
+    await this.payableReminders();
     await this.worshipReminders();
     await this.birthdayReminders();
   }
@@ -63,6 +64,89 @@ export class NotificationsScheduler {
       this.logger.log(`Lembrete de devocional: ${igrejas.length} igreja(s).`);
     } catch (err) {
       this.logger.warn(`Falha no lembrete de devocional: ${String(err)}`);
+    }
+  }
+
+  /**
+   * Contas parceladas: avisa quem cuida do dinheiro sobre parcelas que vencem
+   * em 3 dias, vencem hoje, ou já estão atrasadas. Uma notificação por igreja.
+   */
+  private async payableReminders(): Promise<void> {
+    try {
+      const { start, end } = todayRangeUtc(new Date());
+      const em3Dias = new Date(start.getTime() + 3 * 86_400_000);
+      const fim3Dias = new Date(em3Dias.getTime() + 86_400_000);
+
+      const parcelas = await this.prisma.payableInstallment.findMany({
+        where: {
+          paidAt: null,
+          OR: [
+            { dueDate: { lt: start } }, // atrasada
+            { dueDate: { gte: start, lt: end } }, // vence hoje
+            { dueDate: { gte: em3Dias, lt: fim3Dias } }, // vence em 3 dias
+          ],
+        },
+        select: {
+          churchId: true,
+          dueDate: true,
+          amount: true,
+          payable: { select: { description: true } },
+        },
+      });
+      if (!parcelas.length) return;
+
+      const porIgreja = new Map<string, typeof parcelas>();
+      for (const p of parcelas) {
+        const lista = porIgreja.get(p.churchId) ?? [];
+        lista.push(p);
+        porIgreja.set(p.churchId, lista);
+      }
+
+      const dinheiro = (v: Prisma.Decimal) =>
+        Number(v).toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+        });
+
+      for (const [churchId, lista] of porIgreja) {
+        const atrasadas = lista.filter((p) => p.dueDate < start);
+        const hoje = lista.filter(
+          (p) => p.dueDate >= start && p.dueDate < end,
+        );
+        const emBreve = lista.filter((p) => p.dueDate >= em3Dias);
+
+        const partes: string[] = [];
+        if (atrasadas.length) {
+          partes.push(
+            atrasadas.length === 1
+              ? `1 parcela atrasada (${dinheiro(atrasadas[0].amount)})`
+              : `${atrasadas.length} parcelas atrasadas`,
+          );
+        }
+        if (hoje.length) {
+          partes.push(
+            hoje.length === 1
+              ? `${hoje[0].payable.description} vence hoje (${dinheiro(hoje[0].amount)})`
+              : `${hoje.length} parcelas vencem hoje`,
+          );
+        }
+        if (emBreve.length) {
+          partes.push(
+            emBreve.length === 1
+              ? `${emBreve[0].payable.description} vence em 3 dias`
+              : `${emBreve.length} parcelas vencem em 3 dias`,
+          );
+        }
+        if (!partes.length) continue;
+
+        await this.push.notifyTreasury(churchId, {
+          title: atrasadas.length ? 'Conta atrasada' : 'Conta a pagar',
+          body: partes.join(' · '),
+          url: '/financial?aba=parceladas',
+        });
+      }
+    } catch (err) {
+      this.logger.warn('Falha ao avisar sobre contas parceladas.');
     }
   }
 

@@ -31,6 +31,45 @@ model Church {
   prayers        Prayer[]
   worshipServices WorshipService[]
   serviceSchedules ServiceSchedule[]
+  payables       Payable[]
+}
+
+// Conta parcelada (ex.: ar-condicionado em 10x). Cadastrar NÃO mexe no saldo:
+// cada parcela só vira despesa (Transaction) quando é paga — regime de caixa,
+// que é como a igreja enxerga o dinheiro. Ver PayableInstallment.transactionId.
+model Payable {
+  id           String   @id @default(cuid())
+  churchId     String
+  church       Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  description  String
+  creditor     String?
+  category     String
+  installments Int
+  note         String?
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  items        PayableInstallment[]
+
+  @@index([churchId])
+}
+
+model PayableInstallment {
+  id            String    @id @default(cuid())
+  payableId     String
+  payable       Payable   @relation(fields: [payableId], references: [id], onDelete: Cascade)
+  churchId      String
+  number        Int
+  dueDate       DateTime
+  amount        Decimal   @db.Decimal(12, 2)
+  paidAt        DateTime?
+  // Quanto saiu de fato (juros de atraso ou desconto mudam o valor).
+  paidAmount    Decimal?  @db.Decimal(12, 2)
+  // Despesa gerada no pagamento — desfazer o pagamento apaga esse lançamento.
+  transactionId String?
+
+  @@unique([payableId, number])
+  @@index([churchId, dueDate])
+  @@index([churchId, paidAt])
 }
 
 // Agenda FIXA da igreja: "toda terça, quinta e domingo tem culto no mesmo

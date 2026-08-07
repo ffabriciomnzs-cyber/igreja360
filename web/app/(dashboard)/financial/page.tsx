@@ -27,10 +27,20 @@ import {
   PaginatedTransactions,
   Transaction,
 } from '@/lib/financial';
+import { PayablesTab } from '@/components/financial/PayablesTab';
 
 const EMPTY_SUMMARY: FinancialSummary = { income: 0, expense: 0, balance: 0 };
 
+type Aba = 'lancamentos' | 'parceladas';
+
 export default function FinancialPage(): React.ReactElement {
+  // A notificação de vencimento abre direto na aba certa (?aba=parceladas).
+  const [aba, setAba] = useState<Aba>('lancamentos');
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('aba');
+    if (q === 'parceladas') setAba('parceladas');
+  }, []);
+
   const [items, setItems] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<FinancialSummary>(EMPTY_SUMMARY);
   const [total, setTotal] = useState(0);
@@ -123,6 +133,28 @@ export default function FinancialPage(): React.ReactElement {
         }
       />
 
+      <div className="mb-5 flex gap-1 border-b border-slate-200 dark:border-slate-800">
+        {([
+          ['lancamentos', 'Lançamentos'],
+          ['parceladas', 'Contas parceladas'],
+        ] as const).map(([id, rotulo]) => (
+          <button
+            key={id}
+            onClick={() => setAba(id)}
+            className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+              aba === id
+                ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+            }`}
+          >
+            {rotulo}
+          </button>
+        ))}
+      </div>
+
+      {aba === 'parceladas' && <PayablesTab />}
+
+      <div className={aba === 'lancamentos' ? '' : 'hidden'}>
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {cards.map((c) => {
           const Icon = c.icon;
@@ -367,6 +399,7 @@ export default function FinancialPage(): React.ReactElement {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
