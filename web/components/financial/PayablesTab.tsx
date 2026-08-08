@@ -37,6 +37,10 @@ import {
   payableStatus,
 } from '@/lib/payables';
 import { toast } from 'sonner';
+import {
+  PayablesTour,
+  ABRIR_TOUR_PARCELADAS,
+} from '@/components/financial/PayablesTour';
 
 const FORM_VAZIO = {
   description: '',
@@ -195,7 +199,12 @@ export function PayablesTab(): React.ReactElement {
 
   return (
     <div>
-      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <PayablesTour />
+
+      <div
+        data-tour="parceladas-resumo"
+        className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3"
+      >
         {resumo.map((c) => (
           <Card key={c.label}>
             <CardContent className="p-6">
@@ -212,7 +221,7 @@ export function PayablesTab(): React.ReactElement {
       </div>
 
       <div className="mb-4 flex justify-end">
-        <Button onClick={() => setCriando((v) => !v)}>
+        <Button data-tour="parceladas-nova" onClick={() => setCriando((v) => !v)}>
           <Plus className="h-4 w-4" />
           Nova conta parcelada
         </Button>
@@ -363,7 +372,7 @@ export function PayablesTab(): React.ReactElement {
           description="Cadastre compras parceladas para acompanhar o que ainda falta pagar e não perder vencimento."
         />
       ) : (
-        <div className="space-y-3">
+        <div data-tour="parceladas-lista" className="space-y-3">
           {items.map((conta) => {
             const situacao = payableStatus(conta);
             const expandida = aberta === conta.id;
@@ -515,6 +524,13 @@ export function PayablesTab(): React.ReactElement {
           })}
         </div>
       )}
+
+      <button
+        onClick={() => window.dispatchEvent(new Event(ABRIR_TOUR_PARCELADAS))}
+        className="mt-6 w-full rounded-xl border border-slate-200 bg-white py-3 text-center text-sm font-medium text-indigo-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-indigo-400 dark:hover:bg-slate-800/60"
+      >
+        Como funciona
+      </button>
     </div>
   );
 }
