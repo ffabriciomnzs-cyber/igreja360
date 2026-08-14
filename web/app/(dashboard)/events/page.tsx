@@ -11,6 +11,8 @@ import {
   CalendarDays,
   MapPin,
   Users,
+  Share2,
+  Check,
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { api, extractApiError } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
+import { toast } from 'sonner';
 import { Event, PaginatedEvents, eventPhotoSrc } from '@/lib/events';
 
 export default function EventsPage(): React.ReactElement {
@@ -30,6 +33,7 @@ export default function EventsPage(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [copiadoId, setCopiadoId] = useState<string | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -50,6 +54,27 @@ export default function EventsPage(): React.ReactElement {
     const timer = setTimeout(load, 250);
     return () => clearTimeout(timer);
   }, [load]);
+
+  /**
+   * Copia (ou compartilha) o LINK público do evento. É o link que faz o
+   * WhatsApp mostrar o cartaz — texto puro nunca leva imagem junto.
+   */
+  async function compartilha(ev: Event): Promise<void> {
+    const link = `${window.location.origin}/e/${ev.id}`;
+    const texto = `${ev.name}\n${formatDateTime(ev.date)}${ev.location ? `\nLocal: ${ev.location}` : ''}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: ev.name, text: texto, url: link });
+        return;
+      }
+      await navigator.clipboard.writeText(link);
+      setCopiadoId(ev.id);
+      toast.success('Link copiado! Cole no WhatsApp e o cartaz aparece junto.');
+      setTimeout(() => setCopiadoId(null), 2500);
+    } catch {
+      /* usuário cancelou */
+    }
+  }
 
   async function handleDelete(ev: Event): Promise<void> {
     if (!window.confirm(`Remover o evento ${ev.name}?`)) return;
@@ -186,6 +211,18 @@ export default function EventsPage(): React.ReactElement {
                   </div>
                 )}
                 <div className="mt-auto flex items-center justify-end gap-1 pt-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Copiar link de divulgação (com o cartaz)"
+                    onClick={() => compartilha(ev)}
+                  >
+                    {copiadoId === ev.id ? (
+                      <Check className="h-4 w-4 text-emerald-600" />
+                    ) : (
+                      <Share2 className="h-4 w-4" />
+                    )}
+                  </Button>
                   <Link href={`/events/${ev.id}/edit`}>
                     <Button variant="ghost" size="icon" title="Editar">
                       <Pencil className="h-4 w-4" />

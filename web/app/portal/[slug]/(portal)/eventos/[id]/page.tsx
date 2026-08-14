@@ -73,6 +73,10 @@ export default function EventoPage(): React.ReactElement {
 
   async function compartilhar(): Promise<void> {
     if (!evento) return;
+    // O LINK é o que faz o cartaz aparecer no WhatsApp: o robô dele abre a
+    // página /e/<id> e lê as marcações Open Graph. Texto puro nunca leva
+    // imagem junto — foi exatamente a reclamação da secretaria.
+    const link = `${window.location.origin}/e/${evento.id}`;
     const texto = [
       evento.name,
       `${dataLonga(evento.date)} às ${hora(evento.date)}`,
@@ -83,9 +87,9 @@ export default function EventoPage(): React.ReactElement {
       .join('\n');
     try {
       if (navigator.share) {
-        await navigator.share({ title: evento.name, text: texto });
+        await navigator.share({ title: evento.name, text: texto, url: link });
       } else {
-        await navigator.clipboard.writeText(texto);
+        await navigator.clipboard.writeText(`${texto}\n\n${link}`);
       }
     } catch {
       /* usuário cancelou */

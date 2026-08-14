@@ -1,4 +1,10 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Res,
+} from '@nestjs/common';
 import { FastifyReply } from 'fastify';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -36,6 +42,38 @@ const DATA_URL = /^data:([a-z]+\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/;
 @Controller('public/events')
 export class PublicEventsController {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Dados públicos do evento para a página de divulgação (/e/:id), que é o
+   * que circula no WhatsApp. Só o que já vai impresso no cartaz: nome, data,
+   * local e descrição — nada de membro, inscrito ou dado interno.
+   */
+  @Get(':id')
+  async info(@Param('id') id: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        date: true,
+        endDate: true,
+        location: true,
+        type: true,
+        photoUpdatedAt: true,
+        church: { select: { name: true, slug: true } },
+      },
+    });
+    if (!event) throw new NotFoundException('Evento não encontrado.');
+
+    const { photoUpdatedAt, ...resto } = event;
+    return {
+      ...resto,
+      photoUrl: photoUpdatedAt
+        ? `/public/events/${event.id}/photo?v=${photoUpdatedAt.getTime()}`
+        : null,
+    };
+  }
 
   @Get(':id/photo')
   async photo(
