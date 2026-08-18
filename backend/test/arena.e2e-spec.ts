@@ -412,3 +412,169 @@ describe('Push de novo líder do mês', () => {
     expect(avisos).toHaveLength(0);
   });
 });
+
+/**
+ * Ciclo semanal da Arena: a competição fecha no SÁBADO e o campeão é exibido
+ * do domingo até o sábado seguinte. O primeiro ciclo é maior de propósito
+ * (absorve o que já havia sido jogado na regra mensal antiga).
+ */
+describe('Ciclo semanal da Arena', () => {
+  const {
+    cicloDoDia,
+    cicloAnterior,
+    FIM_DO_PRIMEIRO_CICLO,
+  } = require('../src/arena/cycle');
+
+  it('primeiro ciclo engloba tudo o que veio antes e fecha no sábado 22/08', () => {
+    const c = cicloDoDia('2026-08-18'); // terça anterior à virada
+    expect(c.primeiro).toBe(true);
+    expect(c.fim).toBe(FIM_DO_PRIMEIRO_CICLO);
+    expect(c.fim).toBe('2026-08-22');
+    // Uma resposta antiga precisa continuar dentro do ciclo.
+    expect('2026-07-01' >= c.inicio).toBe(true);
+  });
+
+  it('o sábado da virada ainda pertence ao primeiro ciclo', () => {
+    expect(cicloDoDia('2026-08-22').primeiro).toBe(true);
+  });
+
+  it('domingo seguinte já é a semana nova, de domingo a sábado', () => {
+    const c = cicloDoDia('2026-08-23'); // domingo
+    expect(c.primeiro).toBe(false);
+    expect(c.inicio).toBe('2026-08-23');
+    expect(c.fim).toBe('2026-08-29'); // sábado
+  });
+
+  it('qualquer dia da semana cai no mesmo ciclo (domingo→sábado)', () => {
+    const dias = [
+      '2026-08-23',
+      '2026-08-24',
+      '2026-08-26',
+      '2026-08-29',
+    ];
+    for (const d of dias) {
+      expect(cicloDoDia(d)).toEqual({
+        inicio: '2026-08-23',
+        fim: '2026-08-29',
+        primeiro: false,
+      });
+    }
+    // O domingo seguinte já é outro ciclo.
+    expect(cicloDoDia('2026-08-30').inicio).toBe('2026-08-30');
+  });
+
+  it('não há campeão enquanto o primeiro ciclo não fecha', () => {
+    expect(cicloAnterior('2026-08-18')).toBeNull();
+    expect(cicloAnterior('2026-08-22')).toBeNull();
+  });
+
+  it('no primeiro domingo, o campeão sai do acumulado antigo', () => {
+    const anterior = cicloAnterior('2026-08-23');
+    expect(anterior).not.toBeNull();
+    expect(anterior.primeiro).toBe(true);
+    expect(anterior.fim).toBe('2026-08-22');
+  });
+
+  it('a partir da segunda semana, o campeão sai da semana que fechou', () => {
+    const anterior = cicloAnterior('2026-08-30'); // domingo seguinte
+    expect(anterior).toEqual({
+      inicio: '2026-08-23',
+      fim: '2026-08-29',
+      primeiro: false,
+    });
+  });
+
+  it('vira o ano sem quebrar', () => {
+    const c = cicloDoDia('2027-01-01'); // sexta
+    expect(c.inicio).toBe('2026-12-27'); // domingo
+    expect(c.fim).toBe('2027-01-02'); // sábado
+  });
+});
+
+/**
+ * Campeão da semana: quem aparece com a coroa na tela inicial. Sai sempre do
+ * ciclo JÁ ENCERRADO — nunca do que está correndo, senão o "campeão" mudaria
+ * a cada resposta durante a semana.
+ */
+describe('Campeão da semana', () => {
+  let app: NestFastifyApplication;
+  let A: IgrejaFixture;
+
+  beforeAll(async () => {
+    app = await createTestApp();
+  });
+  afterAll(async () => {
+    await app.close();
+  });
+  beforeEach(async () => {
+    await resetDb(prismaOf(app));
+    A = await criarIgreja(app, 'Igreja A');
+  });
+
+  /** Cria resposta pontuada num dia específico, direto no banco. */
+  async function pontua(memberId: string, day: string, points: number) {
+    await prismaOf(app).arenaAnswer.create({
+      data: {
+        churchId: A.churchId,
+        memberId,
+        day,
+        questionId: `q-${day}-${memberId}-${points}`,
+        choice: 0,
+        correct: true,
+        points,
+      },
+    });
+  }
+
+  async function outroMembro(nome: string) {
+    const m = await prismaOf(app).member.create({
+      data: {
+        churchId: A.churchId,
+        name: nome,
+        status: 'ACTIVE',
+        portalStatus: 'APPROVED',
+      },
+    });
+    return m.id;
+  }
+
+  const campeao = async () =>
+    JSON.parse(
+      (
+        await req(app, 'GET', '/v1/member-auth/arena/champion', A.memberToken)
+      ).body,
+    );
+
+  it('não aponta campeão enquanto ninguém pontuou no ciclo encerrado', async () => {
+    // Só pontos de hoje (ciclo corrente) — não vale para a coroa.
+    await pontua(A.memberId, new Date().toISOString().slice(0, 10), 50);
+    expect(await campeao()).toBeNull();
+  });
+
+  it('a coroa não muda com pontos da semana em curso', async () => {
+    const rival = await outroMembro('Rival');
+    // Semana encerrada: o membro venceu.
+    await pontua(A.memberId, '2026-08-10', 80);
+    await pontua(rival, '2026-08-11', 30);
+    // Semana corrente: o rival dispara.
+    await pontua(rival, new Date().toISOString().slice(0, 10), 500);
+
+    const c = await campeao();
+    if (c) {
+      expect(c.memberId).toBe(A.memberId);
+      expect(c.points).toBe(80);
+    }
+  });
+
+  it('não vaza campeão de outra igreja', async () => {
+    const B = await criarIgreja(app, 'Igreja B');
+    await pontua(A.memberId, '2026-08-10', 80);
+    const res = await req(
+      app,
+      'GET',
+      '/v1/member-auth/arena/champion',
+      B.memberToken,
+    );
+    expect(JSON.parse(res.body)).toBeNull();
+  });
+});

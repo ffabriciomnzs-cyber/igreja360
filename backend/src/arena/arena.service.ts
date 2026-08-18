@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { PushService } from '../push/push.service';
 import { QUESTIONS, ArenaQuestion } from './questions';
+import { Ciclo, cicloAnterior, cicloDoDia } from './cycle';
 
 const PERGUNTAS_POR_DIA = 12;
 const PONTOS_POR_ACERTO = 10;
@@ -185,19 +186,19 @@ export class ArenaService {
   }
 
   /**
-   * Detecta a TROCA de líder do mês: notifica só quando este acerto fez o
-   * membro cruzar para o 1º lugar (antes dele estava alguém — ou ninguém).
-   * Empate não conta como ultrapassagem, então não há spam de ping-pong.
+   * Detecta a TROCA de líder da SEMANA corrente: notifica só quando este
+   * acerto fez o membro cruzar para o 1º lugar (antes dele estava alguém —
+   * ou ninguém). Empate não conta como ultrapassagem, então não há spam.
    */
   private async avisaSeNovoLider(
     churchId: string,
     memberId: string,
     pontosGanhos: number,
   ): Promise<void> {
-    const mesInicio = `${hojeBrt().slice(0, 7)}-01`;
+    const ciclo = cicloDoDia(hojeBrt());
     const somas = await this.prisma.arenaAnswer.groupBy({
       by: ['memberId'],
-      where: { churchId, day: { gte: mesInicio } },
+      where: { churchId, day: { gte: ciclo.inicio, lte: ciclo.fim } },
       _sum: { points: true },
     });
 
@@ -222,22 +223,73 @@ export class ArenaService {
     await this.push.notifyChurch(
       churchId,
       '🏆 Novo líder na Arena!',
-      `${membro.name} assumiu o topo do ranking com ${minha} pontos. Quem alcança?`,
+      `${membro.name} assumiu o topo da semana com ${minha} pontos. O ciclo fecha no sábado — quem alcança?`,
       'arena',
     );
   }
 
   /**
-   * Ranking da igreja. `period` = 'month' (competição corrente, zera todo
-   * mês) ou 'all' (histórico). Devolve o top e a posição do próprio membro.
+   * Campeão da última semana ENCERRADA — é quem aparece com a coroa na tela
+   * inicial, do domingo até o sábado seguinte. Devolve null enquanto o
+   * primeiro ciclo não fechou, ou se ninguém pontuou na semana.
    */
-  async ranking(churchId: string, memberId: string, period: 'month' | 'all') {
+  async campeaoDaSemana(churchId: string) {
+    const ciclo: Ciclo | null = cicloAnterior(hojeBrt());
+    if (!ciclo) return null;
+
+    const somas = await this.prisma.arenaAnswer.groupBy({
+      by: ['memberId'],
+      where: { churchId, day: { gte: ciclo.inicio, lte: ciclo.fim } },
+      _sum: { points: true },
+      _count: { _all: true },
+    });
+    if (!somas.length) return null;
+
+    const vencedor = somas
+      .map((s) => ({
+        memberId: s.memberId,
+        points: s._sum.points ?? 0,
+        answers: s._count._all,
+      }))
+      // Empate no ponto: desempata quem respondeu menos (foi mais certeiro);
+      // persistindo o empate, o id mais antigo, para o resultado ser estável.
+      .sort(
+        (a, b) =>
+          b.points - a.points ||
+          a.answers - b.answers ||
+          a.memberId.localeCompare(b.memberId),
+      )[0];
+    if (!vencedor || vencedor.points <= 0) return null;
+
+    const membro = await this.prisma.member.findUnique({
+      where: { id: vencedor.memberId },
+      select: { id: true, name: true, photo: true, gender: true },
+    });
+    if (!membro) return null;
+
+    return {
+      memberId: membro.id,
+      name: membro.name,
+      photo: membro.photo,
+      title: membro.gender === 'FEMALE' ? 'Campeã da semana' : 'Campeão da semana',
+      points: vencedor.points,
+      cycleStart: ciclo.inicio,
+      cycleEnd: ciclo.fim,
+    };
+  }
+
+  /**
+   * Ranking da igreja. `period` = 'week' (a competição corrente, que fecha no
+   * sábado) ou 'all' (histórico). Devolve o top e a posição do próprio membro.
+   */
+  async ranking(churchId: string, memberId: string, period: 'week' | 'all') {
+    const ciclo = cicloDoDia(hojeBrt());
     const where: {
       churchId: string;
-      day?: { gte: string };
+      day?: { gte: string; lte: string };
     } = { churchId };
-    if (period === 'month') {
-      where.day = { gte: `${hojeBrt().slice(0, 7)}-01` };
+    if (period === 'week') {
+      where.day = { gte: ciclo.inicio, lte: ciclo.fim };
     }
 
     const somas = await this.prisma.arenaAnswer.groupBy({
@@ -267,6 +319,10 @@ export class ArenaService {
 
     return {
       period,
+      // A tela usa para dizer "vale até sábado" e mostrar a contagem.
+      cycleStart: ciclo.inicio,
+      cycleEnd: ciclo.fim,
+      firstCycle: ciclo.primeiro,
       top: top.map((t, i) => ({
         position: i + 1,
         name: nomePorId.get(t.memberId)?.name ?? 'Membro',

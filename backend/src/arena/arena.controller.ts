@@ -55,10 +55,17 @@ export class ArenaController {
     @CurrentMember() member: MemberPrincipal,
     @Query('period') period?: string,
   ) {
+    // 'month' ainda é aceito: o portal antigo pode continuar no ar por alguns
+    // minutos depois de a API subir (os dois serviços sobem separados).
     return this.arena.ranking(
       member.churchId,
       member.id,
-      period === 'all' ? 'all' : 'month',
+      period === 'all' ? 'all' : 'week',
     );
+  }
+
+  @Get('champion')
+  champion(@CurrentMember() member: MemberPrincipal) {
+    return this.arena.campeaoDaSemana(member.churchId);
   }
 }

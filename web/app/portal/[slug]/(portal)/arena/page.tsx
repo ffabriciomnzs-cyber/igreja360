@@ -10,6 +10,7 @@ import {
   BookOpen,
   Loader2,
   Medal,
+  Crown,
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
 import { cn } from '@/lib/utils';
@@ -52,8 +53,38 @@ function iniciais(nome: string): string {
 
 interface Ranking {
   period: string;
+  /** Fim do ciclo em curso — sempre um sábado ("AAAA-MM-DD"). */
+  cycleEnd?: string;
+  /** O ciclo de transição, que absorve a pontuação da regra antiga. */
+  firstCycle?: boolean;
   top: RankRow[];
   me: { position: number | null; points: number };
+}
+
+/** "sábado, 22 de agosto" — para dizer até quando vale a disputa. */
+function diaLongo(iso?: string): string {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+  }).format(new Date(Date.UTC(y, m - 1, d, 12)));
+}
+
+/** Quantos dias faltam para o ciclo fechar (0 = fecha hoje). */
+function diasAte(iso?: string): number | null {
+  if (!iso) return null;
+  const [y, m, d] = iso.split('-').map(Number);
+  const fim = Date.UTC(y, m - 1, d, 12);
+  const brt = new Date(Date.now() - 3 * 3600_000);
+  const hoje = Date.UTC(
+    brt.getUTCFullYear(),
+    brt.getUTCMonth(),
+    brt.getUTCDate(),
+    12,
+  );
+  return Math.round((fim - hoje) / 86_400_000);
 }
 
 const MEDALHAS = ['🥇', '🥈', '🥉'];
@@ -61,7 +92,7 @@ const MEDALHAS = ['🥇', '🥈', '🥉'];
 export default function ArenaPage(): React.ReactElement {
   const [today, setToday] = useState<Today | null>(null);
   const [ranking, setRanking] = useState<Ranking | null>(null);
-  const [period, setPeriod] = useState<'month' | 'all'>('month');
+  const [period, setPeriod] = useState<'week' | 'all'>('week');
   const [sending, setSending] = useState(false);
   // Resultado da pergunta recém-respondida (mostra feedback antes de avançar).
   const [reveal, setReveal] = useState<Answered | null>(null);
@@ -276,7 +307,7 @@ export default function ArenaPage(): React.ReactElement {
             Ranking da igreja
           </h2>
           <div className="flex rounded-lg border border-slate-200 p-0.5 text-xs dark:border-slate-700">
-            {(['month', 'all'] as const).map((p) => (
+            {(['week', 'all'] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
@@ -287,11 +318,27 @@ export default function ArenaPage(): React.ReactElement {
                     : 'text-slate-500 dark:text-slate-400',
                 )}
               >
-                {p === 'month' ? 'Este mês' : 'Geral'}
+                {p === 'week' ? 'Esta semana' : 'Geral'}
               </button>
             ))}
           </div>
         </div>
+
+        {period === 'week' && ranking?.cycleEnd && (
+          <p className="mb-2 flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+            <Crown className="h-3.5 w-3.5 shrink-0" />
+            {(() => {
+              const faltam = diasAte(ranking.cycleEnd);
+              const quando =
+                faltam === 0
+                  ? 'A disputa fecha HOJE'
+                  : faltam === 1
+                    ? 'A disputa fecha amanhã'
+                    : `Faltam ${faltam} dias`;
+              return `${quando} (${diaLongo(ranking.cycleEnd)}). No domingo, quem estiver em 1º vira campeão da semana na tela inicial.`;
+            })()}
+          </p>
+        )}
 
         <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
           {!ranking ? (

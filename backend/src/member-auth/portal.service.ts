@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ArenaService } from '../arena/arena.service';
 
 // Trilhas temáticas do devocional. O conteúdo mora no app
 // (web/lib/devotional-trails.ts) — aqui só validamos o id e o tamanho.
@@ -91,7 +92,10 @@ function comFotoUrl<T extends { id: string; photoUpdatedAt: Date | null }>(
 
 @Injectable()
 export class PortalService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly arena: ArenaService,
+  ) {}
 
   async devotional(churchId: string, memberId: string) {
     const day = brToday();
@@ -468,6 +472,8 @@ export class PortalService {
       worship,
       events: events.map(comFotoUrl),
       schedules,
+      // Campeão da semana encerrada — a coroa da tela inicial.
+      arenaChampion: await this.arena.campeaoDaSemana(churchId),
       announcements,
       campaigns: campaigns.map((c) => {
         const goal = Number(c.goal ?? 0);

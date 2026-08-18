@@ -20,6 +20,8 @@ import { formatCurrency } from '@/lib/utils';
 import { useCached } from '@/lib/use-cached';
 import { EnableNotifications } from '@/components/portal/EnableNotifications';
 import { MuralOracao } from '@/components/portal/MuralOracao';
+import { ArenaCampeao, type ArenaChampion } from '@/components/portal/ArenaCampeao';
+import { ArenaRegras } from '@/components/portal/ArenaRegras';
 import { eventPhotoSrc } from '@/lib/events';
 import { Swords, Trophy } from 'lucide-react';
 
@@ -56,6 +58,7 @@ interface PortalHome {
     name: string;
     note: string | null;
   }[];
+  arenaChampion: ArenaChampion | null;
   campaigns: {
     id: string;
     title: string;
@@ -133,12 +136,12 @@ function arenaIniciais(nome: string): string {
   return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
 }
 
-/** Pódio do mês na Início: mostra o topo e convida para o desafio do dia. */
+/** Pódio da semana na Início: mostra o topo e convida para o desafio do dia. */
 function ArenaDestaque({ base }: { base: string }): React.ReactElement | null {
   const { data } = useCached<ArenaRanking>('arena-ranking-mes', () =>
     memberApi
       .get<ArenaRanking>('/member-auth/arena/ranking', {
-        params: { period: 'month' },
+        params: { period: 'week' },
       })
       .then((r) => r.data),
   );
@@ -163,7 +166,7 @@ function ArenaDestaque({ base }: { base: string }): React.ReactElement | null {
 
       {podio.length === 0 ? (
         <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-          12 perguntas por dia. Seja a primeira pessoa no ranking do mês! 🏆
+          12 perguntas por dia. Seja a primeira pessoa no ranking da semana! 🏆
         </p>
       ) : (
         <div className="mt-3 space-y-1.5">
@@ -236,7 +239,11 @@ export default function PortalInicioPage(): React.ReactElement {
 
   return (
     <div className="space-y-6">
+      <ArenaRegras />
       <EnableNotifications />
+
+      {/* Campeão da semana: coroa, foto e nome na abertura */}
+      <ArenaCampeao champion={data.arenaChampion ?? null} base={base} />
 
       {/* Atalhos rápidos */}
       <div className="grid grid-cols-2 gap-3">
@@ -272,7 +279,7 @@ export default function PortalInicioPage(): React.ReactElement {
         </Link>
       </div>
 
-      {/* Arena: pódio do mês na abertura — competição à vista todo dia */}
+      {/* Arena: pódio da semana na abertura — competição à vista todo dia */}
       <ArenaDestaque base={base} />
 
       {/* Avisos */}
