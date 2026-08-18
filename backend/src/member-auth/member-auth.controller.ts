@@ -25,6 +25,7 @@ import { NotifyPrefsDto } from './dto/notify-prefs.dto';
 import { MemberJwtGuard, MemberPrincipal } from './member-jwt.guard';
 import { CurrentMember } from './current-member.decorator';
 import { PushService } from '../push/push.service';
+import { BirthdaysService } from './birthdays.service';
 
 @Controller('member-auth')
 export class MemberAuthController {
@@ -32,6 +33,7 @@ export class MemberAuthController {
     private readonly memberAuth: MemberAuthService,
     private readonly portal: PortalService,
     private readonly push: PushService,
+    private readonly birthdays: BirthdaysService,
   ) {}
 
   // Chave pública VAPID p/ o membro se inscrever nas notificações (null se off).
@@ -105,6 +107,39 @@ export class MemberAuthController {
   @UseGuards(MemberJwtGuard)
   event(@CurrentMember() member: MemberPrincipal, @Param('id') id: string) {
     return this.portal.event(member.churchId, id);
+  }
+
+  // Aniversariantes de hoje e da semana + os recados que EU recebi.
+  @Get('birthdays')
+  @UseGuards(MemberJwtGuard)
+  listBirthdays(@CurrentMember() member: MemberPrincipal) {
+    return this.birthdays.list(member.churchId, member.id);
+  }
+
+  @Post('birthdays/:memberId/greet')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  greet(
+    @CurrentMember() member: MemberPrincipal,
+    @Param('memberId') memberId: string,
+    @Body() body: { message?: string },
+  ) {
+    return this.birthdays.greet(
+      member.churchId,
+      member.id,
+      memberId,
+      body?.message,
+    );
+  }
+
+  // Um número por vez, e só no dia do aniversário (ver birthdays.service).
+  @Get('birthdays/:memberId/whatsapp')
+  @UseGuards(MemberJwtGuard)
+  whatsapp(
+    @CurrentMember() member: MemberPrincipal,
+    @Param('memberId') memberId: string,
+  ) {
+    return this.birthdays.whatsappLink(member.churchId, memberId);
   }
 
   @Get('me')

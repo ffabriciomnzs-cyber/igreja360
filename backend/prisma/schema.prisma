@@ -32,6 +32,7 @@ model Church {
   worshipServices WorshipService[]
   serviceSchedules ServiceSchedule[]
   payables       Payable[]
+  birthdayGreetings BirthdayGreeting[]
 }
 
 // Conta parcelada (ex.: ar-condicionado em 10x). Cadastrar NÃO mexe no saldo:
@@ -70,6 +71,27 @@ model PayableInstallment {
   @@unique([payableId, number])
   @@index([churchId, dueDate])
   @@index([churchId, paidAt])
+}
+
+// Recado de aniversário que um membro deixa para outro. O `year` faz o
+// carinho se repetir todo ano: em 2027 a igreja parabeniza de novo, sem
+// apagar o que foi escrito em 2026.
+model BirthdayGreeting {
+  id        String   @id @default(cuid())
+  churchId  String
+  // Vínculo real com a igreja: se a igreja sair, os recados (que são
+  // mensagens pessoais) saem junto, sem deixar órfão no banco.
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  // Quem faz aniversário.
+  memberId  String
+  // Quem deixou o recado.
+  authorId  String
+  year      Int
+  message   String?
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, authorId, year])
+  @@index([churchId, memberId, year])
 }
 
 // Agenda FIXA da igreja: "toda terça, quinta e domingo tem culto no mesmo

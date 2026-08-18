@@ -113,6 +113,15 @@ export class PushService {
     return !!found;
   }
 
+  /** Avisa UM membro específico (ex.: recebeu recado de aniversário). */
+  async notifyMember(memberId: string, payload: PushPayload): Promise<void> {
+    if (!this.configured) return;
+    const subs = await this.prisma.pushSubscription.findMany({
+      where: { memberId },
+    });
+    await this.deliver(subs, payload);
+  }
+
   /** Avisa quem cuida do dinheiro (tesoureiro, pastor, admin). */
   async notifyTreasury(churchId: string, payload: PushPayload): Promise<void> {
     if (!this.configured) return;

@@ -22,6 +22,7 @@ import { EnableNotifications } from '@/components/portal/EnableNotifications';
 import { MuralOracao } from '@/components/portal/MuralOracao';
 import { ArenaCampeao, type ArenaChampion } from '@/components/portal/ArenaCampeao';
 import { ArenaRegras } from '@/components/portal/ArenaRegras';
+import { Aniversarios } from '@/components/portal/Aniversarios';
 import { eventPhotoSrc } from '@/lib/events';
 import { Swords, Trophy } from 'lucide-react';
 
@@ -244,6 +245,9 @@ export default function PortalInicioPage(): React.ReactElement {
 
       {/* Campeão da semana: coroa, foto e nome na abertura */}
       <ArenaCampeao champion={data.arenaChampion ?? null} base={base} />
+
+      {/* Aniversariantes de hoje e da semana */}
+      <Aniversarios />
 
       {/* Atalhos rápidos */}
       <div className="grid grid-cols-2 gap-3">
