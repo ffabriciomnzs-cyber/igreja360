@@ -10,6 +10,7 @@ import { usePortalRequests } from '@/lib/use-portal-requests';
 import {
   LayoutDashboard,
   Users,
+  UserPlus,
   Network,
   Wallet,
   Calendar,
@@ -53,6 +54,7 @@ const groups: NavGroup[] = [
     title: 'Pessoas',
     items: [
       { href: '/members', label: 'Membros', icon: Users },
+      { href: '/visitors', label: 'Visitantes', icon: UserPlus },
       { href: '/cells', label: 'Células', icon: Network },
     ],
   },
@@ -103,10 +105,30 @@ export function Sidebar({
   const [isAdmin, setIsAdmin] = useState(false);
   // Badge no item Membros: cadastros aguardando liberação + pedidos de senha.
   const { total: pendingRequests } = usePortalRequests();
+  // Badge no item Visitantes: quem chegou e ninguém contatou ainda.
+  const [novosVisitantes, setNovosVisitantes] = useState(0);
 
   useEffect(() => {
     const role = getStoredUser()?.role ?? '';
     setIsAdmin(ADMIN_ROLES.includes(role));
+  }, []);
+
+  // Visitantes novos esperando contato (selo no item Visitantes).
+  useEffect(() => {
+    let mounted = true;
+    const load = () =>
+      api
+        .get<{ novos: number }>('/visitors/stats')
+        .then(({ data }) => {
+          if (mounted) setNovosVisitantes(data?.novos ?? 0);
+        })
+        .catch(() => undefined);
+    load();
+    const timer = setInterval(load, 60000);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -203,6 +225,11 @@ export function Sidebar({
                             )}
                           />
                           <span>{item.label}</span>
+                          {item.href === '/visitors' && novosVisitantes > 0 && (
+                            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-bold text-white">
+                              {novosVisitantes}
+                            </span>
+                          )}
                           {item.href === '/members' && pendingRequests > 0 && (
                             <span className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
                               {pendingRequests}

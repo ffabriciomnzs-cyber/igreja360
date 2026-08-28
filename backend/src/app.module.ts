@@ -14,6 +14,7 @@ import { CampaignsModule } from './campaigns/campaigns.module';
 import { CommunicationsModule } from './communications/communications.module';
 import { PrayersModule } from './prayers/prayers.module';
 import { ReportsModule } from './reports/reports.module';
+import { VisitorsModule } from './visitors/visitors.module';
 import { SettingsModule } from './settings/settings.module';
 import { WorshipModule } from './worship/worship.module';
 import { UsersModule } from './users/users.module';
@@ -43,6 +44,7 @@ import { HealthController } from './health.controller';
     PrayersModule,
     ReportsModule,
     SettingsModule,
+    VisitorsModule,
     WorshipModule,
     UsersModule,
     MemberAuthModule,

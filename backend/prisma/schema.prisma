@@ -39,6 +39,61 @@ model Church {
   serviceSchedules ServiceSchedule[]
   payables       Payable[]
   birthdayGreetings BirthdayGreeting[]
+  visitors       Visitor[]
+}
+
+// Visitante que se cadastrou sozinho lendo o QR code no culto.
+//
+// Fica SEPARADO de Member de propósito: visitante ainda não é membro, e
+// misturar os dois sujaria a membresia, o ranking e os relatórios da igreja.
+// Quando a liderança confirma, a conversão cria o Member de verdade e guarda
+// o vínculo em `memberId`.
+model Visitor {
+  id            String        @id @default(cuid())
+  churchId      String
+  church        Church        @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  name          String
+  phone         String?
+  email         String?
+  birthDate     DateTime?
+  city          String?
+  // "Como você chegou até nós?" — mostra o que realmente traz gente.
+  howFound      String?
+  // Nome de quem convidou (texto livre: pode ser alguém que nem é membro).
+  invitedBy     String?
+  prayerRequest String?
+  wantsVisit    Boolean       @default(false)
+  status        VisitorStatus @default(NEW)
+  // Preenchido quando o visitante vira membro.
+  memberId      String?
+  firstVisitAt  DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  followUps     VisitorFollowUp[]
+
+  @@index([churchId, status])
+  @@index([churchId, createdAt])
+}
+
+enum VisitorStatus {
+  NEW
+  CONTACTED
+  RETURNED
+  MEMBER
+  ARCHIVED
+}
+
+// Histórico do acompanhamento: ligou, visitou, convidou para a célula.
+model VisitorFollowUp {
+  id        String   @id @default(cuid())
+  churchId  String
+  visitorId String
+  visitor   Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  note      String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  @@index([visitorId])
 }
 
 // Conta parcelada (ex.: ar-condicionado em 10x). Cadastrar NÃO mexe no saldo:
