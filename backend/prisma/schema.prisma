@@ -42,6 +42,67 @@ model Church {
   visitors       Visitor[]
   attendances    Attendance[]
   teams          MinistryTeam[]
+  schoolClasses  SchoolClass[]
+}
+
+// Escola Bíblica: turma, professor e sala.
+model SchoolClass {
+  id          String   @id @default(cuid())
+  churchId    String
+  church      Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  name        String
+  // O professor costuma ser membro; `teacherName` cobre quem não é cadastrado.
+  teacherId   String?
+  teacherName String?
+  room        String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  enrollments ClassEnrollment[]
+  lessons     ClassLesson[]
+
+  @@index([churchId, active])
+}
+
+// Matrícula do aluno na turma.
+model ClassEnrollment {
+  id        String      @id @default(cuid())
+  churchId  String
+  classId   String
+  class     SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  memberId  String
+  createdAt DateTime    @default(now())
+
+  @@unique([classId, memberId])
+  @@index([memberId])
+}
+
+// Uma aula da turma num dia — é a folha da caderneta.
+// @@unique(classId, day): a mesma turma não tem duas aulas no mesmo domingo.
+model ClassLesson {
+  id          String      @id @default(cuid())
+  churchId    String
+  classId     String
+  class       SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  day         String
+  topic       String?
+  note        String?
+  createdAt   DateTime    @default(now())
+  attendances ClassAttendance[]
+
+  @@unique([classId, day])
+  @@index([churchId, day])
+}
+
+// Chamada: quem esteve na aula.
+model ClassAttendance {
+  id       String      @id @default(cuid())
+  churchId String
+  lessonId String
+  lesson   ClassLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  memberId String
+
+  @@unique([lessonId, memberId])
+  @@index([memberId])
 }
 
 // Equipe que serve na igreja: louvor, recepção, som, kids, diaconia.

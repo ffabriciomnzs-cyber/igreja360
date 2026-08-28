@@ -13,6 +13,7 @@ import {
   UserPlus,
   UserCheck,
   HandHelping,
+  GraduationCap,
   Network,
   Wallet,
   Calendar,
@@ -60,6 +61,7 @@ const groups: NavGroup[] = [
       { href: '/cells', label: 'Células', icon: Network },
       { href: '/attendance', label: 'Frequência', icon: UserCheck },
       { href: '/teams', label: 'Equipes e escala', icon: HandHelping },
+      { href: '/school', label: 'Escola Bíblica', icon: GraduationCap },
     ],
   },
   {

@@ -26,6 +26,7 @@ import { Aniversarios } from '@/components/portal/Aniversarios';
 import { AoVivo, type LiveState } from '@/components/portal/AoVivo';
 import { EstouAqui } from '@/components/portal/EstouAqui';
 import { MinhaEscala } from '@/components/portal/MinhaEscala';
+import { MinhaTurma } from '@/components/portal/MinhaTurma';
 import { eventPhotoSrc } from '@/lib/events';
 import { Swords, Trophy } from 'lucide-react';
 
@@ -256,6 +257,9 @@ export default function PortalInicioPage(): React.ReactElement {
 
       {/* Onde eu sirvo nos próximos cultos */}
       <MinhaEscala />
+
+      {/* Minha turma na Escola Bíblica */}
+      <MinhaTurma />
 
       <EnableNotifications />
 

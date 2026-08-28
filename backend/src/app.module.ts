@@ -17,6 +17,7 @@ import { ReportsModule } from './reports/reports.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { TeamsModule } from './teams/teams.module';
+import { SchoolModule } from './school/school.module';
 import { SettingsModule } from './settings/settings.module';
 import { WorshipModule } from './worship/worship.module';
 import { UsersModule } from './users/users.module';
@@ -49,6 +50,7 @@ import { HealthController } from './health.controller';
     VisitorsModule,
     AttendanceModule,
     TeamsModule,
+    SchoolModule,
     WorshipModule,
     UsersModule,
     MemberAuthModule,

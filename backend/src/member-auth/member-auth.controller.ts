@@ -28,6 +28,7 @@ import { PushService } from '../push/push.service';
 import { BirthdaysService } from './birthdays.service';
 import { AttendanceService } from '../attendance/attendance.service';
 import { TeamsService } from '../teams/teams.service';
+import { SchoolService } from '../school/school.service';
 
 @Controller('member-auth')
 export class MemberAuthController {
@@ -38,6 +39,7 @@ export class MemberAuthController {
     private readonly birthdays: BirthdaysService,
     private readonly attendance: AttendanceService,
     private readonly teams: TeamsService,
+    private readonly school: SchoolService,
   ) {}
 
   // Chave pública VAPID p/ o membro se inscrever nas notificações (null se off).
@@ -195,6 +197,13 @@ export class MemberAuthController {
     @Body() body: { confirm?: boolean },
   ) {
     return this.teams.respond(member.churchId, member.id, id, !!body?.confirm);
+  }
+
+  // Minha turma na Escola Bíblica.
+  @Get('school')
+  @UseGuards(MemberJwtGuard)
+  mySchool(@CurrentMember() member: MemberPrincipal) {
+    return this.school.myClasses(member.churchId, member.id);
   }
 
   @Get('me')
