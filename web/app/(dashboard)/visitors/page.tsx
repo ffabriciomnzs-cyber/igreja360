@@ -126,11 +126,7 @@ export default function VisitorsPage(): React.ReactElement {
       const { data } = await api.get<{ slug: string }>('/settings/church');
       const url = `${window.location.origin}/v/${data.slug}`;
       setLinkQr(url);
-      // Caminho do build de NAVEGADOR: o entry padrão do pacote puxa módulos
-      // do Node e não resolve dentro do bundle.
-      const QRCode = (await import('qrcode/lib/browser')) as unknown as {
-        toDataURL: (t: string, o?: Record<string, unknown>) => Promise<string>;
-      };
+      const { default: QRCode } = await import('qrcode');
       setQr(await QRCode.toDataURL(url, { width: 720, margin: 1 }));
     } catch (err) {
       console.error('Falha ao gerar o QR code:', err);
