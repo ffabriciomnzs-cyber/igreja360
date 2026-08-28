@@ -14,7 +14,6 @@ import {
   UserCheck,
   HandHelping,
   GraduationCap,
-  Baby,
   Network,
   Wallet,
   Calendar,
@@ -63,7 +62,6 @@ const groups: NavGroup[] = [
       { href: '/attendance', label: 'Frequência', icon: UserCheck },
       { href: '/teams', label: 'Equipes e escala', icon: HandHelping },
       { href: '/school', label: 'Escola Bíblica', icon: GraduationCap },
-      { href: '/kids', label: 'Kids', icon: Baby },
     ],
   },
   {
