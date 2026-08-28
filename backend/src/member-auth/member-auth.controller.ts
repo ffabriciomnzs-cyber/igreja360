@@ -26,6 +26,7 @@ import { MemberJwtGuard, MemberPrincipal } from './member-jwt.guard';
 import { CurrentMember } from './current-member.decorator';
 import { PushService } from '../push/push.service';
 import { BirthdaysService } from './birthdays.service';
+import { AttendanceService } from '../attendance/attendance.service';
 
 @Controller('member-auth')
 export class MemberAuthController {
@@ -34,6 +35,7 @@ export class MemberAuthController {
     private readonly portal: PortalService,
     private readonly push: PushService,
     private readonly birthdays: BirthdaysService,
+    private readonly attendance: AttendanceService,
   ) {}
 
   // Chave pública VAPID p/ o membro se inscrever nas notificações (null se off).
@@ -159,6 +161,20 @@ export class MemberAuthController {
     @Param('memberId') memberId: string,
   ) {
     return this.birthdays.whatsappLink(member.churchId, memberId);
+  }
+
+  // "Estou aqui": o botão só abre na janela do culto (ver attendance.service).
+  @Get('attendance')
+  @UseGuards(MemberJwtGuard)
+  attendanceStatus(@CurrentMember() member: MemberPrincipal) {
+    return this.attendance.statusDoMembro(member.churchId, member.id);
+  }
+
+  @Post('attendance')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  checkIn(@CurrentMember() member: MemberPrincipal) {
+    return this.attendance.checkIn(member.churchId, member.id);
   }
 
   @Get('me')

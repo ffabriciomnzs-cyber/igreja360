@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Users,
   UserPlus,
+  UserCheck,
   Network,
   Wallet,
   Calendar,
@@ -56,6 +57,7 @@ const groups: NavGroup[] = [
       { href: '/members', label: 'Membros', icon: Users },
       { href: '/visitors', label: 'Visitantes', icon: UserPlus },
       { href: '/cells', label: 'Células', icon: Network },
+      { href: '/attendance', label: 'Frequência', icon: UserCheck },
     ],
   },
   {

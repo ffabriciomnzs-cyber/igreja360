@@ -40,6 +40,29 @@ model Church {
   payables       Payable[]
   birthdayGreetings BirthdayGreeting[]
   visitors       Visitor[]
+  attendances    Attendance[]
+}
+
+// Presença no culto. Uma por membro por dia (@@unique): duas pessoas do mesmo
+// aparelho, dois toques ou recarregar a página não inflam a contagem.
+//
+// `worshipId` guarda O CULTO quando ele existe cadastrado; quando a presença
+// vem do horário fixo da agenda, fica nulo e vale o dia.
+model Attendance {
+  id        String   @id @default(cuid())
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  memberId  String
+  worshipId String?
+  day       String
+  // Quem registrou: nulo = o próprio membro pelo app; preenchido = alguém do
+  // painel marcou na mão (quem não usa o aplicativo).
+  markedBy  String?
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, day])
+  @@index([churchId, day])
+  @@index([memberId])
 }
 
 // Visitante que se cadastrou sozinho lendo o QR code no culto.

@@ -24,6 +24,7 @@ import { ArenaCampeao, type ArenaChampion } from '@/components/portal/ArenaCampe
 import { ArenaRegras } from '@/components/portal/ArenaRegras';
 import { Aniversarios } from '@/components/portal/Aniversarios';
 import { AoVivo, type LiveState } from '@/components/portal/AoVivo';
+import { EstouAqui } from '@/components/portal/EstouAqui';
 import { eventPhotoSrc } from '@/lib/events';
 import { Swords, Trophy } from 'lucide-react';
 
@@ -248,6 +249,9 @@ export default function PortalInicioPage(): React.ReactElement {
 
       {/* Está no ar? Nada é mais urgente na tela. */}
       <AoVivo live={data.live ?? null} />
+
+      {/* Presença no culto: só aparece perto do horário */}
+      <EstouAqui />
 
       <EnableNotifications />
 
