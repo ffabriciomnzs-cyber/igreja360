@@ -18,6 +18,7 @@ import { VisitorsModule } from './visitors/visitors.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { TeamsModule } from './teams/teams.module';
 import { SchoolModule } from './school/school.module';
+import { KidsModule } from './kids/kids.module';
 import { SettingsModule } from './settings/settings.module';
 import { WorshipModule } from './worship/worship.module';
 import { UsersModule } from './users/users.module';
@@ -51,6 +52,7 @@ import { HealthController } from './health.controller';
     AttendanceModule,
     TeamsModule,
     SchoolModule,
+    KidsModule,
     WorshipModule,
     UsersModule,
     MemberAuthModule,

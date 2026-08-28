@@ -43,6 +43,69 @@ model Church {
   attendances    Attendance[]
   teams          MinistryTeam[]
   schoolClasses  SchoolClass[]
+  children       Child[]
+}
+
+// Criança do ministério infantil.
+//
+// `restrictions` é o campo mais sério do sistema: guarda quem NÃO pode
+// retirar (guarda judicial, separação). A equipe do Kids vê isso em
+// destaque na hora da entrega.
+model Child {
+  id           String   @id @default(cuid())
+  churchId     String
+  church       Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  name         String
+  birthDate    DateTime?
+  // Alergias, remédios, necessidades especiais.
+  notes        String?
+  restrictions String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  guardians    ChildGuardian[]
+  checkins     KidsCheckin[]
+
+  @@index([churchId, active])
+}
+
+// Quem pode deixar e buscar a criança.
+model ChildGuardian {
+  id        String  @id @default(cuid())
+  churchId  String
+  childId   String
+  child     Child   @relation(fields: [childId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String?
+  relation  String?
+  // Vínculo com o cadastro de membro, quando o responsável é da igreja.
+  memberId  String?
+  canPickup Boolean @default(true)
+
+  @@index([childId])
+}
+
+// Entrada e saída da criança no culto.
+//
+// O `code` é a trava: gerado na entrega e exigido na retirada. Sem ele,
+// ninguém leva a criança — é o que separa "controle de presença" de
+// "segurança de verdade".
+model KidsCheckin {
+  id           String    @id @default(cuid())
+  churchId     String
+  childId      String
+  child        Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  day          String
+  code         String
+  room         String?
+  checkedInAt  DateTime  @default(now())
+  checkedInBy  String
+  checkedInByUserId String?
+  checkedOutAt DateTime?
+  checkedOutBy String?
+  checkedOutByUserId String?
+
+  @@index([churchId, day])
+  @@index([childId])
 }
 
 // Escola Bíblica: turma, professor e sala.
