@@ -16,6 +16,7 @@ import { PrayersModule } from './prayers/prayers.module';
 import { ReportsModule } from './reports/reports.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { TeamsModule } from './teams/teams.module';
 import { SettingsModule } from './settings/settings.module';
 import { WorshipModule } from './worship/worship.module';
 import { UsersModule } from './users/users.module';
@@ -47,6 +48,7 @@ import { HealthController } from './health.controller';
     SettingsModule,
     VisitorsModule,
     AttendanceModule,
+    TeamsModule,
     WorshipModule,
     UsersModule,
     MemberAuthModule,

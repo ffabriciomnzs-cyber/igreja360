@@ -41,6 +41,60 @@ model Church {
   birthdayGreetings BirthdayGreeting[]
   visitors       Visitor[]
   attendances    Attendance[]
+  teams          MinistryTeam[]
+}
+
+// Equipe que serve na igreja: louvor, recepção, som, kids, diaconia.
+model MinistryTeam {
+  id        String   @id @default(cuid())
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  members   TeamMember[]
+  slots     ScheduleSlot[]
+
+  @@index([churchId, active])
+}
+
+// Quem faz parte da equipe (e a função habitual: vocal, guitarra, portaria).
+model TeamMember {
+  id       String       @id @default(cuid())
+  churchId String
+  teamId   String
+  team     MinistryTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  memberId String
+  role     String?
+
+  @@unique([teamId, memberId])
+  @@index([memberId])
+}
+
+enum ScheduleStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+}
+
+// Uma escalação: fulano serve na equipe X, no dia Y.
+// O @@unique impede escalar a mesma pessoa duas vezes no mesmo dia e equipe.
+model ScheduleSlot {
+  id          String         @id @default(cuid())
+  churchId    String
+  teamId      String
+  team        MinistryTeam   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  memberId    String
+  date        DateTime
+  role        String?
+  status      ScheduleStatus @default(PENDING)
+  note        String?
+  createdAt   DateTime       @default(now())
+  respondedAt DateTime?
+
+  @@unique([teamId, memberId, date])
+  @@index([churchId, date])
+  @@index([memberId, date])
 }
 
 // Presença no culto. Uma por membro por dia (@@unique): duas pessoas do mesmo

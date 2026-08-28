@@ -25,6 +25,7 @@ import { ArenaRegras } from '@/components/portal/ArenaRegras';
 import { Aniversarios } from '@/components/portal/Aniversarios';
 import { AoVivo, type LiveState } from '@/components/portal/AoVivo';
 import { EstouAqui } from '@/components/portal/EstouAqui';
+import { MinhaEscala } from '@/components/portal/MinhaEscala';
 import { eventPhotoSrc } from '@/lib/events';
 import { Swords, Trophy } from 'lucide-react';
 
@@ -252,6 +253,9 @@ export default function PortalInicioPage(): React.ReactElement {
 
       {/* Presença no culto: só aparece perto do horário */}
       <EstouAqui />
+
+      {/* Onde eu sirvo nos próximos cultos */}
+      <MinhaEscala />
 
       <EnableNotifications />
 

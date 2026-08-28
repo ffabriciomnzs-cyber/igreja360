@@ -27,6 +27,7 @@ import { CurrentMember } from './current-member.decorator';
 import { PushService } from '../push/push.service';
 import { BirthdaysService } from './birthdays.service';
 import { AttendanceService } from '../attendance/attendance.service';
+import { TeamsService } from '../teams/teams.service';
 
 @Controller('member-auth')
 export class MemberAuthController {
@@ -36,6 +37,7 @@ export class MemberAuthController {
     private readonly push: PushService,
     private readonly birthdays: BirthdaysService,
     private readonly attendance: AttendanceService,
+    private readonly teams: TeamsService,
   ) {}
 
   // Chave pública VAPID p/ o membro se inscrever nas notificações (null se off).
@@ -175,6 +177,24 @@ export class MemberAuthController {
   @UseGuards(MemberJwtGuard)
   checkIn(@CurrentMember() member: MemberPrincipal) {
     return this.attendance.checkIn(member.churchId, member.id);
+  }
+
+  // Minha escala: onde e quando eu sirvo, e a confirmação.
+  @Get('schedule')
+  @UseGuards(MemberJwtGuard)
+  mySchedule(@CurrentMember() member: MemberPrincipal) {
+    return this.teams.mySchedule(member.churchId, member.id);
+  }
+
+  @Post('schedule/:id/respond')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  respondSchedule(
+    @CurrentMember() member: MemberPrincipal,
+    @Param('id') id: string,
+    @Body() body: { confirm?: boolean },
+  ) {
+    return this.teams.respond(member.churchId, member.id, id, !!body?.confirm);
   }
 
   @Get('me')
