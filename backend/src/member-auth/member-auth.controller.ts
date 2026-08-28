@@ -106,7 +106,26 @@ export class MemberAuthController {
   @Get('events/:id')
   @UseGuards(MemberJwtGuard)
   event(@CurrentMember() member: MemberPrincipal, @Param('id') id: string) {
-    return this.portal.event(member.churchId, id);
+    return this.portal.event(member.churchId, id, member.id);
+  }
+
+  @Post('events/:id/register')
+  @HttpCode(200)
+  @UseGuards(MemberJwtGuard)
+  registerForEvent(
+    @CurrentMember() member: MemberPrincipal,
+    @Param('id') id: string,
+  ) {
+    return this.portal.registerForEvent(member.churchId, member.id, id);
+  }
+
+  @Delete('events/:id/register')
+  @UseGuards(MemberJwtGuard)
+  cancelEventRegistration(
+    @CurrentMember() member: MemberPrincipal,
+    @Param('id') id: string,
+  ) {
+    return this.portal.cancelEventRegistration(member.churchId, member.id, id);
   }
 
   // Aniversariantes de hoje e da semana + os recados que EU recebi.

@@ -3,8 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ArenaService } from '../arena/arena.service';
+import { montaLive } from '../settings/live.service';
 
 // Trilhas temáticas do devocional. O conteúdo mora no app
 // (web/lib/devotional-trails.ts) — aqui só validamos o id e o tamanho.
@@ -401,7 +403,7 @@ export class PortalService {
 
   async home(churchId: string) {
     const now = new Date();
-    const [worship, events, campaigns, announcements, schedules] =
+    const [worship, events, campaigns, announcements, live, schedules] =
       await this.prisma.$transaction([
       this.prisma.worshipService.findMany({
         where: { churchId, date: { gte: now } },
@@ -428,7 +430,9 @@ export class PortalService {
           endDate: true,
           location: true,
           type: true,
+          capacity: true,
           photoUpdatedAt: true,
+          _count: { select: { registrations: true } },
         },
       }),
       this.prisma.campaign.findMany({
@@ -455,6 +459,15 @@ export class PortalService {
           createdAt: true,
         },
       }),
+      this.prisma.church.findUniqueOrThrow({
+        where: { id: churchId },
+        select: {
+          liveUrl: true,
+          liveTitle: true,
+          liveActive: true,
+          liveStartedAt: true,
+        },
+      }),
       this.prisma.serviceSchedule.findMany({
         where: { churchId, active: true },
         orderBy: [{ order: 'asc' }, { weekday: 'asc' }, { time: 'asc' }],
@@ -470,7 +483,17 @@ export class PortalService {
 
     return {
       worship,
-      events: events.map(comFotoUrl),
+      events: events.map((e) => {
+        const { _count, ...resto } = e;
+        return {
+          ...comFotoUrl(resto),
+          capacity: e.capacity,
+          registrations: _count.registrations,
+          spotsLeft:
+            e.capacity != null ? Math.max(0, e.capacity - _count.registrations) : null,
+        };
+      }),
+      live: montaLive(live),
       schedules,
       // Campeão da semana encerrada — a coroa da tela inicial.
       arenaChampion: await this.arena.campeaoDaSemana(churchId),
@@ -492,7 +515,7 @@ export class PortalService {
   }
 
   /** Detalhe de um evento para o portal — escopado pela igreja do membro. */
-  async event(churchId: string, eventId: string) {
+  async event(churchId: string, eventId: string, memberId?: string) {
     const evento = await this.prisma.event.findFirst({
       where: { id: eventId, churchId },
       select: {
@@ -505,10 +528,93 @@ export class PortalService {
         capacity: true,
         type: true,
         photoUpdatedAt: true,
+        _count: { select: { registrations: true } },
       },
     });
     if (!evento) throw new NotFoundException('Evento não encontrado.');
-    return comFotoUrl(evento);
+
+    const minha = memberId
+      ? await this.prisma.eventRegistration.findUnique({
+          where: { eventId_memberId: { eventId, memberId } },
+          select: { id: true },
+        })
+      : null;
+
+    const { _count, ...resto } = evento;
+    return {
+      ...comFotoUrl(resto),
+      registrations: _count.registrations,
+      spotsLeft:
+        evento.capacity != null
+          ? Math.max(0, evento.capacity - _count.registrations)
+          : null,
+      registered: !!minha,
+    };
+  }
+
+  /**
+   * Inscreve o membro no evento.
+   *
+   * A última vaga é o ponto delicado: contar e inserir numa transação comum
+   * NÃO basta — no isolamento padrão do PostgreSQL, duas pessoas tocando ao
+   * mesmo tempo leem a mesma contagem e as duas entram. Por isso a transação
+   * é SERIALIZABLE: o banco recusa uma das duas, e nós devolvemos "vagas
+   * esgotadas" para ela em vez de estourar um erro feio.
+   */
+  async registerForEvent(churchId: string, memberId: string, eventId: string) {
+    const evento = await this.prisma.event.findFirst({
+      where: { id: eventId, churchId },
+      select: { id: true, capacity: true, date: true, name: true },
+    });
+    if (!evento) throw new NotFoundException('Evento não encontrado.');
+    if (evento.date.getTime() < Date.now()) {
+      throw new BadRequestException('Este evento já aconteceu.');
+    }
+
+    try {
+      await this.prisma.$transaction(
+        async (tx) => {
+          if (evento.capacity != null) {
+            const ocupadas = await tx.eventRegistration.count({
+              where: { eventId },
+            });
+            if (ocupadas >= evento.capacity) {
+              throw new BadRequestException(
+                'As vagas para este evento acabaram.',
+              );
+            }
+          }
+          await tx.eventRegistration.create({
+            data: { churchId, eventId, memberId },
+          });
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+    } catch (err) {
+      const codigo = (err as { code?: string }).code;
+      // P2002 = já existe inscrição (dois cliques no mesmo botão). Não é erro
+      // para o membro: ele queria estar inscrito, e está.
+      if (codigo === 'P2002') return this.event(churchId, eventId, memberId);
+      // P2034 = o banco desfez esta transação para não furar a lotação.
+      if (codigo === 'P2034') {
+        throw new BadRequestException('As vagas para este evento acabaram.');
+      }
+      throw err;
+    }
+
+    return this.event(churchId, eventId, memberId);
+  }
+
+  /** Cancela a inscrição e libera a vaga. */
+  async cancelEventRegistration(
+    churchId: string,
+    memberId: string,
+    eventId: string,
+  ) {
+    await this.prisma.eventRegistration.deleteMany({
+      where: { eventId, memberId, churchId },
+    });
+    return this.event(churchId, eventId, memberId);
   }
 
   async me(memberId: string) {

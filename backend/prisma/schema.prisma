@@ -19,6 +19,12 @@ model Church {
   site           String?
   denomination   String?
   serviceHours   String?
+  // Transmissão ao vivo: o YouTube faz o trabalho pesado (e aguenta qualquer
+  // audiência de graça); o app só embute o player e avisa a igreja.
+  liveUrl        String?
+  liveTitle      String?
+  liveActive     Boolean         @default(false)
+  liveStartedAt  DateTime?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   users          User[]
@@ -71,6 +77,21 @@ model PayableInstallment {
   @@unique([payableId, number])
   @@index([churchId, dueDate])
   @@index([churchId, paidAt])
+}
+
+// Inscrição do membro num evento com vagas limitadas. O `@@unique` é o que
+// impede a mesma pessoa de ocupar duas vagas (dois cliques, dois aparelhos).
+model EventRegistration {
+  id        String   @id @default(cuid())
+  churchId  String
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  memberId  String
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, memberId])
+  @@index([churchId, eventId])
+  @@index([memberId])
 }
 
 // Recado de aniversário que um membro deixa para outro. O `year` faz o
@@ -428,6 +449,7 @@ model Event {
   // pública (?v=) para o cache do navegador expirar quando a imagem trocar.
   photoUpdatedAt DateTime?
   createdAt   DateTime  @default(now())
+  registrations EventRegistration[]
 
   @@index([churchId])
 }

@@ -23,6 +23,7 @@ import { MuralOracao } from '@/components/portal/MuralOracao';
 import { ArenaCampeao, type ArenaChampion } from '@/components/portal/ArenaCampeao';
 import { ArenaRegras } from '@/components/portal/ArenaRegras';
 import { Aniversarios } from '@/components/portal/Aniversarios';
+import { AoVivo, type LiveState } from '@/components/portal/AoVivo';
 import { eventPhotoSrc } from '@/lib/events';
 import { Swords, Trophy } from 'lucide-react';
 
@@ -51,6 +52,8 @@ interface PortalHome {
     location: string | null;
     type: string | null;
     photoUrl: string | null;
+    capacity: number | null;
+    spotsLeft: number | null;
   }[];
   schedules: {
     id: string;
@@ -60,6 +63,7 @@ interface PortalHome {
     note: string | null;
   }[];
   arenaChampion: ArenaChampion | null;
+  live: LiveState | null;
   campaigns: {
     id: string;
     title: string;
@@ -241,6 +245,10 @@ export default function PortalInicioPage(): React.ReactElement {
   return (
     <div className="space-y-6">
       <ArenaRegras />
+
+      {/* Está no ar? Nada é mais urgente na tela. */}
+      <AoVivo live={data.live ?? null} />
+
       <EnableNotifications />
 
       {/* Campeão da semana: coroa, foto e nome na abertura */}
@@ -475,6 +483,19 @@ export default function PortalInicioPage(): React.ReactElement {
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400 dark:text-slate-500">
                         <span>{dateBadge(ev.date).time}</span>
+                        {ev.spotsLeft != null && (
+                          <span
+                            className={
+                              ev.spotsLeft === 0
+                                ? 'font-medium text-red-500'
+                                : 'font-medium text-emerald-600 dark:text-emerald-400'
+                            }
+                          >
+                            {ev.spotsLeft === 0
+                              ? 'Esgotado'
+                              : `${ev.spotsLeft} vaga${ev.spotsLeft > 1 ? 's' : ''}`}
+                          </span>
+                        )}
                         {ev.location && (
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />

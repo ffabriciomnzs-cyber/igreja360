@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { api, extractApiError } from '@/lib/api';
+import { AoVivoCard } from '@/components/settings/AoVivoCard';
 import { AgendaFixa } from '@/components/settings/AgendaFixa';
 import { fileToCompressedDataUrl, removeDarkBackground } from '@/lib/image';
 import { getStoredUser, updateStoredUser } from '@/lib/auth';
@@ -215,6 +216,10 @@ export default function SettingsPage(): React.ReactElement {
         description="Dados da igreja e da sua conta."
       />
 
+
+      <div className="mb-6">
+        <AoVivoCard />
+      </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>

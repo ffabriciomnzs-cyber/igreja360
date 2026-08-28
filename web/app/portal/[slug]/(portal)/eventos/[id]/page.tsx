@@ -14,8 +14,10 @@ import {
   MapPin,
   Share2,
   Users,
+  UserPlus,
+  Check,
 } from 'lucide-react';
-import { memberApi } from '@/lib/member-api';
+import { memberApi, memberApiError } from '@/lib/member-api';
 import { eventPhotoSrc } from '@/lib/events';
 
 interface EventoPortal {
@@ -28,6 +30,9 @@ interface EventoPortal {
   capacity: number | null;
   type: string | null;
   photoUrl: string | null;
+  registrations: number;
+  spotsLeft: number | null;
+  registered: boolean;
 }
 
 function dataLonga(iso: string): string {
@@ -70,6 +75,28 @@ export default function EventoPage(): React.ReactElement {
       ativo = false;
     };
   }, [id]);
+
+  const [inscrevendo, setInscrevendo] = useState(false);
+
+  /** Entra ou sai da lista de inscritos; o servidor devolve o evento atualizado. */
+  async function alternaInscricao(): Promise<void> {
+    if (!evento) return;
+    setInscrevendo(true);
+    try {
+      const { data } = evento.registered
+        ? await memberApi.delete<EventoPortal>(
+            `/member-auth/events/${evento.id}/register`,
+          )
+        : await memberApi.post<EventoPortal>(
+            `/member-auth/events/${evento.id}/register`,
+          );
+      setEvento(data);
+    } catch (err) {
+      alert(memberApiError(err));
+    } finally {
+      setInscrevendo(false);
+    }
+  }
 
   async function compartilhar(): Promise<void> {
     if (!evento) return;
@@ -185,6 +212,51 @@ export default function EventoPage(): React.ReactElement {
             <p className="mt-4 whitespace-pre-line border-t border-slate-100 pt-4 text-sm leading-relaxed text-slate-600 dark:border-slate-800 dark:text-slate-300">
               {evento.description}
             </p>
+          )}
+
+          {/* Inscrição: só faz sentido quando a igreja limitou as vagas */}
+          {evento.spotsLeft !== null && (
+            <div className="mt-4 rounded-xl border border-border p-3">
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <span className="text-slate-600 dark:text-slate-300">
+                  {evento.registrations} inscrito
+                  {evento.registrations === 1 ? '' : 's'}
+                </span>
+                <span
+                  className={
+                    evento.spotsLeft === 0
+                      ? 'font-semibold text-red-500'
+                      : 'font-semibold text-emerald-600 dark:text-emerald-400'
+                  }
+                >
+                  {evento.spotsLeft === 0
+                    ? 'Vagas esgotadas'
+                    : `${evento.spotsLeft} vaga${evento.spotsLeft > 1 ? 's' : ''} restante${evento.spotsLeft > 1 ? 's' : ''}`}
+                </span>
+              </div>
+              <button
+                onClick={alternaInscricao}
+                disabled={inscrevendo || (evento.spotsLeft === 0 && !evento.registered)}
+                className={`mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60 ${
+                  evento.registered
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                {inscrevendo ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : evento.registered ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <UserPlus className="h-4 w-4" />
+                )}
+                {evento.registered
+                  ? 'Você está inscrito — cancelar'
+                  : evento.spotsLeft === 0
+                    ? 'Sem vagas'
+                    : 'Quero participar'}
+              </button>
+            </div>
           )}
 
           <button

@@ -14,6 +14,7 @@ import { UpdateChurchDto } from './dto/update-church.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ServiceSchedulesDto } from './dto/service-schedule.dto';
+import { LiveService } from './live.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -23,7 +24,29 @@ import { AuthUser } from '../auth/types/auth.types';
 @Controller('settings')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SettingsController {
-  constructor(private readonly settingsService: SettingsService) {}
+  constructor(
+    private readonly settingsService: SettingsService,
+    private readonly live: LiveService,
+  ) {}
+
+  // Transmissão ao vivo (link do YouTube que o app embute).
+  @Get('live')
+  getLive(@CurrentUser() user: AuthUser) {
+    return this.live.get(user.churchId);
+  }
+
+  @Put('live')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.PASTOR, UserRole.SECRETARY)
+  setLive(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: { url?: string; title?: string; active?: boolean },
+  ) {
+    return this.live.set(user.churchId, {
+      url: dto?.url,
+      title: dto?.title,
+      active: !!dto?.active,
+    });
+  }
 
   @Get('church')
   getChurch(@CurrentUser() user: AuthUser) {
