@@ -15,17 +15,18 @@ import { PushService } from './push.service';
  * Isso vale para reinício da API, deploy repetido e duas réplicas ao mesmo
  * tempo — ninguém recebe o aviso duas vezes.
  *
- * Depois de disparado, este arquivo pode ser removido.
+ * A chave carrega a data justamente para poder ser reusada: para mandar um
+ * aviso novo, troca-se o texto e a chave, e o anterior continua travado.
  */
-const CHAVE = 'aviso:arena-cronometro:2026-09';
+const CHAVE = 'aviso:arena-rodada-completa:2026-09-06';
 
-const TITULO = 'A Arena Bíblica agora tem cronômetro';
+const TITULO = 'Novas regras da Arena Bíblica';
 
 const TEXTO = [
-  'A partir de agora, cada pergunta da Arena tem 30 segundos para ser respondida. Passou do tempo, a pergunta vale 0 ponto e não volta — e sair do app não pausa o relógio.',
-  'Os pontos de hoje foram zerados para todo mundo começar junto, e as perguntas do dia foram trocadas.',
-  'Chegaram quase 100 perguntas novas: agora dá mais de um mês de desafio sem repetir nenhuma.',
-  'O resto continua igual: 12 perguntas por dia, 10 pontos por acerto, e a semana fecha no sábado. No domingo, quem estiver em 1º lugar ganha a coroa na tela inicial.',
+  'Duas mudanças na Arena, pedidas por vocês.',
+  '1) Agora a pergunta só aparece — e o cronômetro só começa — quando você toca em "Começar". Entrar na Arena não gasta mais o seu tempo.',
+  '2) Os pontos do dia só entram no ranking depois que você enfrentar as 12 perguntas. Parar no meio não pontua. Errar, sim: o que conta é terminar.',
+  'O resto continua igual: 30 segundos por pergunta, 10 pontos por acerto, e a disputa fecha no sábado. No domingo sai o campeão da semana — e agora dá para compartilhar a coroa no status do WhatsApp.',
 ].join('\n\n');
 
 @Injectable()
@@ -63,8 +64,8 @@ export class AnnounceService implements OnApplicationBootstrap {
       });
       await this.push.notifyChurch(
         igreja.id,
-        `⏱️ ${TITULO}`,
-        'Cada pergunta tem 30 segundos. Os pontos de hoje foram zerados — todo mundo começa junto!',
+        `▶️ ${TITULO}`,
+        'Agora você decide quando o relógio começa — e os pontos só valem se você responder as 12. Vem ver!',
         'announcements',
         // O toque leva direto para o jogo, não para a tela inicial.
         'arena',

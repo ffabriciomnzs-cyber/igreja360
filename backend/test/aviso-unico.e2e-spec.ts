@@ -38,7 +38,7 @@ describe('Aviso único do deploy', () => {
     // Primeira subida da API.
     await aviso.onApplicationBootstrap();
     expect(enviados).toHaveLength(1);
-    expect(enviados[0]).toContain('cronômetro');
+    expect(enviados[0]).toContain('Arena');
     expect(await prismaOf(app).communication.count()).toBe(1);
 
     // Reinício, deploy repetido, segunda réplica: nada de novo pode sair.
@@ -51,7 +51,7 @@ describe('Aviso único do deploy', () => {
     const salvo = await prismaOf(app).communication.findFirst({
       where: { churchId: A.churchId },
     });
-    expect(salvo?.content).toContain('30 segundos');
+    expect(salvo?.content).toContain('Arena');
   });
 
   it('avisa cada igreja uma vez (uma instalação com mais de uma)', async () => {
