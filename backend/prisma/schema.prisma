@@ -778,6 +778,16 @@ enum WorshipStatus {
 /// JavaScript para responder com calma. Aqui fica a hora real da abertura, e
 /// é contra ela que a resposta é conferida. Reabrir a pergunta NÃO reinicia a
 /// contagem — senão fechar e voltar ao app daria tempo infinito.
+/// Trava de "isto roda uma vez só".
+///
+/// Existe para avisos e correções pontuais que precisam acontecer no deploy e
+/// nunca mais: a chave é o id, então a segunda tentativa de inserir falha e o
+/// trabalho é pulado — inclusive se a API reiniciar ou rodar em duas réplicas.
+model SystemFlag {
+  key       String   @id
+  createdAt DateTime @default(now())
+}
+
 model ArenaQuestionOpen {
   id         String   @id @default(cuid())
   churchId   String

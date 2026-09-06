@@ -55,7 +55,7 @@ export function ArenaRegras(): React.ReactElement | null {
       icone: RotateCcw,
       titulo: 'A largada é a mesma para todo mundo',
       texto:
-        'A semana virou neste domingo, então o placar está zerado para a igreja inteira. E chegaram quase 100 perguntas novas: agora dá mais de um mês de desafio sem nenhuma se repetir.',
+        'Os pontos de hoje foram zerados e as perguntas do dia foram trocadas, para ninguém sair na frente por ter jogado antes do cronômetro. E chegaram quase 100 perguntas novas: mais de um mês de desafio sem nenhuma se repetir.',
     },
     {
       icone: Crown,

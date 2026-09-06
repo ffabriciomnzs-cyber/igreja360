@@ -44,6 +44,9 @@ export function prismaOf(app: INestApplication): PrismaService {
 export async function resetDb(prisma: PrismaService): Promise<void> {
   await prisma.pushSubscription.deleteMany({});
   await prisma.church.deleteMany({});
+  // SystemFlag não pende de igreja nenhuma, então a cascata não o alcança:
+  // sem isto, um teste herdaria a trava deixada pelo anterior.
+  await prisma.systemFlag.deleteMany({});
 }
 
 export interface IgrejaFixture {
