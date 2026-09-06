@@ -11,6 +11,19 @@ import { Ciclo, cicloAnterior, cicloDoDia } from './cycle';
 const PERGUNTAS_POR_DIA = 12;
 const PONTOS_POR_ACERTO = 10;
 
+/**
+ * Cronômetro: 30 segundos por pergunta.
+ *
+ * O relógio é do SERVIDOR. Um contador de navegador é enfeite — basta pausar
+ * o JavaScript para responder com calma. Aqui a hora de abertura é gravada
+ * quando a pergunta é entregue, e a resposta é conferida contra ela.
+ *
+ * A tolerância cobre o trajeto da rede: sem ela, quem está no 4G da igreja
+ * perderia pontos por causa de meio segundo de latência, e não por não saber.
+ */
+const SEGUNDOS_POR_PERGUNTA = 30;
+const TOLERANCIA_MS = 3_000;
+
 /** "AAAA-MM-DD" no fuso de Brasília — o dia vira à meia-noite BRT, não UTC. */
 function hojeBrt(): string {
   const brt = new Date(Date.now() - 3 * 3600_000);
@@ -110,27 +123,46 @@ export class ArenaService {
     const day = hojeBrt();
     const perguntas = perguntasDoDia(day, churchId);
 
-    const respondidas = await this.prisma.arenaAnswer.findMany({
-      where: { memberId, day },
-      select: { questionId: true, choice: true, correct: true, points: true },
-    });
+    const [respondidas, aberturas] = await Promise.all([
+      this.prisma.arenaAnswer.findMany({
+        where: { memberId, day },
+        select: {
+          questionId: true,
+          choice: true,
+          correct: true,
+          points: true,
+          timedOut: true,
+        },
+      }),
+      this.prisma.arenaQuestionOpen.findMany({
+        where: { memberId, day },
+        select: { questionId: true, openedAt: true },
+      }),
+    ]);
     const porPergunta = new Map(respondidas.map((r) => [r.questionId, r]));
+    const porAbertura = new Map(aberturas.map((a) => [a.questionId, a.openedAt]));
 
     return {
       day,
       pointsPerHit: PONTOS_POR_ACERTO,
+      secondsPerQuestion: SEGUNDOS_POR_PERGUNTA,
       questions: perguntas.map((q) => {
         const resposta = porPergunta.get(q.id);
+        const abertura = porAbertura.get(q.id);
         return {
           id: q.id,
           question: q.question,
           options: q.options,
+          // Retoma o cronômetro de onde parou: quem recarrega a página no
+          // meio da pergunta não ganha 30 segundos novos.
+          remaining: abertura ? this.restante(abertura) : null,
           // Só depois de responder o membro vê o gabarito e a referência.
           answered: resposta
             ? {
                 choice: resposta.choice,
                 correct: resposta.correct,
                 points: resposta.points,
+                timedOut: resposta.timedOut,
                 answer: q.answer,
                 ref: q.ref,
               }
@@ -141,13 +173,14 @@ export class ArenaService {
   }
 
   /** Corrige e pontua NO SERVIDOR. Uma tentativa por pergunta por dia. */
-  async answer(
-    churchId: string,
-    memberId: string,
-    questionId: string,
-    choice: number,
-  ) {
-    const day = hojeBrt();
+  /** Segundos que ainda restam de uma pergunta aberta (nunca negativo). */
+  private restante(abertaEm: Date): number {
+    const decorrido = (Date.now() - abertaEm.getTime()) / 1000;
+    return Math.max(0, Math.ceil(SEGUNDOS_POR_PERGUNTA - decorrido));
+  }
+
+  /** A pergunta pedida, se ela for mesmo do desafio de hoje. */
+  private perguntaDeHoje(churchId: string, day: string, questionId: string) {
     const pergunta = perguntasDoDia(day, churchId).find(
       (q) => q.id === questionId,
     );
@@ -155,16 +188,130 @@ export class ArenaService {
     if (!pergunta) {
       throw new BadRequestException('Essa pergunta não é do desafio de hoje.');
     }
+    return pergunta;
+  }
+
+  /**
+   * Liga o cronômetro da pergunta.
+   *
+   * O upsert é o coração da defesa: se a abertura já existe, ela é MANTIDA.
+   * Reabrir não reinicia a contagem, então fechar o app, pesquisar a resposta
+   * e voltar não devolve tempo nenhum.
+   */
+  async open(churchId: string, memberId: string, questionId: string) {
+    const day = hojeBrt();
+    this.perguntaDeHoje(churchId, day, questionId);
+
+    const jaRespondeu = await this.prisma.arenaAnswer.findUnique({
+      where: { memberId_day_questionId: { memberId, day, questionId } },
+      select: { id: true },
+    });
+    if (jaRespondeu) {
+      throw new ConflictException('Você já respondeu essa pergunta hoje.');
+    }
+
+    const abertura = await this.prisma.arenaQuestionOpen.upsert({
+      where: { memberId_day_questionId: { memberId, day, questionId } },
+      create: { churchId, memberId, day, questionId },
+      update: {},
+      select: { openedAt: true },
+    });
+
+    return {
+      questionId,
+      seconds: SEGUNDOS_POR_PERGUNTA,
+      remaining: this.restante(abertura.openedAt),
+    };
+  }
+
+  /**
+   * O tempo acabou sem resposta: registra o zero para a pergunta não voltar
+   * como pendente e devolve o gabarito, que aí já pode ser mostrado.
+   */
+  async timeout(churchId: string, memberId: string, questionId: string) {
+    const day = hojeBrt();
+    const pergunta = this.perguntaDeHoje(churchId, day, questionId);
+
+    const abertura = await this.prisma.arenaQuestionOpen.findUnique({
+      where: { memberId_day_questionId: { memberId, day, questionId } },
+      select: { openedAt: true },
+    });
+    if (!abertura) {
+      throw new BadRequestException('Essa pergunta nem chegou a ser aberta.');
+    }
+    // Só o servidor decide que o tempo acabou. Sem isto, o app poderia
+    // "queimar" uma pergunta difícil na hora que quisesse.
+    if (this.restante(abertura.openedAt) > 0) {
+      throw new BadRequestException('Ainda há tempo para responder.');
+    }
+
+    try {
+      await this.prisma.arenaAnswer.create({
+        data: {
+          churchId,
+          memberId,
+          day,
+          questionId,
+          choice: -1, // -1 = não respondeu
+          correct: false,
+          points: 0,
+          timedOut: true,
+        },
+      });
+    } catch (err) {
+      if ((err as { code?: string })?.code !== 'P2002') throw err;
+      // Já registrado (dois toques, duas abas): só devolve o gabarito.
+    }
+
+    return {
+      correct: false,
+      points: 0,
+      timedOut: true,
+      answer: pergunta.answer,
+      ref: pergunta.ref,
+    };
+  }
+
+  async answer(
+    churchId: string,
+    memberId: string,
+    questionId: string,
+    choice: number,
+  ) {
+    const day = hojeBrt();
+    const pergunta = this.perguntaDeHoje(churchId, day, questionId);
     if (!Number.isInteger(choice) || choice < 0 || choice > 3) {
       throw new BadRequestException('Alternativa inválida.');
     }
 
+    // O cronômetro do servidor manda. Uma resposta que chega depois dos 30
+    // segundos vale ZERO mesmo estando certa — é o que impede pausar a tela,
+    // procurar no Google e voltar para pontuar.
+    const abertura = await this.prisma.arenaQuestionOpen.findUnique({
+      where: { memberId_day_questionId: { memberId, day, questionId } },
+      select: { openedAt: true },
+    });
+    if (!abertura) {
+      throw new BadRequestException('Abra a pergunta antes de responder.');
+    }
+    const decorridoMs = Date.now() - abertura.openedAt.getTime();
+    const timedOut = decorridoMs > SEGUNDOS_POR_PERGUNTA * 1000 + TOLERANCIA_MS;
+
     const correct = pergunta.answer === choice;
-    const points = correct ? PONTOS_POR_ACERTO : 0;
+    const points = correct && !timedOut ? PONTOS_POR_ACERTO : 0;
 
     try {
       await this.prisma.arenaAnswer.create({
-        data: { churchId, memberId, day, questionId, choice, correct, points },
+        data: {
+          churchId,
+          memberId,
+          day,
+          questionId,
+          choice,
+          correct,
+          points,
+          timedOut,
+        },
       });
     } catch (err) {
       // P2002 = violação do @@unique: já respondeu esta pergunta hoje.
@@ -176,13 +323,19 @@ export class ArenaService {
 
     // Pontuou? Confere se acabou de assumir o topo do mês — se sim, avisa a
     // igreja. Best-effort: nunca atrasa nem quebra a resposta da pergunta.
-    if (correct) {
+    if (points > 0) {
       void this.avisaSeNovoLider(churchId, memberId, points).catch(
         () => undefined,
       );
     }
 
-    return { correct, points, answer: pergunta.answer, ref: pergunta.ref };
+    return {
+      correct,
+      points,
+      timedOut,
+      answer: pergunta.answer,
+      ref: pergunta.ref,
+    };
   }
 
   /**

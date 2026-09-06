@@ -1,14 +1,15 @@
 'use client';
 
-// Aviso ÚNICO das regras novas da Arena Bíblica (ciclo semanal + campeão).
+// Aviso ÚNICO das regras novas da Arena Bíblica.
 // Aparece uma vez só, no próximo acesso ao portal, e some para sempre.
-// A chave leva ".v1": se um dia a regra mudar de novo, basta subir a versão
-// para o aviso voltar a aparecer sem afetar quem já leu o antigo.
+// A versão na chave é o mecanismo: subir de .v1 (ciclo semanal) para .v2
+// (cronômetro) faz o aviso voltar para TODO mundo, inclusive quem já leu o
+// anterior — que é exatamente o que se quer quando a regra do jogo muda.
 
 import { useEffect, useState } from 'react';
-import { Crown, CalendarDays, Swords, Trophy } from 'lucide-react';
+import { Crown, Timer, TimerOff, RotateCcw } from 'lucide-react';
 
-const CHAVE = 'igreja360.arena.regras.v1';
+const CHAVE = 'igreja360.arena.regras.v2';
 
 export function ArenaRegras(): React.ReactElement | null {
   const [aberto, setAberto] = useState(false);
@@ -39,28 +40,28 @@ export function ArenaRegras(): React.ReactElement | null {
 
   const itens = [
     {
-      icone: CalendarDays,
-      titulo: 'A disputa agora é por semana',
+      icone: Timer,
+      titulo: 'Agora cada pergunta tem 30 segundos',
       texto:
-        'Cada ciclo vai de domingo a sábado. No sábado a contagem fecha, e tudo recomeça do zero no domingo — quem começou devagar tem chance nova toda semana.',
+        'O relógio começa a correr assim que a pergunta aparece na tela. Dá tempo de ler com calma e pensar — mas não dá para consultar. Responder rápido virou parte do jogo.',
+    },
+    {
+      icone: TimerOff,
+      titulo: 'Acabou o tempo, a pergunta se fecha',
+      texto:
+        'Sem resposta dentro dos 30 segundos, aquela pergunta vale 0 ponto e não volta. E não adianta sair do app para ganhar tempo: o relógio continua correndo do lado de fora.',
+    },
+    {
+      icone: RotateCcw,
+      titulo: 'Todo mundo recomeça de hoje',
+      texto:
+        'Para ninguém sair na frente por já ter jogado sem cronômetro, os pontos de hoje foram zerados e as perguntas do dia foram trocadas. É a mesma largada para a igreja inteira.',
     },
     {
       icone: Crown,
-      titulo: 'No domingo sai o campeão',
+      titulo: 'O resto continua igual',
       texto:
-        'Quem fizer mais pontos na semana aparece com a coroa na tela inicial do app, com foto e nome, para a igreja inteira ver — e fica em destaque a semana toda.',
-    },
-    {
-      icone: Swords,
-      titulo: 'Como pontuar',
-      texto:
-        'São 12 perguntas novas por dia, 10 pontos por acerto. Cada pergunta vale uma tentativa só, então leia com calma. Jogar todo dia é o que ganha a semana.',
-    },
-    {
-      icone: Trophy,
-      titulo: 'E a pontuação de agora?',
-      texto:
-        'Nada se perde: tudo o que você já fez conta para este primeiro ciclo, que fecha neste sábado. No domingo teremos o primeiro campeão da história da Arena.',
+        'São 12 perguntas por dia, 10 pontos por acerto, e a disputa fecha no sábado. No domingo, quem estiver em 1º aparece com a coroa na tela inicial para todos verem.',
     },
   ];
 
@@ -69,12 +70,12 @@ export function ArenaRegras(): React.ReactElement | null {
       <div className="mx-auto my-auto flex min-h-full max-w-md items-center">
         <div className="w-full rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900">
           <div className="text-center">
-            <p className="text-4xl">👑</p>
+            <p className="text-4xl">⏱️</p>
             <h2 className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">
-              A Arena Bíblica mudou!
+              A Arena ficou mais difícil!
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Agora tem campeão toda semana. Veja como funciona:
+              Chegou o cronômetro. Veja o que mudou:
             </p>
           </div>
 
@@ -103,7 +104,7 @@ export function ArenaRegras(): React.ReactElement | null {
             onClick={fecha}
             className="mt-6 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white hover:bg-indigo-700"
           >
-            Entendi, quero jogar
+            Entendi, bora jogar
           </button>
         </div>
       </div>

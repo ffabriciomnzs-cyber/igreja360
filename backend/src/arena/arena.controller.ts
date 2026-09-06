@@ -15,6 +15,11 @@ import {
 } from '../member-auth/member-jwt.guard';
 import { CurrentMember } from '../member-auth/current-member.decorator';
 
+class ArenaOpenDto {
+  @IsString()
+  questionId!: string;
+}
+
 class ArenaAnswerDto {
   @IsString()
   questionId!: string;
@@ -34,6 +39,20 @@ export class ArenaController {
   @Get('today')
   today(@CurrentMember() member: MemberPrincipal) {
     return this.arena.today(member.churchId, member.id);
+  }
+
+  /** Liga o cronômetro: o servidor grava a hora em que entregou a pergunta. */
+  @Post('open')
+  @HttpCode(200)
+  open(@CurrentMember() member: MemberPrincipal, @Body() dto: ArenaOpenDto) {
+    return this.arena.open(member.churchId, member.id, dto.questionId);
+  }
+
+  /** O tempo acabou sem resposta. */
+  @Post('timeout')
+  @HttpCode(200)
+  timeout(@CurrentMember() member: MemberPrincipal, @Body() dto: ArenaOpenDto) {
+    return this.arena.timeout(member.churchId, member.id, dto.questionId);
   }
 
   @Post('answer')

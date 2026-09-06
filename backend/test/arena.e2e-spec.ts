@@ -60,6 +60,41 @@ describe('Arena Bíblica', () => {
     return q.answer;
   }
 
+  /**
+   * Liga o cronômetro. O servidor exige a abertura antes da resposta, então
+   * este é o caminho real do app — o teste tem que percorrer o mesmo.
+   */
+  const abre = (questionId: string, token = A.memberToken) =>
+    req(app, 'POST', '/v1/member-auth/arena/open', token, { questionId });
+
+  const responder = (
+    questionId: string,
+    choice: number,
+    token = A.memberToken,
+  ) =>
+    req(app, 'POST', '/v1/member-auth/arena/answer', token, {
+      questionId,
+      choice,
+    });
+
+  async function abreEResponde(
+    questionId: string,
+    choice: number,
+    token = A.memberToken,
+  ) {
+    await abre(questionId, token);
+    return responder(questionId, choice, token);
+  }
+
+  /** Empurra a abertura para o passado: simula o tempo passando. */
+  async function envelhece(questionId: string, segundos: number) {
+    const day = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
+    await prismaOf(app).arenaQuestionOpen.updateMany({
+      where: { memberId: A.memberId, day, questionId },
+      data: { openedAt: new Date(Date.now() - segundos * 1000) },
+    });
+  }
+
   describe('Desafio do dia', () => {
     it('devolve 12 perguntas SEM o gabarito', async () => {
       const { questions } = await hoje();
@@ -122,13 +157,7 @@ describe('Arena Bíblica', () => {
     it('acerto vale 10 pontos e só então revela gabarito e referência', async () => {
       const { questions } = await hoje();
       const q = questions[0];
-      const res = await req(
-        app,
-        'POST',
-        '/v1/member-auth/arena/answer',
-        A.memberToken,
-        { questionId: q.id, choice: gabarito(q.id) },
-      );
+      const res = await abreEResponde(q.id, gabarito(q.id));
       expect(res.statusCode).toBe(200);
       const corpo = JSON.parse(res.body);
       expect(corpo.correct).toBe(true);
@@ -141,13 +170,7 @@ describe('Arena Bíblica', () => {
       const { questions } = await hoje();
       const q = questions[0];
       const errada = (gabarito(q.id) + 1) % 4;
-      const res = await req(
-        app,
-        'POST',
-        '/v1/member-auth/arena/answer',
-        A.memberToken,
-        { questionId: q.id, choice: errada },
-      );
+      const res = await abreEResponde(q.id, errada);
       const corpo = JSON.parse(res.body);
       expect(corpo.correct).toBe(false);
       expect(corpo.points).toBe(0);
@@ -157,17 +180,8 @@ describe('Arena Bíblica', () => {
       const { questions } = await hoje();
       const q = questions[0];
       const certa = gabarito(q.id);
-      await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
-        questionId: q.id,
-        choice: certa,
-      });
-      const denovo = await req(
-        app,
-        'POST',
-        '/v1/member-auth/arena/answer',
-        A.memberToken,
-        { questionId: q.id, choice: certa },
-      );
+      await abreEResponde(q.id, certa);
+      const denovo = await responder(q.id, certa);
       expect(denovo.statusCode).toBe(409);
 
       // E só existe UMA resposta gravada.
@@ -208,14 +222,173 @@ describe('Arena Bíblica', () => {
     it('depois de responder, o desafio de hoje mostra o resultado daquela pergunta', async () => {
       const antes = await hoje();
       const q = antes.questions[0];
-      await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
-        questionId: q.id,
-        choice: gabarito(q.id),
-      });
+      await abreEResponde(q.id, gabarito(q.id));
       const depois = await hoje();
       const respondida = depois.questions.find((x) => x.id === q.id);
       expect(respondida?.answered?.correct).toBe(true);
       expect(respondida?.answered?.points).toBe(10);
+    });
+  });
+
+  /**
+   * Cronômetro (30s por pergunta).
+   *
+   * A regra só vale alguma coisa se o relógio for do SERVIDOR: um contador de
+   * navegador se pausa com uma linha no console. Por isso os testes abaixo
+   * envelhecem a ABERTURA gravada no banco, não o cronômetro da tela.
+   */
+  describe('Cronômetro', () => {
+    it('abrir a pergunta liga o relógio em 30 segundos', async () => {
+      const { questions } = await hoje();
+      const res = await abre(questions[0].id);
+      expect(res.statusCode).toBe(200);
+      const corpo = JSON.parse(res.body);
+      expect(corpo.seconds).toBe(30);
+      expect(corpo.remaining).toBeGreaterThan(27);
+      expect(corpo.remaining).toBeLessThanOrEqual(30);
+    });
+
+    it('REABRIR não reinicia a contagem', async () => {
+      const { questions } = await hoje();
+      const q = questions[0];
+      await abre(q.id);
+      await envelhece(q.id, 25); // 25s se passaram
+
+      // Fechar o app, pesquisar a resposta e voltar não devolve tempo.
+      const denovo = JSON.parse((await abre(q.id)).body);
+      expect(denovo.remaining).toBeLessThanOrEqual(5);
+    });
+
+    it('responder DENTRO do tempo pontua normalmente', async () => {
+      const { questions } = await hoje();
+      const q = questions[0];
+      await abre(q.id);
+      await envelhece(q.id, 20);
+
+      const corpo = JSON.parse((await responder(q.id, gabarito(q.id))).body);
+      expect(corpo.correct).toBe(true);
+      expect(corpo.timedOut).toBe(false);
+      expect(corpo.points).toBe(10);
+    });
+
+    it('resposta CERTA fora do tempo vale ZERO', async () => {
+      const { questions } = await hoje();
+      const q = questions[0];
+      await abre(q.id);
+      await envelhece(q.id, 60); // muito depois dos 30s
+
+      const corpo = JSON.parse((await responder(q.id, gabarito(q.id))).body);
+      expect(corpo.correct).toBe(true); // acertou, sim
+      expect(corpo.timedOut).toBe(true);
+      expect(corpo.points).toBe(0); // mas não pontua
+
+      const gravada = await prismaOf(app).arenaAnswer.findFirst({
+        where: { memberId: A.memberId, questionId: q.id },
+      });
+      expect(gravada?.points).toBe(0);
+      expect(gravada?.timedOut).toBe(true);
+    });
+
+    it('a tolerância cobre a internet ruim, mas não o atraso de verdade', async () => {
+      const { questions } = await hoje();
+
+      // 32s: dentro da tolerância de 3s — ainda pontua.
+      const a = questions[0];
+      await abre(a.id);
+      await envelhece(a.id, 32);
+      expect(JSON.parse((await responder(a.id, gabarito(a.id))).body).points).toBe(10);
+
+      // 34s: passou da tolerância — zero.
+      const b = questions[1];
+      await abre(b.id);
+      await envelhece(b.id, 34);
+      expect(JSON.parse((await responder(b.id, gabarito(b.id))).body).points).toBe(0);
+    });
+
+    it('NÃO deixa responder sem ter aberto (sem relógio não há prova de tempo)', async () => {
+      const { questions } = await hoje();
+      const res = await responder(questions[0].id, gabarito(questions[0].id));
+      expect(res.statusCode).toBe(400);
+      expect(await prismaOf(app).arenaAnswer.count()).toBe(0);
+    });
+
+    it('o desafio de hoje devolve quanto tempo resta, para o app retomar', async () => {
+      const { questions, secondsPerQuestion } = (await hoje()) as unknown as {
+        questions: { id: string; remaining: number | null }[];
+        secondsPerQuestion: number;
+      };
+      expect(secondsPerQuestion).toBe(30);
+      expect(questions[0].remaining).toBeNull(); // nem abriu ainda
+
+      await abre(questions[0].id);
+      await envelhece(questions[0].id, 22);
+
+      const depois = (await hoje()) as unknown as {
+        questions: { id: string; remaining: number | null }[];
+      };
+      const q = depois.questions.find((x) => x.id === questions[0].id);
+      expect(q?.remaining).toBeLessThanOrEqual(8);
+      expect(q?.remaining).toBeGreaterThan(5);
+    });
+
+    it('o tempo esgotado é registrado como zero e revela o gabarito', async () => {
+      const { questions } = await hoje();
+      const q = questions[0];
+      await abre(q.id);
+      await envelhece(q.id, 45);
+
+      const res = await req(
+        app,
+        'POST',
+        '/v1/member-auth/arena/timeout',
+        A.memberToken,
+        { questionId: q.id },
+      );
+      expect(res.statusCode).toBe(200);
+      const corpo = JSON.parse(res.body);
+      expect(corpo.points).toBe(0);
+      expect(corpo.timedOut).toBe(true);
+      expect(corpo.answer).toBe(gabarito(q.id));
+
+      // A pergunta não volta como pendente no próximo acesso.
+      const depois = await hoje();
+      expect(depois.questions.find((x) => x.id === q.id)?.answered).not.toBeNull();
+    });
+
+    it('NÃO deixa "queimar" uma pergunta difícil antes do tempo acabar', async () => {
+      const { questions } = await hoje();
+      const q = questions[0];
+      await abre(q.id);
+
+      const res = await req(
+        app,
+        'POST',
+        '/v1/member-auth/arena/timeout',
+        A.memberToken,
+        { questionId: q.id },
+      );
+      expect(res.statusCode).toBe(400);
+      expect(await prismaOf(app).arenaAnswer.count()).toBe(0);
+    });
+
+    it('o tempo esgotado NÃO conta como acerto no ranking', async () => {
+      const { questions } = await hoje();
+      const q = questions[0];
+      await abre(q.id);
+      await envelhece(q.id, 60);
+      await responder(q.id, gabarito(q.id));
+
+      const r = JSON.parse(
+        (
+          await req(
+            app,
+            'GET',
+            '/v1/member-auth/arena/ranking?period=all',
+            A.memberToken,
+          )
+        ).body,
+      );
+      expect(r.me.points).toBe(0);
     });
   });
 
@@ -224,10 +397,7 @@ describe('Arena Bíblica', () => {
       const { questions } = await hoje();
       // Membro A acerta 2 perguntas = 20 pontos.
       for (const q of questions.slice(0, 2)) {
-        await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
-          questionId: q.id,
-          choice: gabarito(q.id),
-        });
+        await abreEResponde(q.id, gabarito(q.id));
       }
       const res = await req(
         app,
@@ -246,10 +416,7 @@ describe('Arena Bíblica', () => {
     it('NÃO mistura igrejas: o ranking da B não vê pontos da A', async () => {
       const B = await criarIgreja(app, 'Igreja B');
       const { questions } = await hoje();
-      await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
-        questionId: questions[0].id,
-        choice: gabarito(questions[0].id),
-      });
+      await abreEResponde(questions[0].id, gabarito(questions[0].id));
 
       const res = await req(
         app,
@@ -266,8 +433,10 @@ describe('Arena Bíblica', () => {
 
 describe('Banco e rodízio de perguntas', () => {
 
-  it('o banco tem 260 perguntas válidas e sem duplicatas', () => {
-    expect(QUESTIONS.length).toBe(260);
+  it('o banco dá pelo menos um mês sem repetir, e é válido', () => {
+    // O que importa não é o número exato, é a experiência: o rodízio consome
+    // 12 por dia, então o banco precisa cobrir um mês inteiro de desafio.
+    expect(Math.floor(QUESTIONS.length / 12)).toBeGreaterThanOrEqual(28);
     const ids = new Set(QUESTIONS.map((q) => q.id));
     expect(ids.size).toBe(QUESTIONS.length);
     const textos = new Set(QUESTIONS.map((q) => q.question));
@@ -342,6 +511,17 @@ describe('Push de novo líder do mês', () => {
     A = await criarIgreja(app, 'Igreja A');
   });
 
+  /** Abre a pergunta (liga o cronômetro do servidor) e então responde. */
+  async function abreEResponde(questionId: string, choice: number) {
+    await req(app, 'POST', '/v1/member-auth/arena/open', A.memberToken, {
+      questionId,
+    });
+    return req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
+      questionId,
+      choice,
+    });
+  }
+
   function gabaritoDe(questionId: string): number {
     const day = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
     const q = perguntasDoDia(day, A.churchId).find((x) => x.id === questionId);
@@ -368,15 +548,9 @@ describe('Push de novo líder do mês', () => {
     const questions = JSON.parse(res.body).questions as { id: string }[];
 
     // 1º acerto: vira o primeiro líder do mês → notifica.
-    await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
-      questionId: questions[0].id,
-      choice: gabaritoDe(questions[0].id),
-    });
+    await abreEResponde(questions[0].id, gabaritoDe(questions[0].id));
     // 2º acerto: JÁ era líder → não notifica de novo.
-    await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
-      questionId: questions[1].id,
-      choice: gabaritoDe(questions[1].id),
-    });
+    await abreEResponde(questions[1].id, gabaritoDe(questions[1].id));
     // O aviso é disparado sem bloquear a resposta: dá um instante.
     await new Promise((r) => setTimeout(r, 100));
 
@@ -404,10 +578,7 @@ describe('Push de novo líder do mês', () => {
     );
     const q = (JSON.parse(res.body).questions as { id: string }[])[0];
     const errada = (gabaritoDe(q.id) + 1) % 4;
-    await req(app, 'POST', '/v1/member-auth/arena/answer', A.memberToken, {
-      questionId: q.id,
-      choice: errada,
-    });
+    await abreEResponde(q.id, errada);
     await new Promise((r) => setTimeout(r, 100));
     expect(avisos).toHaveLength(0);
   });

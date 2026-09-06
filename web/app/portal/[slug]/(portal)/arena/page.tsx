@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Swords,
   Trophy,
@@ -11,6 +11,8 @@ import {
   Loader2,
   Medal,
   Crown,
+  Timer,
+  TimerOff,
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
 import { cn } from '@/lib/utils';
@@ -19,6 +21,8 @@ interface Answered {
   choice: number;
   correct: boolean;
   points: number;
+  /** Respondida (ou perdida) depois de o cronômetro fechar. */
+  timedOut?: boolean;
   answer: number;
   ref: string;
 }
@@ -27,12 +31,15 @@ interface TodayQuestion {
   id: string;
   question: string;
   options: string[];
+  /** Segundos que ainda restam; null = a pergunta nem foi aberta. */
+  remaining: number | null;
   answered: Answered | null;
 }
 
 interface Today {
   day: string;
   pointsPerHit: number;
+  secondsPerQuestion: number;
   questions: TodayQuestion[];
 }
 
@@ -97,6 +104,10 @@ export default function ArenaPage(): React.ReactElement {
   // Resultado da pergunta recém-respondida (mostra feedback antes de avançar).
   const [reveal, setReveal] = useState<Answered | null>(null);
   const [myChoice, setMyChoice] = useState<number | null>(null);
+  // Cronômetro: o número aqui é só o espelho do relógio do servidor, que é
+  // quem de fato decide se a resposta chegou a tempo.
+  const [restam, setRestam] = useState<number | null>(null);
+  const perguntaAberta = useRef<string | null>(null);
 
   useEffect(() => {
     memberApi
@@ -117,6 +128,54 @@ export default function ArenaPage(): React.ReactElement {
     () => today?.questions.find((q) => !q.answered) ?? null,
     [today],
   );
+
+  const segundos = today?.secondsPerQuestion ?? 30;
+
+  /** O tempo acabou: registra o zero e revela o gabarito. */
+  const estourou = useCallback(
+    async (questionId: string): Promise<void> => {
+      try {
+        const { data } = await memberApi.post<Answered>(
+          '/member-auth/arena/timeout',
+          { questionId },
+        );
+        setReveal({ ...data, choice: -1 });
+      } catch {
+        /* já registrado, ou sem rede: o servidor continua sendo a verdade */
+      }
+    },
+    [],
+  );
+
+  // Liga o cronômetro da pergunta atual. A hora real fica no servidor: aqui
+  // só pedimos quanto ainda resta — recarregar a página não dá tempo novo.
+  useEffect(() => {
+    if (!atual || reveal) return;
+    if (perguntaAberta.current === atual.id) return;
+    perguntaAberta.current = atual.id;
+    setRestam(null);
+
+    memberApi
+      .post<{ remaining: number }>('/member-auth/arena/open', {
+        questionId: atual.id,
+      })
+      .then((r) => {
+        if (r.data.remaining <= 0) void estourou(atual.id);
+        else setRestam(r.data.remaining);
+      })
+      .catch(() => setRestam(null));
+  }, [atual, reveal, estourou]);
+
+  // A contagem regressiva na tela.
+  useEffect(() => {
+    if (restam === null || reveal || !atual) return;
+    if (restam <= 0) {
+      void estourou(atual.id);
+      return;
+    }
+    const t = setTimeout(() => setRestam((r) => (r === null ? null : r - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [restam, reveal, atual, estourou]);
   const respondidas = today?.questions.filter((q) => q.answered) ?? [];
   const acertosHoje = respondidas.filter((q) => q.answered?.correct).length;
   const pontosHoje = respondidas.reduce(
@@ -135,6 +194,7 @@ export default function ArenaPage(): React.ReactElement {
         { questionId: atual.id, choice },
       );
       setReveal({ ...data, choice });
+      setRestam(null);
     } catch {
       setMyChoice(null);
     } finally {
@@ -153,6 +213,8 @@ export default function ArenaPage(): React.ReactElement {
     });
     setReveal(null);
     setMyChoice(null);
+    setRestam(null);
+    perguntaAberta.current = null;
     // Ranking muda quando pontua.
     memberApi
       .get<Ranking>('/member-auth/arena/ranking', { params: { period } })
@@ -168,8 +230,7 @@ export default function ArenaPage(): React.ReactElement {
           Arena Bíblica
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          12 perguntas por dia · 10 pontos por acerto · valendo o topo do
-          ranking!
+          12 perguntas por dia · 30 segundos cada · 10 pontos por acerto
         </p>
       </div>
 
@@ -209,9 +270,48 @@ export default function ArenaPage(): React.ReactElement {
                 />
               ))}
             </div>
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {respondidas.length + 1}/{today.questions.length}
-            </span>
+            <div className="flex items-center gap-3">
+              {restam !== null && !reveal && (
+                <span
+                  className={cn(
+                    'flex items-center gap-1 text-sm font-bold tabular-nums',
+                    restam <= 10
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-emerald-600 dark:text-emerald-400',
+                  )}
+                >
+                  <Timer className="h-4 w-4" />
+                  {restam}s
+                </span>
+              )}
+              {reveal?.timedOut && (
+                <span className="flex items-center gap-1 text-sm font-bold text-red-600 dark:text-red-400">
+                  <TimerOff className="h-4 w-4" />
+                  0s
+                </span>
+              )}
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {respondidas.length + 1}/{today.questions.length}
+              </span>
+            </div>
+          </div>
+
+          {/* Barra do tempo: encolhe de ponta a ponta em 30 segundos. */}
+          <div className="h-1 bg-slate-100 dark:bg-slate-800">
+            <div
+              className={cn(
+                'h-full transition-[width] duration-1000 ease-linear',
+                restam !== null && restam <= 10
+                  ? 'bg-red-500'
+                  : 'bg-emerald-500',
+              )}
+              style={{
+                width:
+                  reveal || restam === null
+                    ? '0%'
+                    : `${Math.max(0, Math.min(100, (restam / segundos) * 100))}%`,
+              }}
+            />
           </div>
 
           <div className="p-5">
@@ -222,7 +322,8 @@ export default function ArenaPage(): React.ReactElement {
             <div className="mt-4 space-y-2.5">
               {atual?.options.map((opcao, i) => {
                 const acertou = reveal && i === reveal.answer;
-                const errei = reveal && i === myChoice && !reveal.correct;
+                const errei =
+                  reveal && i === myChoice && myChoice >= 0 && !reveal.correct;
                 return (
                   <button
                     key={i}
@@ -270,14 +371,20 @@ export default function ArenaPage(): React.ReactElement {
               <div className="mt-4 space-y-3">
                 <div
                   className={cn(
-                    'flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold',
-                    reveal.correct
+                    'flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold',
+                    reveal.points > 0
                       ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
                       : 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
                   )}
                 >
                   <span>
-                    {reveal.correct ? '🎉 Acertou! +10 pontos' : 'Não foi dessa vez...'}
+                    {reveal.points > 0
+                      ? '🎉 Acertou! +10 pontos'
+                      : reveal.timedOut && reveal.correct
+                        ? 'Era essa mesmo — mas o tempo acabou. 0 ponto.'
+                        : reveal.timedOut
+                          ? 'Tempo esgotado! Esta valeu 0 ponto.'
+                          : 'Não foi dessa vez...'}
                   </span>
                   <span className="flex items-center gap-1 text-xs font-medium opacity-80">
                     <BookOpen className="h-3.5 w-3.5" />

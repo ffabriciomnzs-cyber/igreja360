@@ -230,9 +230,23 @@ describe('Contas parceladas', () => {
   describe('Resumo do topo', () => {
     it('soma o que falta, o que vence no mês e o que está atrasado', async () => {
       const prisma = prismaOf(app);
-      const conta = JSON.parse((await criar(A.adminToken)).body);
 
-      // Joga a 1ª parcela para ontem (atrasada) e a 2ª para hoje.
+      // As datas aqui são RELATIVAS a hoje de propósito. Com uma data fixa no
+      // cadastro, o teste passava a acusar atraso sozinho conforme o
+      // calendário andava — quebrava sem ninguém ter mexido no código.
+      const agora = new Date();
+      const longe = new Date(
+        Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth() + 2, 1),
+      );
+      const conta = JSON.parse(
+        (
+          await criar(A.adminToken, {
+            firstDueDate: longe.toISOString().slice(0, 10),
+          })
+        ).body,
+      );
+
+      // Só o que este teste posicionar é que conta: 1ª atrasada, 2ª e 3ª hoje.
       const ontem = new Date(Date.now() - 86_400_000);
       const hoje = new Date();
       await prisma.payableInstallment.update({
@@ -241,6 +255,10 @@ describe('Contas parceladas', () => {
       });
       await prisma.payableInstallment.update({
         where: { id: conta.items[1].id },
+        data: { dueDate: hoje },
+      });
+      await prisma.payableInstallment.update({
+        where: { id: conta.items[2].id },
         data: { dueDate: hoje },
       });
 
