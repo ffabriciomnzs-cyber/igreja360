@@ -40,6 +40,11 @@ interface Today {
   day: string;
   pointsPerHit: number;
   secondsPerQuestion: number;
+  /** Progresso da rodada: os pontos só valem quando as 12 forem enfrentadas. */
+  roundTotal: number;
+  roundAnswered: number;
+  roundComplete: boolean;
+  roundPoints: number;
   questions: TodayQuestion[];
 }
 
@@ -106,7 +111,9 @@ export default function ArenaPage(): React.ReactElement {
   const [myChoice, setMyChoice] = useState<number | null>(null);
   // Cronômetro: o número aqui é só o espelho do relógio do servidor, que é
   // quem de fato decide se a resposta chegou a tempo.
+  // null = cronômetro parado (a pergunta ainda nem foi entregue pelo servidor).
   const [restam, setRestam] = useState<number | null>(null);
+  const [abrindo, setAbrindo] = useState(false);
   const perguntaAberta = useRef<string | null>(null);
 
   useEffect(() => {
@@ -147,24 +154,45 @@ export default function ArenaPage(): React.ReactElement {
     [],
   );
 
-  // Liga o cronômetro da pergunta atual. A hora real fica no servidor: aqui
-  // só pedimos quanto ainda resta — recarregar a página não dá tempo novo.
+  /**
+   * Entrega a pergunta e liga o cronômetro — só quando a pessoa PEDE.
+   *
+   * Entrar na Arena não pode começar a contagem: alguém abre o app na fila do
+   * mercado, deixa a tela ligada e perde a pergunta sem ter lido. Por isso o
+   * enunciado fica escondido até aqui — mostrar a pergunta com o relógio
+   * parado seria o mesmo que dar tempo infinito para pesquisar a resposta.
+   */
+  const iniciar = useCallback(
+    async (questionId: string): Promise<void> => {
+      if (perguntaAberta.current === questionId) return;
+      setAbrindo(true);
+      try {
+        const { data } = await memberApi.post<{ remaining: number }>(
+          '/member-auth/arena/open',
+          { questionId },
+        );
+        perguntaAberta.current = questionId;
+        if (data.remaining <= 0) await estourou(questionId);
+        else setRestam(data.remaining);
+      } catch {
+        setRestam(null);
+      } finally {
+        setAbrindo(false);
+      }
+    },
+    [estourou],
+  );
+
+  // Voltou no meio de uma pergunta já entregue: o relógio do servidor NÃO
+  // parou enquanto o app esteve fechado, então a tela retoma de onde está.
   useEffect(() => {
-    if (!atual || reveal) return;
+    if (!atual || reveal || restam !== null) return;
+    if (atual.remaining === null) return; // ainda não foi entregue: espera o toque
     if (perguntaAberta.current === atual.id) return;
     perguntaAberta.current = atual.id;
-    setRestam(null);
-
-    memberApi
-      .post<{ remaining: number }>('/member-auth/arena/open', {
-        questionId: atual.id,
-      })
-      .then((r) => {
-        if (r.data.remaining <= 0) void estourou(atual.id);
-        else setRestam(r.data.remaining);
-      })
-      .catch(() => setRestam(null));
-  }, [atual, reveal, estourou]);
+    if (atual.remaining <= 0) void estourou(atual.id);
+    else setRestam(atual.remaining);
+  }, [atual, reveal, restam, estourou]);
 
   // A contagem regressiva na tela.
   useEffect(() => {
@@ -215,6 +243,12 @@ export default function ArenaPage(): React.ReactElement {
     setMyChoice(null);
     setRestam(null);
     perguntaAberta.current = null;
+    // O toque em "Próxima" já é a decisão de começar: não faz sentido pedir
+    // um segundo toque. Quem parar aqui volta a ver a tela de começar.
+    const proximaPergunta = today.questions.find(
+      (q) => !q.answered && q.id !== atual.id,
+    );
+    if (proximaPergunta) void iniciar(proximaPergunta.id);
     // Ranking muda quando pontua.
     memberApi
       .get<Ranking>('/member-auth/arena/ranking', { params: { period } })
@@ -230,7 +264,7 @@ export default function ArenaPage(): React.ReactElement {
           Arena Bíblica
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          12 perguntas por dia · 30 segundos cada · 10 pontos por acerto
+          12 perguntas por dia · 30 segundos cada · termine a rodada para pontuar
         </p>
       </div>
 
@@ -242,8 +276,11 @@ export default function ArenaPage(): React.ReactElement {
           <Trophy className="mx-auto h-10 w-10 text-amber-300" />
           <p className="mt-2 text-lg font-bold">Desafio de hoje concluído!</p>
           <p className="mt-1 text-sm text-indigo-100">
-            Você acertou {acertosHoje} de {today.questions.length} e marcou{' '}
+            Você acertou {acertosHoje} de {today.questions.length} e garantiu{' '}
             <span className="font-bold text-white">{pontosHoje} pontos</span>.
+          </p>
+          <p className="mx-auto mt-3 max-w-xs rounded-xl bg-white/10 px-3 py-2 text-xs leading-relaxed text-indigo-100">
+            Rodada fechada, então os pontos já entraram no ranking da semana.
           </p>
           <p className="mt-3 text-xs text-indigo-200">
             Volte amanhã — tem desafio novo todo dia. 🔥
@@ -315,6 +352,43 @@ export default function ArenaPage(): React.ReactElement {
           </div>
 
           <div className="p-5">
+            {restam === null && !reveal ? (
+              /* Tela de começar. O enunciado NÃO aparece aqui de propósito:
+                 ler a pergunta com o relógio parado seria tempo infinito. */
+              <div className="py-6 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                  <Timer className="h-7 w-7" />
+                </div>
+                <p className="mt-4 text-base font-bold text-slate-900 dark:text-slate-100">
+                  Pergunta {respondidas.length + 1} de {today.questions.length}
+                </p>
+                <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                  Você tem {segundos} segundos para responder. O relógio começa
+                  quando você tocar no botão — não antes.
+                </p>
+
+                <p className="mx-auto mt-3 max-w-xs rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                  {respondidas.length === 0
+                    ? `Responda as ${today.questions.length} perguntas para os seus pontos entrarem no ranking. Rodada pela metade não pontua.`
+                    : `Faltam ${today.questions.length - respondidas.length} para fechar a rodada e valer os ${pontosHoje} pontos que você já fez hoje.`}
+                </p>
+
+                <button
+                  onClick={() => atual && void iniciar(atual.id)}
+                  disabled={abrindo || !atual}
+                  className="mt-5 w-full rounded-xl bg-indigo-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
+                >
+                  {abrindo ? (
+                    <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+                  ) : respondidas.length === 0 ? (
+                    'Começar a rodada'
+                  ) : (
+                    'Continuar'
+                  )}
+                </button>
+              </div>
+            ) : (
+              <>
             <p className="text-base font-semibold leading-snug text-slate-900 dark:text-slate-100">
               {atual?.question}
             </p>
@@ -401,6 +475,8 @@ export default function ArenaPage(): React.ReactElement {
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
+            )}
+              </>
             )}
           </div>
         </div>

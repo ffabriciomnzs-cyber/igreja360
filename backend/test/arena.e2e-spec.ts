@@ -392,12 +392,158 @@ describe('Arena Bíblica', () => {
     });
   });
 
+  /**
+   * Rodada completa.
+   *
+   * Regra pedida pela igreja: os pontos do dia só valem quando as 12 perguntas
+   * foram enfrentadas. Isso tira do ranking quem abre o app, pega as fáceis e
+   * some — e é a diferença entre um jogo de sorte e um de constância.
+   */
+  describe('Rodada completa', () => {
+    /** Responde as N primeiras perguntas do dia, sempre acertando. */
+    async function jogaRodada(quantas: number) {
+      const { questions } = await hoje();
+      for (const q of questions.slice(0, quantas)) {
+        await abreEResponde(q.id, gabarito(q.id));
+      }
+      return questions;
+    }
+
+    const meuRanking = async () =>
+      JSON.parse(
+        (
+          await req(
+            app,
+            'GET',
+            '/v1/member-auth/arena/ranking?period=all',
+            A.memberToken,
+          )
+        ).body,
+      );
+
+    it('rodada pela metade NÃO pontua no ranking', async () => {
+      await jogaRodada(11); // 11 acertos = 110 pontos "no ar"
+      const r = await meuRanking();
+      expect(r.me.points).toBe(0);
+      expect(r.top).toHaveLength(0);
+
+      // Mas as respostas estão lá: o que falta é terminar.
+      expect(await prismaOf(app).arenaAnswer.count()).toBe(11);
+    });
+
+    it('a 12ª resposta libera os pontos do dia inteiro', async () => {
+      const questions = await jogaRodada(11);
+      expect((await meuRanking()).me.points).toBe(0);
+
+      const ultima = questions[11];
+      const res = await abreEResponde(ultima.id, gabarito(ultima.id));
+      const corpo = JSON.parse(res.body);
+      expect(corpo.roundComplete).toBe(true);
+      expect(corpo.roundPoints).toBe(120);
+
+      const r = await meuRanking();
+      expect(r.me.points).toBe(120);
+      expect(r.me.position).toBe(1);
+    });
+
+    it('errar não impede de fechar a rodada — terminar é que vale', async () => {
+      const { questions } = await hoje();
+      for (const q of questions) {
+        // Erra TODAS de propósito: a rodada fecha, valendo zero ponto.
+        await abreEResponde(q.id, (gabarito(q.id) + 1) % 4);
+      }
+      const r = await meuRanking();
+      expect(r.me.points).toBe(0);
+      // A rodada consta como concluída (12 respostas registradas).
+      expect(await prismaOf(app).arenaAnswer.count()).toBe(12);
+    });
+
+    it('pergunta perdida no tempo CONTA como enfrentada', async () => {
+      const { questions } = await hoje();
+      // 11 acertos + 1 estourada no tempo = rodada fechada, 110 pontos.
+      for (const q of questions.slice(0, 11)) {
+        await abreEResponde(q.id, gabarito(q.id));
+      }
+      const perdida = questions[11];
+      await abre(perdida.id);
+      await envelhece(perdida.id, 60);
+      await req(app, 'POST', '/v1/member-auth/arena/timeout', A.memberToken, {
+        questionId: perdida.id,
+      });
+
+      const r = await meuRanking();
+      expect(r.me.points).toBe(110);
+    });
+
+    it('o desafio de hoje avisa quanto falta para os pontos valerem', async () => {
+      await jogaRodada(3);
+      const d = (await hoje()) as unknown as {
+        roundAnswered: number;
+        roundTotal: number;
+        roundComplete: boolean;
+        roundPoints: number;
+      };
+      expect(d.roundAnswered).toBe(3);
+      expect(d.roundTotal).toBe(12);
+      expect(d.roundComplete).toBe(false);
+      expect(d.roundPoints).toBe(30); // somados, mas ainda não valendo
+    });
+
+    it('o campeão da semana também exige rodada completa', async () => {
+      // Semeia o ciclo anterior: 11 respostas certas, rodada inacabada.
+      const prisma = prismaOf(app);
+      const { cicloAnterior } = await import('../src/arena/cycle');
+      const ciclo = cicloAnterior(
+        new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10),
+      );
+      if (!ciclo) return; // ainda no primeiro ciclo: nada a testar
+      for (let i = 0; i < 11; i++) {
+        await prisma.arenaAnswer.create({
+          data: {
+            churchId: A.churchId,
+            memberId: A.memberId,
+            day: ciclo.fim,
+            questionId: `semente${i}`,
+            choice: 0,
+            correct: true,
+            points: 10,
+          },
+        });
+      }
+      const semCampeao = JSON.parse(
+        (await req(app, 'GET', '/v1/member-auth/arena/champion', A.memberToken))
+          .body || 'null',
+      );
+      expect(semCampeao).toBeNull();
+
+      // A 12ª fecha a rodada e a coroa aparece.
+      await prisma.arenaAnswer.create({
+        data: {
+          churchId: A.churchId,
+          memberId: A.memberId,
+          day: ciclo.fim,
+          questionId: 'semente11',
+          choice: 0,
+          correct: true,
+          points: 10,
+        },
+      });
+      const comCampeao = JSON.parse(
+        (await req(app, 'GET', '/v1/member-auth/arena/champion', A.memberToken))
+          .body,
+      );
+      expect(comCampeao.points).toBe(120);
+    });
+  });
+
   describe('Ranking', () => {
     it('soma pontos e coloca quem acertou na frente', async () => {
       const { questions } = await hoje();
-      // Membro A acerta 2 perguntas = 20 pontos.
-      for (const q of questions.slice(0, 2)) {
-        await abreEResponde(q.id, gabarito(q.id));
+      // Acerta 2 e erra as outras 10: 20 pontos, com a RODADA FECHADA — sem
+      // fechar, os pontos não entrariam no ranking.
+      for (const [i, q] of questions.entries()) {
+        const escolha = i < 2 ? gabarito(q.id) : (gabarito(q.id) + 1) % 4;
+        await abreEResponde(q.id, escolha);
       }
       const res = await req(
         app,
@@ -547,10 +693,15 @@ describe('Push de novo líder do mês', () => {
     );
     const questions = JSON.parse(res.body).questions as { id: string }[];
 
-    // 1º acerto: vira o primeiro líder do mês → notifica.
-    await abreEResponde(questions[0].id, gabaritoDe(questions[0].id));
-    // 2º acerto: JÁ era líder → não notifica de novo.
-    await abreEResponde(questions[1].id, gabaritoDe(questions[1].id));
+    // Acertos ao longo da rodada NÃO avisam nada: os pontos ainda não valem.
+    for (const q of questions.slice(0, 11)) {
+      await abreEResponde(q.id, gabaritoDe(q.id));
+    }
+    await new Promise((r) => setTimeout(r, 100));
+    expect(avisos.filter((a) => a.startsWith('arena|'))).toHaveLength(0);
+
+    // A 12ª fecha a rodada, os pontos passam a valer e a liderança muda.
+    await abreEResponde(questions[11].id, gabaritoDe(questions[11].id));
     // O aviso é disparado sem bloquear a resposta: dá um instante.
     await new Promise((r) => setTimeout(r, 100));
 

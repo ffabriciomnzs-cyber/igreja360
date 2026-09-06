@@ -2,14 +2,15 @@
 
 // Aviso ÚNICO das regras novas da Arena Bíblica.
 // Aparece uma vez só, no próximo acesso ao portal, e some para sempre.
-// A versão na chave é o mecanismo: subir de .v1 (ciclo semanal) para .v2
-// (cronômetro) faz o aviso voltar para TODO mundo, inclusive quem já leu o
-// anterior — que é exatamente o que se quer quando a regra do jogo muda.
+// A versão na chave é o mecanismo: subir a versão faz o aviso voltar para
+// TODO mundo, inclusive quem já leu o anterior — que é exatamente o que se
+// quer quando a regra do jogo muda. v1: ciclo semanal. v2: cronômetro.
+// v3: botão de começar + rodada completa.
 
 import { useEffect, useState } from 'react';
-import { Crown, Timer, TimerOff, RotateCcw } from 'lucide-react';
+import { Crown, Timer, PlayCircle, ListChecks } from 'lucide-react';
 
-const CHAVE = 'igreja360.arena.regras.v2';
+const CHAVE = 'igreja360.arena.regras.v3';
 
 export function ArenaRegras(): React.ReactElement | null {
   const [aberto, setAberto] = useState(false);
@@ -40,28 +41,28 @@ export function ArenaRegras(): React.ReactElement | null {
 
   const itens = [
     {
+      icone: PlayCircle,
+      titulo: 'Você decide quando o relógio começa',
+      texto:
+        'Entrar na Arena não inicia mais a contagem. A pergunta fica escondida até você tocar em "Começar" — aí ela aparece e o cronômetro liga. Dá para abrir o app na fila do mercado sem perder ponto.',
+    },
+    {
       icone: Timer,
-      titulo: 'Agora cada pergunta tem 30 segundos',
+      titulo: 'Cada pergunta tem 30 segundos',
       texto:
-        'O relógio começa a correr assim que a pergunta aparece na tela. Dá tempo de ler com calma e pensar — mas não dá para consultar. Responder rápido virou parte do jogo.',
+        'Dá tempo de ler com calma e pensar, mas não de consultar. Passou do tempo, aquela pergunta vale 0 e não volta — e sair do app não pausa o relógio.',
     },
     {
-      icone: TimerOff,
-      titulo: 'Acabou o tempo, a pergunta se fecha',
+      icone: ListChecks,
+      titulo: 'Os pontos só valem com a rodada inteira',
       texto:
-        'Sem resposta dentro dos 30 segundos, aquela pergunta vale 0 ponto e não volta. E não adianta sair do app para ganhar tempo: o relógio continua correndo do lado de fora.',
-    },
-    {
-      icone: RotateCcw,
-      titulo: 'A largada é a mesma para todo mundo',
-      texto:
-        'Os pontos de hoje foram zerados e as perguntas do dia foram trocadas, para ninguém sair na frente por ter jogado antes do cronômetro. E chegaram quase 100 perguntas novas: mais de um mês de desafio sem nenhuma se repetir.',
+        'São 12 perguntas por dia, e o seu placar do dia só entra no ranking depois que você enfrentar as 12. Parar no meio não pontua. Errar tudo, sim: o que conta é terminar, não acertar.',
     },
     {
       icone: Crown,
-      titulo: 'O resto continua igual',
+      titulo: 'A coroa continua sendo no domingo',
       texto:
-        'São 12 perguntas por dia, 10 pontos por acerto, e a disputa fecha no sábado. No domingo, quem estiver em 1º aparece com a coroa na tela inicial para todos verem.',
+        '10 pontos por acerto, e a disputa fecha no sábado. No domingo, quem estiver em 1º aparece com a coroa na tela inicial — e agora dá para compartilhar isso no status do WhatsApp.',
     },
   ];
 
@@ -72,10 +73,10 @@ export function ArenaRegras(): React.ReactElement | null {
           <div className="text-center">
             <p className="text-4xl">⏱️</p>
             <h2 className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">
-              A Arena ficou mais difícil!
+              A Arena mudou de novo!
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Chegou o cronômetro. Veja o que mudou:
+              Duas novidades importantes. Leia antes de jogar:
             </p>
           </div>
 

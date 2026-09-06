@@ -6,6 +6,7 @@
 
 import Link from 'next/link';
 import { Crown, ChevronRight } from 'lucide-react';
+import { CompartilharCampeao } from './CompartilharCampeao';
 
 export interface ArenaChampion {
   memberId: string;
@@ -26,20 +27,27 @@ function iniciais(nome: string): string {
 export function ArenaCampeao({
   champion,
   base,
+  churchName = '',
 }: {
   champion: ArenaChampion | null;
   base: string;
+  churchName?: string;
 }): React.ReactElement | null {
   if (!champion) return null;
 
+  // O card inteiro leva à Arena, mas o botão de compartilhar precisa ser um
+  // <button> de verdade — e botão dentro de <a> é HTML inválido. Por isso o
+  // link é uma camada esticada por baixo, e não o pai de tudo.
   return (
-    <Link
-      href={`${base}/arena`}
-      className="relative flex items-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 p-4 text-white shadow-lg"
-    >
-      <Crown className="absolute -right-4 -top-4 h-24 w-24 text-white/15" />
+    <div className="relative flex items-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 p-4 text-white shadow-lg">
+      <Link
+        href={`${base}/arena`}
+        aria-label="Ver a Arena Bíblica"
+        className="absolute inset-0 z-0"
+      />
+      <Crown className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 text-white/15" />
 
-      <div className="relative shrink-0">
+      <div className="pointer-events-none relative z-10 shrink-0">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white/25 text-lg font-bold ring-4 ring-white/40">
           {champion.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -57,7 +65,7 @@ export function ArenaCampeao({
         </span>
       </div>
 
-      <div className="min-w-0 flex-1">
+      <div className="pointer-events-none relative z-10 min-w-0 flex-1">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-100">
           {champion.title}
         </p>
@@ -69,7 +77,8 @@ export function ArenaCampeao({
         </p>
       </div>
 
-      <ChevronRight className="h-5 w-5 shrink-0 text-white/70" />
-    </Link>
+      <CompartilharCampeao champion={champion} igreja={churchName} />
+      <ChevronRight className="pointer-events-none relative z-10 h-5 w-5 shrink-0 text-white/70" />
+    </div>
   );
 }

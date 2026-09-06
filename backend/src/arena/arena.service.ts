@@ -142,10 +142,20 @@ export class ArenaService {
     const porPergunta = new Map(respondidas.map((r) => [r.questionId, r]));
     const porAbertura = new Map(aberturas.map((a) => [a.questionId, a.openedAt]));
 
+    const feitas = respondidas.length;
+    const pontosDoDia = respondidas.reduce((soma, r) => soma + r.points, 0);
+
     return {
       day,
       pointsPerHit: PONTOS_POR_ACERTO,
       secondsPerQuestion: SEGUNDOS_POR_PERGUNTA,
+      // Progresso da rodada. Os pontos do dia só entram no ranking quando as
+      // 12 forem enfrentadas, então a tela precisa dizer isso com clareza —
+      // ninguém pode descobrir a regra só ao perder os pontos.
+      roundTotal: PERGUNTAS_POR_DIA,
+      roundAnswered: feitas,
+      roundComplete: feitas >= PERGUNTAS_POR_DIA,
+      roundPoints: pontosDoDia,
       questions: perguntas.map((q) => {
         const resposta = porPergunta.get(q.id);
         const abertura = porAbertura.get(q.id);
@@ -173,6 +183,62 @@ export class ArenaService {
   }
 
   /** Corrige e pontua NO SERVIDOR. Uma tentativa por pergunta por dia. */
+  /**
+   * Pontos de cada membro no período, contando SÓ as rodadas concluídas.
+   *
+   * A regra: o dia só vale se as 12 perguntas foram enfrentadas. Meia rodada
+   * não pontua — quem abre o app, pega as fáceis e some não aparece no
+   * ranking. Uma pergunta que estourou o tempo CONTA como enfrentada (ela
+   * ficou registrada valendo zero): terminar é obrigatório, acertar não.
+   */
+  private async pontosPorMembro(
+    churchId: string,
+    dias?: { gte: string; lte: string },
+  ): Promise<Map<string, { points: number; answers: number; rounds: number }>> {
+    const porDia = await this.prisma.arenaAnswer.groupBy({
+      by: ['memberId', 'day'],
+      where: { churchId, ...(dias ? { day: dias } : {}) },
+      _sum: { points: true },
+      _count: { _all: true },
+    });
+
+    const total = new Map<
+      string,
+      { points: number; answers: number; rounds: number }
+    >();
+    for (const dia of porDia) {
+      if (dia._count._all < PERGUNTAS_POR_DIA) continue; // rodada pela metade
+      const atual = total.get(dia.memberId) ?? {
+        points: 0,
+        answers: 0,
+        rounds: 0,
+      };
+      atual.points += dia._sum.points ?? 0;
+      atual.answers += dia._count._all;
+      atual.rounds += 1;
+      total.set(dia.memberId, atual);
+    }
+    return total;
+  }
+
+  /** Quantas perguntas de hoje o membro já enfrentou, e quanto somou nelas. */
+  private async rodadaDoDia(
+    memberId: string,
+    day: string,
+  ): Promise<{ respondidas: number; pontos: number; completa: boolean }> {
+    const resumo = await this.prisma.arenaAnswer.aggregate({
+      where: { memberId, day },
+      _sum: { points: true },
+      _count: { _all: true },
+    });
+    const respondidas = resumo._count._all;
+    return {
+      respondidas,
+      pontos: resumo._sum.points ?? 0,
+      completa: respondidas >= PERGUNTAS_POR_DIA,
+    };
+  }
+
   /** Segundos que ainda restam de uma pergunta aberta (nunca negativo). */
   private restante(abertaEm: Date): number {
     const decorrido = (Date.now() - abertaEm.getTime()) / 1000;
@@ -263,12 +329,23 @@ export class ArenaService {
       // Já registrado (dois toques, duas abas): só devolve o gabarito.
     }
 
+    const rodada = await this.rodadaDoDia(memberId, day);
+    if (rodada.completa) {
+      void this.avisaSeNovoLider(churchId, memberId, rodada.pontos).catch(
+        () => undefined,
+      );
+    }
+
     return {
       correct: false,
       points: 0,
       timedOut: true,
       answer: pergunta.answer,
       ref: pergunta.ref,
+      roundComplete: rodada.completa,
+      roundAnswered: rodada.respondidas,
+      roundTotal: PERGUNTAS_POR_DIA,
+      roundPoints: rodada.pontos,
     };
   }
 
@@ -323,8 +400,11 @@ export class ArenaService {
 
     // Pontuou? Confere se acabou de assumir o topo do mês — se sim, avisa a
     // igreja. Best-effort: nunca atrasa nem quebra a resposta da pergunta.
-    if (points > 0) {
-      void this.avisaSeNovoLider(churchId, memberId, points).catch(
+    // A rodada acabou de fechar? Só aí os pontos do dia passam a valer, e só
+    // aí faz sentido conferir se a liderança mudou de mãos.
+    const rodada = await this.rodadaDoDia(memberId, day);
+    if (rodada.completa) {
+      void this.avisaSeNovoLider(churchId, memberId, rodada.pontos).catch(
         () => undefined,
       );
     }
@@ -335,6 +415,10 @@ export class ArenaService {
       timedOut,
       answer: pergunta.answer,
       ref: pergunta.ref,
+      roundComplete: rodada.completa,
+      roundAnswered: rodada.respondidas,
+      roundTotal: PERGUNTAS_POR_DIA,
+      roundPoints: rodada.pontos,
     };
   }
 
@@ -346,21 +430,21 @@ export class ArenaService {
   private async avisaSeNovoLider(
     churchId: string,
     memberId: string,
+    /** Os pontos da rodada que acabou de fechar — é o que ele "ganhou" agora. */
     pontosGanhos: number,
   ): Promise<void> {
     const ciclo = cicloDoDia(hojeBrt());
-    const somas = await this.prisma.arenaAnswer.groupBy({
-      by: ['memberId'],
-      where: { churchId, day: { gte: ciclo.inicio, lte: ciclo.fim } },
-      _sum: { points: true },
+    const somas = await this.pontosPorMembro(churchId, {
+      gte: ciclo.inicio,
+      lte: ciclo.fim,
     });
 
-    const minha = somas.find((s) => s.memberId === memberId)?._sum.points ?? 0;
+    const minha = somas.get(memberId)?.points ?? 0;
     const maiorDosOutros = Math.max(
       0,
-      ...somas
-        .filter((s) => s.memberId !== memberId)
-        .map((s) => s._sum.points ?? 0),
+      ...[...somas.entries()]
+        .filter(([id]) => id !== memberId)
+        .map(([, t]) => t.points),
     );
 
     const lideraAgora = minha > maiorDosOutros;
@@ -390,26 +474,20 @@ export class ArenaService {
     const ciclo: Ciclo | null = cicloAnterior(hojeBrt());
     if (!ciclo) return null;
 
-    const somas = await this.prisma.arenaAnswer.groupBy({
-      by: ['memberId'],
-      where: { churchId, day: { gte: ciclo.inicio, lte: ciclo.fim } },
-      _sum: { points: true },
-      _count: { _all: true },
+    const somas = await this.pontosPorMembro(churchId, {
+      gte: ciclo.inicio,
+      lte: ciclo.fim,
     });
-    if (!somas.length) return null;
+    if (!somas.size) return null;
 
-    const vencedor = somas
-      .map((s) => ({
-        memberId: s.memberId,
-        points: s._sum.points ?? 0,
-        answers: s._count._all,
-      }))
-      // Empate no ponto: desempata quem respondeu menos (foi mais certeiro);
+    const vencedor = [...somas.entries()]
+      .map(([memberId, t]) => ({ memberId, points: t.points, rounds: t.rounds }))
+      // Empate no ponto: leva quem precisou de MENOS rodadas para chegar lá;
       // persistindo o empate, o id mais antigo, para o resultado ser estável.
       .sort(
         (a, b) =>
           b.points - a.points ||
-          a.answers - b.answers ||
+          a.rounds - b.rounds ||
           a.memberId.localeCompare(b.memberId),
       )[0];
     if (!vencedor || vencedor.points <= 0) return null;
@@ -445,19 +523,10 @@ export class ArenaService {
       where.day = { gte: ciclo.inicio, lte: ciclo.fim };
     }
 
-    const somas = await this.prisma.arenaAnswer.groupBy({
-      by: ['memberId'],
-      where,
-      _sum: { points: true },
-      _count: { _all: true },
-    });
+    const somas = await this.pontosPorMembro(churchId, where.day);
 
-    const ordenado = somas
-      .map((s) => ({
-        memberId: s.memberId,
-        points: s._sum.points ?? 0,
-        answers: s._count._all,
-      }))
+    const ordenado = [...somas.entries()]
+      .map(([memberId, t]) => ({ memberId, points: t.points }))
       .sort((a, b) => b.points - a.points || a.memberId.localeCompare(b.memberId));
 
     const top = ordenado.slice(0, 10);
