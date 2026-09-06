@@ -1838,7 +1838,7 @@ export const QUESTIONS: ArenaQuestion[] = [
   },
   {
     id: 'q261',
-    question: 'Quem escreveu, a próprio punho, as saudações finais da carta aos Romanos?',
+    question: 'Quem foi o escrivão que escreveu a carta aos Romanos ditada por Paulo?',
     options: ['Tércio', 'Timóteo', 'Lucas', 'Silas'],
     answer: 0,
     ref: 'Romanos 16:22',
@@ -2335,14 +2335,14 @@ export const QUESTIONS: ArenaQuestion[] = [
   },
   {
     id: 'q332',
-    question: 'Quantas pessoas Jesus alimentou com sete pães e alguns peixinhos?',
+    question: 'Quantos homens Jesus alimentou com sete pães e alguns peixinhos?',
     options: ['Cinco mil', 'Quatro mil', 'Três mil', 'Dois mil'],
     answer: 1,
     ref: 'Mateus 15:38',
   },
   {
     id: 'q333',
-    question: 'Quem era o sumo sacerdote diante de quem Jesus foi levado?',
+    question: 'Segundo Mateus, para a casa de qual sumo sacerdote Jesus foi levado?',
     options: ['Anás', 'Caifás', 'Gamaliel', 'Nicodemos'],
     answer: 1,
     ref: 'Mateus 26:57',
@@ -2469,7 +2469,7 @@ export const QUESTIONS: ArenaQuestion[] = [
   {
     id: 'q351',
     question: 'Qual livro do Antigo Testamento não menciona o nome de Deus?',
-    options: ['Rute', 'Ester', 'Jó', 'Cantares'],
+    options: ['Rute', 'Ester', 'Jó', 'Juízes'],
     answer: 1,
     ref: 'Ester',
   },
