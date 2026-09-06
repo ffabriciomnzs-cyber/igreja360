@@ -136,7 +136,7 @@ export default function ArenaPage(): React.ReactElement {
     [today],
   );
 
-  const segundos = today?.secondsPerQuestion ?? 30;
+  const segundos = today?.secondsPerQuestion ?? 20;
 
   /** O tempo acabou: registra o zero e revela o gabarito. */
   const estourou = useCallback(
@@ -264,7 +264,8 @@ export default function ArenaPage(): React.ReactElement {
           Arena Bíblica
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          12 perguntas por dia · 30 segundos cada · termine a rodada para pontuar
+          12 perguntas por dia · {segundos} segundos cada · termine a rodada para
+          pontuar
         </p>
       </div>
 
@@ -333,7 +334,7 @@ export default function ArenaPage(): React.ReactElement {
             </div>
           </div>
 
-          {/* Barra do tempo: encolhe de ponta a ponta em 30 segundos. */}
+          {/* Barra do tempo: encolhe de ponta a ponta até o fim do prazo. */}
           <div className="h-1 bg-slate-100 dark:bg-slate-800">
             <div
               className={cn(

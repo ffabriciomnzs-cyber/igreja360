@@ -48,9 +48,9 @@ export function ArenaRegras(): React.ReactElement | null {
     },
     {
       icone: Timer,
-      titulo: 'Cada pergunta tem 30 segundos',
+      titulo: 'Cada pergunta tem 20 segundos',
       texto:
-        'Dá tempo de ler com calma e pensar, mas não de consultar. Passou do tempo, aquela pergunta vale 0 e não volta — e sair do app não pausa o relógio.',
+        'É pouco de propósito: dá para ler e decidir, não dá para consultar. Passou do tempo, aquela pergunta vale 0 e não volta — e sair do app não pausa o relógio.',
     },
     {
       icone: ListChecks,

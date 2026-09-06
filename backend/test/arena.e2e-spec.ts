@@ -8,7 +8,10 @@ import {
   IgrejaFixture,
 } from './helpers';
 import { QUESTIONS } from '../src/arena/questions';
-import { perguntasDoDia } from '../src/arena/arena.service';
+import {
+  perguntasDoDia,
+  SEGUNDOS_POR_PERGUNTA as LIMITE,
+} from '../src/arena/arena.service';
 
 interface TodayQuestion {
   id: string;
@@ -238,21 +241,28 @@ describe('Arena Bíblica', () => {
    * envelhecem a ABERTURA gravada no banco, não o cronômetro da tela.
    */
   describe('Cronômetro', () => {
-    it('abrir a pergunta liga o relógio em 30 segundos', async () => {
+    it('o tempo combinado com a igreja é de 20 segundos', () => {
+      // Os outros testes derivam da constante de propósito (mudar o tempo não
+      // deve exigir mexer em teste). Este aqui existe para o contrário: se o
+      // número mudar sem alguém ter decidido isso, ele acusa.
+      expect(LIMITE).toBe(20);
+    });
+
+    it('abrir a pergunta liga o relógio no tempo combinado', async () => {
       const { questions } = await hoje();
       const res = await abre(questions[0].id);
       expect(res.statusCode).toBe(200);
       const corpo = JSON.parse(res.body);
-      expect(corpo.seconds).toBe(30);
-      expect(corpo.remaining).toBeGreaterThan(27);
-      expect(corpo.remaining).toBeLessThanOrEqual(30);
+      expect(corpo.seconds).toBe(LIMITE);
+      expect(corpo.remaining).toBeGreaterThan(LIMITE - 3);
+      expect(corpo.remaining).toBeLessThanOrEqual(LIMITE);
     });
 
     it('REABRIR não reinicia a contagem', async () => {
       const { questions } = await hoje();
       const q = questions[0];
       await abre(q.id);
-      await envelhece(q.id, 25); // 25s se passaram
+      await envelhece(q.id, LIMITE - 5); // quase todo o tempo se foi
 
       // Fechar o app, pesquisar a resposta e voltar não devolve tempo.
       const denovo = JSON.parse((await abre(q.id)).body);
@@ -263,7 +273,7 @@ describe('Arena Bíblica', () => {
       const { questions } = await hoje();
       const q = questions[0];
       await abre(q.id);
-      await envelhece(q.id, 20);
+      await envelhece(q.id, LIMITE - 2); // no limite, mas dentro
 
       const corpo = JSON.parse((await responder(q.id, gabarito(q.id))).body);
       expect(corpo.correct).toBe(true);
@@ -275,7 +285,7 @@ describe('Arena Bíblica', () => {
       const { questions } = await hoje();
       const q = questions[0];
       await abre(q.id);
-      await envelhece(q.id, 60); // muito depois dos 30s
+      await envelhece(q.id, LIMITE * 2); // muito depois do fim
 
       const corpo = JSON.parse((await responder(q.id, gabarito(q.id))).body);
       expect(corpo.correct).toBe(true); // acertou, sim
@@ -292,16 +302,16 @@ describe('Arena Bíblica', () => {
     it('a tolerância cobre a internet ruim, mas não o atraso de verdade', async () => {
       const { questions } = await hoje();
 
-      // 32s: dentro da tolerância de 3s — ainda pontua.
+      // Dentro da tolerância de 3s — ainda pontua.
       const a = questions[0];
       await abre(a.id);
-      await envelhece(a.id, 32);
+      await envelhece(a.id, LIMITE + 2);
       expect(JSON.parse((await responder(a.id, gabarito(a.id))).body).points).toBe(10);
 
-      // 34s: passou da tolerância — zero.
+      // Passou da tolerância — zero.
       const b = questions[1];
       await abre(b.id);
-      await envelhece(b.id, 34);
+      await envelhece(b.id, LIMITE + 4);
       expect(JSON.parse((await responder(b.id, gabarito(b.id))).body).points).toBe(0);
     });
 
@@ -317,11 +327,11 @@ describe('Arena Bíblica', () => {
         questions: { id: string; remaining: number | null }[];
         secondsPerQuestion: number;
       };
-      expect(secondsPerQuestion).toBe(30);
+      expect(secondsPerQuestion).toBe(LIMITE);
       expect(questions[0].remaining).toBeNull(); // nem abriu ainda
 
       await abre(questions[0].id);
-      await envelhece(questions[0].id, 22);
+      await envelhece(questions[0].id, LIMITE - 8);
 
       const depois = (await hoje()) as unknown as {
         questions: { id: string; remaining: number | null }[];
@@ -335,7 +345,7 @@ describe('Arena Bíblica', () => {
       const { questions } = await hoje();
       const q = questions[0];
       await abre(q.id);
-      await envelhece(q.id, 45);
+      await envelhece(q.id, LIMITE * 2);
 
       const res = await req(
         app,
@@ -375,7 +385,7 @@ describe('Arena Bíblica', () => {
       const { questions } = await hoje();
       const q = questions[0];
       await abre(q.id);
-      await envelhece(q.id, 60);
+      await envelhece(q.id, LIMITE * 2);
       await responder(q.id, gabarito(q.id));
 
       const r = JSON.parse(
@@ -466,7 +476,7 @@ describe('Arena Bíblica', () => {
       }
       const perdida = questions[11];
       await abre(perdida.id);
-      await envelhece(perdida.id, 60);
+      await envelhece(perdida.id, LIMITE * 2);
       await req(app, 'POST', '/v1/member-auth/arena/timeout', A.memberToken, {
         questionId: perdida.id,
       });

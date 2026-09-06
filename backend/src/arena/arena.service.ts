@@ -12,7 +12,7 @@ const PERGUNTAS_POR_DIA = 12;
 const PONTOS_POR_ACERTO = 10;
 
 /**
- * Cronômetro: 30 segundos por pergunta.
+ * Cronômetro: 20 segundos por pergunta.
  *
  * O relógio é do SERVIDOR. Um contador de navegador é enfeite — basta pausar
  * o JavaScript para responder com calma. Aqui a hora de abertura é gravada
@@ -21,7 +21,7 @@ const PONTOS_POR_ACERTO = 10;
  * A tolerância cobre o trajeto da rede: sem ela, quem está no 4G da igreja
  * perderia pontos por causa de meio segundo de latência, e não por não saber.
  */
-const SEGUNDOS_POR_PERGUNTA = 30;
+export const SEGUNDOS_POR_PERGUNTA = 20;
 const TOLERANCIA_MS = 3_000;
 
 /**
@@ -174,7 +174,7 @@ export class ArenaService {
           question: q.question,
           options: q.options,
           // Retoma o cronômetro de onde parou: quem recarrega a página no
-          // meio da pergunta não ganha 30 segundos novos.
+          // meio da pergunta não ganha o tempo cheio de novo.
           remaining: abertura ? this.restante(abertura) : null,
           // Só depois de responder o membro vê o gabarito e a referência.
           answered: resposta

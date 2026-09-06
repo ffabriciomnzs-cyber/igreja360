@@ -26,7 +26,7 @@ const TEXTO = [
   'Duas mudanças na Arena, pedidas por vocês.',
   '1) Agora a pergunta só aparece — e o cronômetro só começa — quando você toca em "Começar". Entrar na Arena não gasta mais o seu tempo.',
   '2) Os pontos do dia só entram no ranking depois que você enfrentar as 12 perguntas. Parar no meio não pontua. Errar, sim: o que conta é terminar.',
-  'O resto continua igual: 30 segundos por pergunta, 10 pontos por acerto, e a disputa fecha no sábado. No domingo sai o campeão da semana — e agora dá para compartilhar a coroa no status do WhatsApp.',
+  'O resto continua igual: 20 segundos por pergunta, 10 pontos por acerto, e a disputa fecha no sábado. No domingo sai o campeão da semana — e agora dá para compartilhar a coroa no status do WhatsApp.',
 ].join('\n\n');
 
 @Injectable()
