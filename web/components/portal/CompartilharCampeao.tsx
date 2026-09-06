@@ -70,6 +70,7 @@ function quebraLinhas(
 async function desenhaCartaz(
   champion: ArenaChampion,
   igreja: string,
+  convite: string,
 ): Promise<Blob | null> {
   const canvas = document.createElement('canvas');
   canvas.width = LARGURA;
@@ -151,12 +152,29 @@ async function desenhaCartaz(
     y + 200,
   );
 
-  // Rodapé com o nome da igreja
+  // Rodapé: a igreja e o convite. O endereço vai IMPRESSO porque muita gente
+  // vê só a imagem do status, sem a legenda — sem isto, o convite se perde.
   if (igreja) {
     ctx.font = 'bold 48px system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.fillText(igreja, LARGURA / 2, ALTURA - 130);
+    ctx.fillText(igreja, LARGURA / 2, ALTURA - 230);
   }
+
+  ctx.font = '36px system-ui, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.fillText('Jogue você também:', LARGURA / 2, ALTURA - 150);
+
+  // Sem o "https://", que só ocupa espaço e ninguém digita.
+  const enderecoLimpo = convite.replace(/^https?:\/\//, '');
+  ctx.font = 'bold 40px system-ui, sans-serif';
+  ctx.fillStyle = '#FFFFFF';
+  // Encolhe a fonte se o endereço for comprido, para não vazar da imagem.
+  let tamanho = 40;
+  while (ctx.measureText(enderecoLimpo).width > LARGURA - 100 && tamanho > 22) {
+    tamanho -= 2;
+    ctx.font = `bold ${tamanho}px system-ui, sans-serif`;
+  }
+  ctx.fillText(enderecoLimpo, LARGURA / 2, ALTURA - 90);
 
   return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
 }
@@ -178,9 +196,12 @@ async function nomeDaIgreja(jaSei: string): Promise<string> {
 export function CompartilharCampeao({
   champion,
   igreja = '',
+  base,
 }: {
   champion: ArenaChampion;
   igreja?: string;
+  /** Caminho do portal desta igreja, ex.: "/portal/judeia". */
+  base: string;
 }): React.ReactElement {
   const [estado, setEstado] = useState<'parado' | 'gerando' | 'pronto'>(
     'parado',
@@ -191,10 +212,14 @@ export function CompartilharCampeao({
     setEstado('gerando');
     try {
       const nome = await nomeDaIgreja(igreja);
-      const texto = `👑 ${champion.name} — ${champion.title.toLowerCase()} na Arena Bíblica${
-        nome ? ` da ${nome}` : ''
-      }, com ${champion.points} pontos!`;
-      const blob = await desenhaCartaz(champion, nome);
+      // O convite é a porta de entrada do portal desta igreja — é lá que a
+      // pessoa cria o acesso dela e o painel aprova.
+      const convite = `${window.location.origin}${base}`;
+      const texto =
+        `👑 ${champion.name} — ${champion.title.toLowerCase()} na Arena Bíblica` +
+        `${nome ? ` da ${nome}` : ''}, com ${champion.points} pontos!\n\n` +
+        `Quer jogar também? Entre pelo portal da igreja: ${convite}`;
+      const blob = await desenhaCartaz(champion, nome, convite);
       if (!blob) throw new Error('sem cartaz');
       const arquivo = new File([blob], 'campeao-arena.png', {
         type: 'image/png',

@@ -1,13 +1,76 @@
 import type { Metadata, Viewport } from 'next';
 
-// Metadados do portal por igreja: liga o manifesto PWA, ícones e modo "app" no iOS.
+const API =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ??
+  'http://localhost:3000/v1';
+
+/** Base absoluta do próprio site (o robô do WhatsApp exige URL absoluta). */
+function siteUrl(): string {
+  const bruto =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
+  return bruto.replace(/\/$/, '');
+}
+
+/** Nome e logo da igreja, para o convite não chegar como um link sem cara. */
+async function buscaIgreja(
+  slug: string,
+): Promise<{ name: string; logo: string | null } | null> {
+  try {
+    const res = await fetch(`${API}/member-auth/church/${slug}`, {
+      // O nome da igreja quase nunca muda; 1h evita martelar a API a cada
+      // pessoa que abre o convite no grupo.
+      next: { revalidate: 3600 },
+      // Sem prazo, uma API lenta seguraria a tela de entrada do portal. O
+      // cartão do link é um enfeite: não pode atrasar quem quer só entrar.
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as { name: string; logo: string | null };
+  } catch {
+    return null;
+  }
+}
+
+// Metadados do portal por igreja: liga o manifesto PWA, ícones e modo "app" no
+// iOS — e o cartão de pré-visualização do link, que é o que aparece quando
+// alguém convida outra pessoa colando o endereço numa conversa.
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const igreja = await buscaIgreja(slug);
+  const site = siteUrl();
+  const titulo = igreja ? `Portal da ${igreja.name}` : 'Portal da igreja';
+  const descricao =
+    'Cultos, eventos, devocional e a Arena Bíblica — tudo no seu celular. Entre e participe.';
+  // A logo da igreja é a melhor capa possível. Sem ela (ou se estiver salva
+  // como caminho relativo), cai no ícone do app — 512px, que é o mínimo que o
+  // robô do WhatsApp aceita para montar o cartão.
+  const imagem = igreja?.logo?.startsWith('http')
+    ? igreja.logo
+    : site
+      ? `${site}/icons/icon-512.png`
+      : undefined;
+
   return {
+    title: titulo,
+    description: descricao,
+    openGraph: {
+      type: 'website',
+      title: titulo,
+      description: descricao,
+      ...(site ? { url: `${site}/portal/${slug}` } : {}),
+      ...(imagem ? { images: [imagem] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: titulo,
+      description: descricao,
+      ...(imagem ? { images: [imagem] } : {}),
+    },
     manifest: `/portal/${slug}/manifest.webmanifest`,
     appleWebApp: {
       capable: true,

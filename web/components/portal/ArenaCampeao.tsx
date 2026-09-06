@@ -77,7 +77,11 @@ export function ArenaCampeao({
         </p>
       </div>
 
-      <CompartilharCampeao champion={champion} igreja={churchName} />
+      <CompartilharCampeao
+        champion={champion}
+        igreja={churchName}
+        base={base}
+      />
       <ChevronRight className="pointer-events-none relative z-10 h-5 w-5 shrink-0 text-white/70" />
     </div>
   );
