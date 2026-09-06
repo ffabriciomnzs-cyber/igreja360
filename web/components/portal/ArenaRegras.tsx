@@ -53,9 +53,9 @@ export function ArenaRegras(): React.ReactElement | null {
     },
     {
       icone: RotateCcw,
-      titulo: 'Todo mundo recomeça de hoje',
+      titulo: 'A largada é a mesma para todo mundo',
       texto:
-        'Para ninguém sair na frente por já ter jogado sem cronômetro, os pontos de hoje foram zerados e as perguntas do dia foram trocadas. É a mesma largada para a igreja inteira.',
+        'A semana virou neste domingo, então o placar está zerado para a igreja inteira. E chegaram quase 100 perguntas novas: agora dá mais de um mês de desafio sem nenhuma se repetir.',
     },
     {
       icone: Crown,
