@@ -24,6 +24,16 @@ const PONTOS_POR_ACERTO = 10;
 const SEGUNDOS_POR_PERGUNTA = 30;
 const TOLERANCIA_MS = 3_000;
 
+/**
+ * A partir de quando a rodada precisa estar completa para pontuar.
+ *
+ * A regra é nova; os dias anteriores foram jogados sob a regra antiga, em que
+ * cada acerto valia na hora. Aplicá-la para trás tiraria pontos que as pessoas
+ * já viram no placar — e derrubaria a coroa de quem foi campeão no domingo de
+ * manhã, antes de a regra existir. Ninguém perde nada retroativamente.
+ */
+const RODADA_COMPLETA_A_PARTIR_DE = '2026-09-06';
+
 /** "AAAA-MM-DD" no fuso de Brasília — o dia vira à meia-noite BRT, não UTC. */
 function hojeBrt(): string {
   const brt = new Date(Date.now() - 3 * 3600_000);
@@ -207,7 +217,8 @@ export class ArenaService {
       { points: number; answers: number; rounds: number }
     >();
     for (const dia of porDia) {
-      if (dia._count._all < PERGUNTAS_POR_DIA) continue; // rodada pela metade
+      const valeARegra = dia.day >= RODADA_COMPLETA_A_PARTIR_DE;
+      if (valeARegra && dia._count._all < PERGUNTAS_POR_DIA) continue; // pela metade
       const atual = total.get(dia.memberId) ?? {
         points: 0,
         answers: 0,

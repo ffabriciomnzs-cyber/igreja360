@@ -489,15 +489,37 @@ describe('Arena Bíblica', () => {
       expect(d.roundPoints).toBe(30); // somados, mas ainda não valendo
     });
 
-    it('o campeão da semana também exige rodada completa', async () => {
-      // Semeia o ciclo anterior: 11 respostas certas, rodada inacabada.
+    it('pontos de ANTES da regra continuam valendo, mesmo pela metade', async () => {
+      // Aplicar a regra para trás tiraria pontos que as pessoas já viram no
+      // placar — e derrubaria uma coroa já entregue. A data é fixa de
+      // propósito: ela é anterior à regra e sempre será.
+      const prisma = prismaOf(app);
+      for (let i = 0; i < 11; i++) {
+        await prisma.arenaAnswer.create({
+          data: {
+            churchId: A.churchId,
+            memberId: A.memberId,
+            day: '2026-08-20',
+            questionId: `antiga${i}`,
+            choice: 0,
+            correct: true,
+            points: 10,
+          },
+        });
+      }
+      const r = await meuRanking();
+      expect(r.me.points).toBe(110);
+    });
+
+    it('o campeão da semana usa a mesma conta do ranking', async () => {
       const prisma = prismaOf(app);
       const { cicloAnterior } = await import('../src/arena/cycle');
       const ciclo = cicloAnterior(
         new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10),
       );
-      if (!ciclo) return; // ainda no primeiro ciclo: nada a testar
-      for (let i = 0; i < 11; i++) {
+      if (!ciclo) return; // ainda no primeiro ciclo: nada a coroar
+
+      for (let i = 0; i < 12; i++) {
         await prisma.arenaAnswer.create({
           data: {
             churchId: A.churchId,
@@ -510,29 +532,12 @@ describe('Arena Bíblica', () => {
           },
         });
       }
-      const semCampeao = JSON.parse(
-        (await req(app, 'GET', '/v1/member-auth/arena/champion', A.memberToken))
-          .body || 'null',
-      );
-      expect(semCampeao).toBeNull();
-
-      // A 12ª fecha a rodada e a coroa aparece.
-      await prisma.arenaAnswer.create({
-        data: {
-          churchId: A.churchId,
-          memberId: A.memberId,
-          day: ciclo.fim,
-          questionId: 'semente11',
-          choice: 0,
-          correct: true,
-          points: 10,
-        },
-      });
-      const comCampeao = JSON.parse(
+      const campeao = JSON.parse(
         (await req(app, 'GET', '/v1/member-auth/arena/champion', A.memberToken))
           .body,
       );
-      expect(comCampeao.points).toBe(120);
+      expect(campeao.points).toBe(120);
+      expect(campeao.memberId).toBe(A.memberId);
     });
   });
 
