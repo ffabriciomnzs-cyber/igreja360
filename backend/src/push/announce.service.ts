@@ -22,13 +22,6 @@ const CHAVE = 'aviso:arena-rodada-completa:2026-09-06';
 
 const TITULO = 'Novas regras da Arena Bíblica';
 
-const TEXTO = [
-  'Duas mudanças na Arena, pedidas por vocês.',
-  '1) Agora a pergunta só aparece — e o cronômetro só começa — quando você toca em "Começar". Entrar na Arena não gasta mais o seu tempo.',
-  '2) Os pontos do dia só entram no ranking depois que você enfrentar as 12 perguntas. Parar no meio não pontua. Errar, sim: o que conta é terminar.',
-  'O resto continua igual: 20 segundos por pergunta, 10 pontos por acerto, e a disputa fecha no sábado. No domingo sai o campeão da semana — e agora dá para compartilhar a coroa no status do WhatsApp.',
-].join('\n\n');
-
 @Injectable()
 export class AnnounceService implements OnApplicationBootstrap {
   private readonly logger = new Logger('AnnounceService');
@@ -58,10 +51,11 @@ export class AnnounceService implements OnApplicationBootstrap {
 
     const igrejas = await this.prisma.church.findMany({ select: { id: true } });
     for (const igreja of igrejas) {
-      // Fica salvo no app: quem não vê o push ainda encontra o aviso depois.
-      await this.prisma.communication.create({
-        data: { churchId: igreja.id, title: TITULO, content: TEXTO },
-      });
+      // Só o push. A primeira versão também gravava um comunicado, e o
+      // resultado foi a tela inicial da igreja tomada por dois blocos enormes
+      // de regra de jogo — no lugar onde deveriam estar os avisos que a
+      // liderança escreve. Aviso de sistema é passageiro: vive na notificação
+      // e no pop-up de regras, não na mural da igreja.
       await this.push.notifyChurch(
         igreja.id,
         `▶️ ${TITULO}`,

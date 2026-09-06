@@ -1,15 +1,29 @@
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 
 const API =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ??
   'http://localhost:3000/v1';
 
-/** Base absoluta do próprio site (o robô do WhatsApp exige URL absoluta). */
-function siteUrl(): string {
-  const bruto =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
-  return bruto.replace(/\/$/, '');
+/**
+ * Base absoluta do próprio site (o robô do WhatsApp exige URL absoluta).
+ *
+ * Sai do cabeçalho da requisição em vez de uma variável de ambiente: assim
+ * funciona sem ninguém precisar configurar nada e acompanha o domínio de
+ * verdade quando ele mudar. A variável fica como reserva.
+ */
+async function siteUrl(): Promise<string> {
+  try {
+    const h = await headers();
+    const host = h.get('x-forwarded-host') ?? h.get('host');
+    if (host) {
+      const proto = h.get('x-forwarded-proto') ?? 'https';
+      return `${proto}://${host}`;
+    }
+  } catch {
+    /* fora de uma requisição: cai na variável */
+  }
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/$/, '');
 }
 
 /** Nome e logo da igreja, para o convite não chegar como um link sem cara. */
@@ -42,7 +56,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const igreja = await buscaIgreja(slug);
-  const site = siteUrl();
+  const site = await siteUrl();
   const titulo = igreja ? `Portal da ${igreja.name}` : 'Portal da igreja';
   const descricao =
     'Cultos, eventos, devocional e a Arena Bíblica — tudo no seu celular. Entre e participe.';

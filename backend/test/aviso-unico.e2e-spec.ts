@@ -24,7 +24,7 @@ describe('Aviso único do deploy', () => {
   });
 
   it('envia uma vez e NUNCA repete, mesmo com a API reiniciando', async () => {
-    const A = await criarIgreja(app, 'Igreja A');
+    await criarIgreja(app, 'Igreja A');
     const aviso = app.get(AnnounceService);
     const push = app.get(PushService);
 
@@ -39,19 +39,14 @@ describe('Aviso único do deploy', () => {
     await aviso.onApplicationBootstrap();
     expect(enviados).toHaveLength(1);
     expect(enviados[0]).toContain('Arena');
-    expect(await prismaOf(app).communication.count()).toBe(1);
+    // Aviso de sistema NÃO vira comunicado: a mural da igreja é da liderança.
+    expect(await prismaOf(app).communication.count()).toBe(0);
 
     // Reinício, deploy repetido, segunda réplica: nada de novo pode sair.
     await aviso.onApplicationBootstrap();
     await aviso.onApplicationBootstrap();
     expect(enviados).toHaveLength(1);
-    expect(await prismaOf(app).communication.count()).toBe(1);
-
-    // E o comunicado ficou salvo para quem não viu o push.
-    const salvo = await prismaOf(app).communication.findFirst({
-      where: { churchId: A.churchId },
-    });
-    expect(salvo?.content).toContain('Arena');
+    expect(await prismaOf(app).communication.count()).toBe(0);
   });
 
   it('avisa cada igreja uma vez (uma instalação com mais de uma)', async () => {
