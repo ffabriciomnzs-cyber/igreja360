@@ -173,6 +173,15 @@ export class ArenaController {
 
   // ---------- Desafio 1x1 ----------
 
+  /** Membros da igreja que podem ser desafiados (nome e foto, só isso). */
+  @Get('duels/members')
+  adversarios(
+    @CurrentMember() m: MemberPrincipal,
+    @Query('search') search?: string,
+  ) {
+    return this.duels.adversarios(m.churchId, m.id, search);
+  }
+
   @Get('duels')
   meusDuelos(@CurrentMember() m: MemberPrincipal) {
     return this.duels.meus(m.churchId, m.id);

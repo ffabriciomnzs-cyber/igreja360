@@ -23,7 +23,7 @@ import { MissionBar, type Mission } from '@/components/portal/arena/MissionBar';
 import { ThemePoll, type Poll } from '@/components/portal/arena/ThemePoll';
 import { StreakStrip, type Progress } from '@/components/portal/arena/StreakStrip';
 import { DuelsCard, type Duels } from '@/components/portal/arena/DuelsCard';
-import { desafiarAlguem } from '@/lib/arena-duelo';
+import { DesafiarSheet } from '@/components/portal/arena/DesafiarSheet';
 import { Highlights, type Highlight } from '@/components/portal/arena/Highlights';
 
 interface Answered {
@@ -140,20 +140,6 @@ export default function ArenaPage(): React.ReactElement {
   const [meuNome, setMeuNome] = useState('Alguém');
   const [desafiando, setDesafiando] = useState(false);
 
-  /** O mesmo gesto do card de duelos, também no fim da rodada. */
-  async function desafiar(): Promise<void> {
-    if (desafiando) return;
-    setDesafiando(true);
-    try {
-      await desafiarAlguem(base, meuNome);
-    } catch {
-      /* cancelou o compartilhamento: não é erro */
-    } finally {
-      setDesafiando(false);
-      carregaExtras();
-    }
-  }
-
   /** Tudo o que é "em volta" do jogo carrega em paralelo e sem travar a tela. */
   const carregaExtras = useCallback(() => {
     const pega = <T,>(rota: string, set: (v: T) => void) =>
@@ -199,25 +185,11 @@ export default function ArenaPage(): React.ReactElement {
       });
       setPoll(data);
     } catch {
-      /* silêncio: o voto ou vale, ou a tela continua como está */
+      /* o voto ou vale, ou a tela fica como está */
     } finally {
       setVotando(null);
     }
   }
-
-  useEffect(() => {
-    memberApi
-      .get<Today>('/member-auth/arena/today')
-      .then((r) => setToday(r.data))
-      .catch(() => setToday(null));
-  }, []);
-
-  useEffect(() => {
-    memberApi
-      .get<Ranking>('/member-auth/arena/ranking', { params: { period } })
-      .then((r) => setRanking(r.data))
-      .catch(() => undefined);
-  }, [period]);
 
   // Próxima pergunta ainda não respondida (o desafio "resume" de onde parou).
   const atual = useMemo(
@@ -379,18 +351,11 @@ export default function ArenaPage(): React.ReactElement {
             Rodada fechada, então os pontos já entraram no ranking da semana.
           </p>
           <button
-            onClick={() => void desafiar()}
-            disabled={desafiando}
+            onClick={() => setDesafiando(true)}
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/20 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {desafiando ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <Swords className="h-4 w-4" />
-                Desafiar alguém agora
-              </>
-            )}
+            <Swords className="h-4 w-4" />
+            Desafiar alguém agora
           </button>
           <p className="mt-3 text-xs text-indigo-200">
             Volte amanhã — tem desafio novo todo dia. 🔥
@@ -601,8 +566,8 @@ export default function ArenaPage(): React.ReactElement {
       <DuelsCard
         duels={duels}
         base={base}
-        meuNome={meuNome}
         onCriou={carregaExtras}
+        onDesafiar={() => setDesafiando(true)}
       />
       <MissionBar mission={mission} />
       <ThemePoll poll={poll} votando={votando} onVotar={(t) => void vota(t)} />
@@ -710,6 +675,17 @@ export default function ArenaPage(): React.ReactElement {
       </section>
 
       <Highlights items={highlights} />
+
+      {desafiando && (
+        <DesafiarSheet
+          base={base}
+          meuNome={meuNome}
+          onFechar={(criou) => {
+            setDesafiando(false);
+            if (criou) carregaExtras();
+          }}
+        />
+      )}
     </div>
   );
 }

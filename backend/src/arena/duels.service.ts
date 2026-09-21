@@ -14,9 +14,6 @@ import { SEGUNDOS_POR_PERGUNTA, TOLERANCIA_MS } from './config';
 const PERGUNTAS_POR_DUELO = 5;
 /** Convite sem resposta vira lixo; dois dias é o bastante para um desafio. */
 const VALIDADE_HORAS = 48;
-/** Trava simples contra encher o app de convites abertos. */
-const MAX_ABERTOS = 5;
-
 type Lado = 'challenger' | 'opponent';
 
 export type Status =
@@ -119,7 +116,13 @@ export class DuelsService {
     }
 
     if (!opponentId) {
-      const abertos = await this.prisma.arenaDuel.count({
+      // Já existe um convite por link sem dono? Devolve o MESMO.
+      //
+      // Antes havia um teto de convites abertos que simplesmente recusava a
+      // criação — e quem tinha cinco convites esquecidos no WhatsApp ficava
+      // sem conseguir desafiar ninguém, com o erro sumindo na tela. Reusar o
+      // convite pendente também torna o toque repetido (e o refresh) inofensivo.
+      const pendente = await this.prisma.arenaDuel.findFirst({
         where: {
           churchId,
           challengerId: memberId,
@@ -127,12 +130,10 @@ export class DuelsService {
           declinedAt: null,
           expiresAt: { gt: new Date() },
         },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, token: true },
       });
-      if (abertos >= MAX_ABERTOS) {
-        throw new BadRequestException(
-          'Você já tem desafios esperando resposta. Espere alguém aceitar.',
-        );
-      }
+      if (pendente) return { token: pendente.token, id: pendente.id };
     }
 
     const duelo = await this.prisma.arenaDuel.create({
@@ -144,8 +145,10 @@ export class DuelsService {
         questionIds: this.sorteia(),
         token: randomBytes(9).toString('base64url'),
         rematchOfId: anterior?.id ?? null,
-        // Convite por link: abrir é aceitar, então já nasce aceito.
-        acceptedAt: opponentId ? null : new Date(),
+        // Nenhum convite nasce aceito, nem o de link: aceitar é sempre um
+        // ato de quem foi convidado. Era isto que fazia o link "entrar
+        // sozinho" e começar as perguntas sem ninguém concordar.
+        acceptedAt: null,
         expiresAt: new Date(Date.now() + VALIDADE_HORAS * 3600_000),
       },
     });
@@ -154,29 +157,52 @@ export class DuelsService {
     return { token: duelo.token, id: duelo.id };
   }
 
-  /** Aceitar é idempotente: dois toques não criam dois aceites. */
+  /**
+   * Aceitar. Vale para os dois tipos de convite e é idempotente.
+   *
+   * No convite por link não há convidado até alguém aceitar: o updateMany com
+   * `opponentId: null` é o que garante que só o PRIMEIRO leve a vaga, mesmo
+   * com duas pessoas tocando no link no mesmo instante.
+   */
   async aceitar(churchId: string, memberId: string, duelId: string) {
-    const duelo = await this.carrega(churchId, memberId, duelId);
+    const duelo = await this.prisma.arenaDuel.findFirst({
+      where: { id: duelId, churchId },
+    });
+    if (!duelo) throw new NotFoundException('Desafio não encontrado.');
     if (duelo.declinedAt) throw new BadRequestException('Este desafio foi recusado.');
-    if (duelo.opponentId !== memberId) {
-      throw new BadRequestException('Só quem foi convidado pode aceitar.');
+    if (duelo.challengerId === memberId) {
+      throw new BadRequestException('Você não pode aceitar o seu próprio desafio.');
+    }
+    if (duelo.opponentId && duelo.opponentId !== memberId) {
+      throw new BadRequestException('Este desafio já tem adversário.');
     }
     if (!duelo.acceptedAt) {
       if (duelo.expiresAt < new Date()) {
-        throw new BadRequestException('Este desafio expirou.');
+        throw new BadRequestException('Este convite expirou.');
       }
-      await this.prisma.arenaDuel.updateMany({
-        where: { id: duelId, acceptedAt: null },
-        data: { acceptedAt: new Date() },
+      const ganhou = await this.prisma.arenaDuel.updateMany({
+        where: duelo.opponentId
+          ? { id: duelId, acceptedAt: null }
+          : { id: duelId, opponentId: null, acceptedAt: null },
+        data: { opponentId: memberId, acceptedAt: new Date() },
       });
+      if (ganhou.count === 0 && !duelo.opponentId) {
+        throw new BadRequestException('Outra pessoa aceitou este desafio primeiro.');
+      }
     }
     return this.estado(churchId, memberId, duelId);
   }
 
   async recusar(churchId: string, memberId: string, duelId: string) {
-    const duelo = await this.carrega(churchId, memberId, duelId);
-    if (duelo.opponentId !== memberId) {
+    const duelo = await this.prisma.arenaDuel.findFirst({
+      where: { id: duelId, churchId },
+    });
+    if (!duelo) throw new NotFoundException('Desafio não encontrado.');
+    if (duelo.challengerId === memberId) {
       throw new BadRequestException('Só quem foi convidado pode recusar.');
+    }
+    if (duelo.opponentId && duelo.opponentId !== memberId) {
+      throw new BadRequestException('Este desafio não é seu.');
     }
     if (duelo.acceptedAt) {
       throw new BadRequestException('Você já aceitou este desafio.');
@@ -226,17 +252,9 @@ export class DuelsService {
     });
     if (!duelo) throw new NotFoundException('Desafio não encontrado.');
 
-    if (!duelo.opponentId && duelo.challengerId !== memberId) {
-      if (duelo.expiresAt < new Date()) {
-        throw new BadRequestException('Este desafio expirou.');
-      }
-      // Convite por link: abrir É aceitar. O updateMany com opponentId nulo
-      // resolve a corrida de dois abrindo o mesmo link no mesmo instante.
-      await this.prisma.arenaDuel.updateMany({
-        where: { id: duelo.id, opponentId: null },
-        data: { opponentId: memberId, acceptedAt: new Date() },
-      });
-    }
+    // Abrir o link NÃO entra no duelo: quem chega vê quem chamou e decide.
+    // Antes, abrir era aceitar — bastava tocar no link por curiosidade para
+    // já estar dentro, e as perguntas começavam sem ninguém ter concordado.
     return this.estado(churchId, memberId, duelo.id);
   }
 
@@ -325,7 +343,11 @@ export class DuelsService {
       status,
       isRematch: !!duelo.rematchOfId,
       /** Só o convidado decide; quem convidou espera. */
-      canDecide: status === 'INVITED' && !!duelo.opponentId && meuLado === 'opponent',
+      // No convite por link não há convidado: quem abrir (menos o autor) decide.
+      canDecide:
+        status === 'INVITED' &&
+        duelo.challengerId !== memberId &&
+        (duelo.opponentId ? meuLado === 'opponent' : true),
       total: duelo.questionIds.length,
       seconds: SEGUNDOS_POR_PERGUNTA,
       side: meuLado,
@@ -513,6 +535,29 @@ export class DuelsService {
         ...url,
       });
     }
+  }
+
+  /**
+   * Irmãos que podem ser desafiados: só nome e foto, só da mesma igreja.
+   *
+   * O portal não tinha nenhuma lista de membros, e não vai passar a ter: aqui
+   * sai o mínimo para escolher um adversário. Telefone, e-mail e endereço não
+   * têm o que fazer numa tela de jogo.
+   */
+  async adversarios(churchId: string, memberId: string, busca?: string) {
+    const termo = busca?.trim() ?? '';
+    return this.prisma.member.findMany({
+      where: {
+        churchId,
+        id: { not: memberId },
+        status: 'ACTIVE',
+        portalStatus: 'APPROVED',
+        ...(termo.length >= 2 ? { name: { contains: termo, mode: 'insensitive' } } : {}),
+      },
+      select: { id: true, name: true, photo: true },
+      orderBy: { name: 'asc' },
+      take: 20,
+    });
   }
 
   /** "Lucas 4 x 3 Pedro": vitórias de cada um nos duelos já encerrados. */

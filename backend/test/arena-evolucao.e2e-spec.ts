@@ -149,8 +149,10 @@ describe('Arena — temporadas, duelos e missões', () => {
     async function duelo() {
       const criado = JSON.parse((await post('duels')).body);
       const tokenB = await outroMembro();
+      // Abrir o link mostra o convite; entrar exige aceitar.
+      await get(`duels/token/${criado.token}`, tokenB);
       const estado = JSON.parse(
-        (await get(`duels/token/${criado.token}`, tokenB)).body,
+        (await post(`duels/${criado.id}/accept`, {}, tokenB)).body,
       );
       return { token: criado.token, id: criado.id, tokenB, estado };
     }
@@ -173,7 +175,7 @@ describe('Arena — temporadas, duelos e missões', () => {
       }
     }
 
-    it('cria o convite e quem abre o link vira o adversário', async () => {
+    it('cria o convite e quem ACEITA o link vira o adversário', async () => {
       const d = await duelo();
       expect(d.estado.side).toBe('opponent');
       expect(d.estado.challenger.name).toContain('Membro');
@@ -181,8 +183,8 @@ describe('Arena — temporadas, duelos e missões', () => {
     });
 
     it('NÃO entrega o gabarito na pergunta da vez', async () => {
-      const criado = JSON.parse((await post('duels')).body);
-      const res = await get(`duels/token/${criado.token}`);
+      const d = await duelo();
+      const res = await get(`duels/token/${d.token}`);
       expect(res.body).not.toContain('"answer"');
       expect(res.body).not.toContain('"ref"');
     });
@@ -448,6 +450,8 @@ describe('Arena — temporadas, duelos e missões', () => {
 
     it('no duelo, responder a MESMA pergunta duas vezes é recusado', async () => {
       const criado = JSON.parse((await post('duels')).body);
+      const tokenB = await outroMembro('Irmão Teste');
+      await post(`duels/${criado.id}/accept`, {}, tokenB);
       const estado = JSON.parse((await get(`duels/token/${criado.token}`)).body);
       const q = estado.current;
       await post(`duels/${estado.id}/open`, { questionId: q.id });

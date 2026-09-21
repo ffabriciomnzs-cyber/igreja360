@@ -59,10 +59,11 @@ describe('Duelo 1x1', () => {
   const post = (r: string, body: unknown = {}, t = A.memberToken) =>
     req(app, 'POST', `/v1/member-auth/arena/${r}`, t, body);
 
-  /** Duelo por link já aceito: B abre o convite e entra. */
+  /** Duelo por link com B já dentro: abrir mostra o convite, aceitar entra. */
   async function duelo() {
     const criado = JSON.parse((await post('duels')).body);
     await get(`duels/token/${criado.token}`, tokenB);
+    await post(`duels/${criado.id}/accept`, {}, tokenB);
     return criado as { id: string; token: string };
   }
 
@@ -274,6 +275,114 @@ describe('Duelo 1x1', () => {
       expect(deA.received).toHaveLength(0);
       expect(deB.received).toHaveLength(1);
       expect(deB.received[0].isRematch).toBe(true);
+    });
+  });
+
+  describe('Escolher um membro / compartilhar convite', () => {
+    it('lista irmãos da igreja com o mínimo: nome e foto', async () => {
+      const lista = JSON.parse((await get('duels/members')).body);
+      expect(lista.some((m: { id: string }) => m.id === idB)).toBe(true);
+      expect(lista.some((m: { id: string }) => m.id === A.memberId)).toBe(false);
+      // Nada de telefone, e-mail ou endereço numa tela de jogo.
+      expect(Object.keys(lista[0]).sort()).toEqual(['id', 'name', 'photo']);
+    });
+
+    it('busca por nome', async () => {
+      expect(JSON.parse((await get('duels/members?search=Tha')).body)).toHaveLength(1);
+      expect(JSON.parse((await get('duels/members?search=Zzz')).body)).toHaveLength(0);
+    });
+
+    it('desafio NOMINAL: só o escolhido recebe o convite, e um push só', async () => {
+      avisos.length = 0;
+      const d = JSON.parse((await post('duels', { opponentId: idB })).body);
+      await new Promise((x) => setTimeout(x, 120));
+      expect(avisos).toHaveLength(1);
+      expect(avisos[0].memberId).toBe(idB);
+      expect(avisos[0].title).toContain('desafiou você');
+
+      const deB = JSON.parse((await get('duels', tokenB)).body);
+      expect(deB.received).toHaveLength(1);
+      expect(deB.received[0].isRematch).toBe(false);
+      const deA = JSON.parse((await get('duels')).body);
+      expect(deA.sent).toHaveLength(1);
+      expect(deA.received).toHaveLength(0);
+      expect(JSON.parse((await get(`duels/token/${d.token}`, tokenB)).body).canDecide).toBe(true);
+    });
+
+    it('convite por LINK devolve token e não duplica no toque repetido', async () => {
+      const um = JSON.parse((await post('duels')).body);
+      const dois = JSON.parse((await post('duels')).body);
+      expect(um.token).toBeTruthy();
+      // Tocar duas vezes (ou recarregar) não pode encher a Arena de convites.
+      expect(dois.token).toBe(um.token);
+      expect(await prismaOf(app).arenaDuel.count()).toBe(1);
+    });
+
+    it('abrir o link NÃO começa as perguntas: mostra quem chamou', async () => {
+      const d = JSON.parse((await post('duels')).body);
+      const visto = JSON.parse((await get(`duels/token/${d.token}`, tokenB)).body);
+      expect(visto.status).toBe('INVITED');
+      expect(visto.canDecide).toBe(true);
+      expect(visto.current).toBeNull();
+      expect(visto.challenger.name).toBeTruthy();
+      // E ninguém virou adversário só por ter aberto.
+      expect(
+        (await prismaOf(app).arenaDuel.findUnique({ where: { id: d.id } }))!.opponentId,
+      ).toBeNull();
+    });
+
+    it('o autor NÃO aceita o próprio link', async () => {
+      const d = JSON.parse((await post('duels')).body);
+      const res = await post(`duels/${d.id}/accept`);
+      expect(res.statusCode).toBe(400);
+      expect(JSON.parse((await get(`duels/token/${d.token}`)).body).canDecide).toBe(false);
+    });
+
+    it('o segundo aceita; o terceiro não consegue mais reivindicar', async () => {
+      const d = JSON.parse((await post('duels')).body);
+      expect((await post(`duels/${d.id}/accept`, {}, tokenB)).statusCode).toBe(200);
+
+      const bcrypt = await import('bcryptjs');
+      await prismaOf(app).member.create({
+        data: {
+          churchId: A.churchId, name: 'Terceiro Membro', email: 'terceiro@teste.local',
+          passwordHash: await bcrypt.hash('Senha@12345', 4),
+          portalStatus: 'APPROVED', status: 'ACTIVE',
+        },
+      });
+      const login = await req(app, 'POST', '/v1/member-auth/login', undefined, {
+        slug: A.slug, email: 'terceiro@teste.local', password: 'Senha@12345',
+      });
+      const tokenC = JSON.parse(login.body).accessToken;
+      const res = await post(`duels/${d.id}/accept`, {}, tokenC);
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toContain('adversário');
+    });
+
+    it('convite expirado avisa em vez de deixar entrar', async () => {
+      const d = JSON.parse((await post('duels')).body);
+      await prismaOf(app).arenaDuel.update({
+        where: { id: d.id },
+        data: { expiresAt: new Date(Date.now() - 1000) },
+      });
+      expect(JSON.parse((await get(`duels/token/${d.token}`, tokenB)).body).status).toBe('EXPIRED');
+      expect((await post(`duels/${d.id}/accept`, {}, tokenB)).statusCode).toBe(400);
+    });
+
+    it('recusar um convite por link o encerra', async () => {
+      const d = JSON.parse((await post('duels')).body);
+      expect((await post(`duels/${d.id}/decline`, {}, tokenB)).statusCode).toBe(200);
+      expect(JSON.parse((await get(`duels/token/${d.token}`)).body).status).toBe('DECLINED');
+    });
+
+    it('nem o nominal nem o por link encostam no ranking', async () => {
+      const nominal = JSON.parse((await post('duels', { opponentId: idB })).body);
+      await post(`duels/${nominal.id}/accept`, {}, tokenB);
+      jogoAtual = nominal.token;
+      await joga(A.memberToken, 5);
+      await joga(tokenB, 3);
+      expect(await prismaOf(app).arenaAnswer.count()).toBe(0);
+      expect(JSON.parse((await get('ranking?period=all')).body).me.points).toBe(0);
     });
   });
 

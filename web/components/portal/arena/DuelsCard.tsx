@@ -8,7 +8,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Swords, Loader2, Share2, ChevronRight, Check, X } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
-import { desafiarAlguem } from '@/lib/arena-duelo';
 
 export interface Duel {
   id: string;
@@ -33,29 +32,15 @@ export interface Duels {
 export function DuelsCard({
   duels,
   base,
-  meuNome,
   onCriou,
+  onDesafiar,
 }: {
   duels: Duels;
   base: string;
-  meuNome: string;
   onCriou: () => void;
+  onDesafiar: () => void;
 }): React.ReactElement {
-  const [criando, setCriando] = useState(false);
   const [decidindo, setDecidindo] = useState<string | null>(null);
-
-  async function desafiar(): Promise<void> {
-    if (criando) return;
-    setCriando(true);
-    try {
-      await desafiarAlguem(base, meuNome);
-    } catch {
-      /* cancelar o compartilhamento não é erro */
-    } finally {
-      setCriando(false);
-      onCriou();
-    }
-  }
 
   async function decide(id: string, acao: 'accept' | 'decline'): Promise<void> {
     if (decidindo) return;
@@ -148,18 +133,11 @@ export function DuelsCard({
       )}
 
       <button
-        onClick={() => void desafiar()}
-        disabled={criando}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700 disabled:opacity-60"
+        onClick={onDesafiar}
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
       >
-        {criando ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <>
-            <Share2 className="h-4 w-4" />
-            Desafiar alguém
-          </>
-        )}
+        <Share2 className="h-4 w-4" />
+        Desafiar alguém
       </button>
     </section>
   );
