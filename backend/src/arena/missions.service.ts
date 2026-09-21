@@ -1,11 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { cicloDoDia } from './cycle';
+import { cicloDoDia, hojeBrt } from './cycle';
 import { PERGUNTAS_POR_DIA } from './config';
-
-function hojeBrt(): string {
-  return new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
-}
 
 /**
  * Missão coletiva: uma meta da igreja inteira na semana.

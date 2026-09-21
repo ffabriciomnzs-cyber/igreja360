@@ -1,12 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { cicloAnterior, cicloDoDia } from './cycle';
+import { cicloAnterior, cicloDoDia, hojeBrt } from './cycle';
 import { PERGUNTAS_POR_DIA } from './config';
 import { TEMAS, temaPorId, temasDisponiveis } from './themes';
-
-function hojeBrt(): string {
-  return new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
-}
 
 /** Quantas opções entram na votação da próxima temporada. */
 const OPCOES_NA_VOTACAO = 3;

@@ -11,6 +11,22 @@
  * 22/08/2026 — daí em diante são semanas de 7 dias, domingo a sábado.
  */
 
+/**
+ * "AAAA-MM-DD" de HOJE no fuso da igreja.
+ *
+ * Mora aqui junto com a definição de ciclo porque é a mesma decisão: quando
+ * o dia vira. Estava copiada em quatro serviços, e quatro cópias de uma regra
+ * de fuso é a forma mais silenciosa de o ranking e a sequência discordarem.
+ */
+export function hojeBrt(): string {
+  return new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
+}
+
+/** 0 = domingo … 6 = sábado. A posição do dia dentro da semana do ciclo. */
+export function posicaoNaSemana(day: string): number {
+  return diaDaSemana(day);
+}
+
 /** Sábado em que o primeiro ciclo (o acumulado antigo) se encerra. */
 export const FIM_DO_PRIMEIRO_CICLO = '2026-08-22';
 

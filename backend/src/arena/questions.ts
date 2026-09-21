@@ -2594,7 +2594,7 @@ export const QUESTIONS: ArenaQuestion[] = [
   },
   {
     id: 'q369',
-    question: 'Na parábola do credor incompassivo, o que o servo perdoado fez com seu companheiro?',
+    question: 'Na parábola do servo incompassivo, o que o servo perdoado fez com seu companheiro?',
     options: ['Mandou prendê-lo', 'Perdoou também', 'Deu-lhe dinheiro', 'Fugiu dele'],
     answer: 0,
     ref: 'Mateus 18:28-30',

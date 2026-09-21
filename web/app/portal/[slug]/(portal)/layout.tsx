@@ -48,7 +48,14 @@ export default function PortalLayout({
 
   useEffect(() => {
     if (!getMemberToken()) {
-      router.replace(`/portal/${slug}`);
+      // Quem chegou por um link de desafio não pode perdê-lo no login: o
+      // destino viaja junto e a entrada devolve a pessoa para lá.
+      const destino = window.location.pathname + window.location.search;
+      const volta =
+        destino && destino !== `/portal/${slug}/inicio`
+          ? `?volta=${encodeURIComponent(destino)}`
+          : '';
+      router.replace(`/portal/${slug}${volta}`);
       return;
     }
     let mounted = true;

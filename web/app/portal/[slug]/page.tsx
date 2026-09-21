@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Church, CheckCircle2 } from 'lucide-react';
 import {
   memberApi,
@@ -18,6 +18,18 @@ export default function PortalLoginPage(): React.ReactElement {
   const params = useParams();
   const router = useRouter();
   const slug = String(params.slug);
+
+  /**
+   * Para onde ir depois de entrar. Quem clicou num link de desafio no WhatsApp
+   * e ainda não estava logado volta para o desafio, não para a tela inicial —
+   * sem isto o convite simplesmente se perde no caminho.
+   */
+  const busca = useSearchParams();
+  const volta = busca.get('volta');
+  const destino =
+    volta && volta.startsWith(`/portal/${slug}/`)
+      ? volta
+      : `/portal/${slug}/inicio`;
 
   const [tab, setTab] = useState<Tab>('login');
   const [loading, setLoading] = useState(false);
@@ -66,7 +78,7 @@ export default function PortalLoginPage(): React.ReactElement {
         password: login.password,
       });
       saveMemberSession(data.accessToken, data.member);
-      router.push(`/portal/${slug}/inicio`);
+      router.push(destino);
     } catch (err) {
       setError(memberApiError(err));
       setLoading(false);

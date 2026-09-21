@@ -63,11 +63,23 @@ export class FlashService {
   /** O surpresa em cartaz agora (liberado e dentro da janela de entrada). */
   async emCartaz(churchId: string, memberId: string) {
     const agora = new Date();
-    const flash = await this.prisma.arenaFlash.findFirst({
-      where: { churchId, startsAt: { lte: agora } },
+    // Um surpresa começado e não terminado vem na frente do mais recente:
+    // senão, abrir um novo desafio faria a pessoa perder o que estava jogando.
+    const recentes = await this.prisma.arenaFlash.findMany({
+      where: {
+        churchId,
+        startsAt: { lte: agora, gte: new Date(agora.getTime() - 24 * 3600_000) },
+      },
       orderBy: { startsAt: 'desc' },
+      take: 5,
       include: { turns: { where: { memberId } } },
     });
+    const emAndamento = recentes.find(
+      (f) =>
+        f.turns.length > 0 &&
+        f.turns.filter((t) => t.answeredAt).length < f.questions,
+    );
+    const flash = emAndamento ?? recentes[0];
     if (!flash) return null;
 
     const fechaEm = new Date(flash.startsAt.getTime() + flash.windowMin * 60_000);

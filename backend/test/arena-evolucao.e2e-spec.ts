@@ -335,6 +335,44 @@ describe('Arena — temporadas, duelos e missões', () => {
       expect(m.progress).toBe(3);
     });
 
+    it('meta de RODADAS não conta quem parou no meio', async () => {
+      await req(app, 'POST', '/v1/arena/missions', A.adminToken, {
+        title: 'Cem Arenas juntos',
+        kind: 'ROUNDS',
+        target: 100,
+      });
+      const hoje = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
+      // 11 respostas: rodada pela metade, não pode contar como Arena concluída.
+      for (let i = 0; i < 11; i++) {
+        await prismaOf(app).arenaAnswer.create({
+          data: {
+            churchId: A.churchId,
+            memberId: A.memberId,
+            day: hoje,
+            questionId: `r${i}`,
+            choice: 0,
+            correct: true,
+            points: 10,
+          },
+        });
+      }
+      expect(JSON.parse((await get('mission')).body).progress).toBe(0);
+
+      // A 12ª fecha a rodada e ela passa a contar.
+      await prismaOf(app).arenaAnswer.create({
+        data: {
+          churchId: A.churchId,
+          memberId: A.memberId,
+          day: hoje,
+          questionId: 'r11',
+          choice: 0,
+          correct: true,
+          points: 10,
+        },
+      });
+      expect(JSON.parse((await get('mission')).body).progress).toBe(1);
+    });
+
     it('a missão de uma igreja não conta o acerto da outra', async () => {
       await req(app, 'POST', '/v1/arena/missions', A.adminToken, {
         title: 'Juntos',
@@ -393,6 +431,92 @@ describe('Arena — temporadas, duelos e missões', () => {
       expect(
         p.achievements.find((c: { id: string }) => c.id === 'fogo-7').conquistada,
       ).toBe(false);
+    });
+  });
+
+  describe('Auditoria — o que a revisão encontrou', () => {
+    it('o desafio do dia diz QUANTAS perguntas são do tema', async () => {
+      const hoje = JSON.parse((await get('today')).body);
+      // A tela promete só o que o acervo entrega; sem este número ela
+      // anunciaria uma semana inteira temática que não acontece.
+      expect(hoje.season.questionsTotal).toBe(PERGUNTAS_POR_DIA);
+      expect(hoje.season.questionsFromTheme).toBeGreaterThanOrEqual(
+        porDiaDoTema(hoje.season.theme, PERGUNTAS_POR_DIA),
+      );
+      expect(hoje.season.questionsFromTheme).toBeLessThanOrEqual(PERGUNTAS_POR_DIA);
+    });
+
+    it('no duelo, responder a MESMA pergunta duas vezes é recusado', async () => {
+      const criado = JSON.parse((await post('duels')).body);
+      const estado = JSON.parse((await get(`duels/token/${criado.token}`)).body);
+      const q = estado.current;
+      await post(`duels/${estado.id}/open`, { questionId: q.id });
+      await post(`duels/${estado.id}/answer`, { questionId: q.id, choice: 0 });
+
+      const denovo = await post(`duels/${estado.id}/answer`, {
+        questionId: q.id,
+        choice: 1,
+      });
+      expect(denovo.statusCode).toBe(409);
+      // E reabrir para "tentar de novo" também não passa.
+      const reabrir = await post(`duels/${estado.id}/open`, { questionId: q.id });
+      expect(reabrir.statusCode).toBe(409);
+    });
+
+    it('um surpresa em andamento vem na frente de um novo', async () => {
+      const antigo = await prismaOf(app).arenaFlash.create({
+        data: {
+          churchId: A.churchId,
+          startsAt: new Date(Date.now() - 5 * 60_000),
+          windowMin: 10,
+          questions: 3,
+          bonus: 5,
+        },
+      });
+      const entrou = JSON.parse((await post(`flash/${antigo.id}/join`)).body);
+      await post(`flash/${antigo.id}/open`, { questionId: entrou.current.id });
+
+      // Abre outro depois: quem está no meio não pode perder o que jogava.
+      await prismaOf(app).arenaFlash.create({
+        data: {
+          churchId: A.churchId,
+          startsAt: new Date(),
+          windowMin: 10,
+          questions: 3,
+          bonus: 5,
+        },
+      });
+      const emCartaz = JSON.parse((await get('flash')).body);
+      expect(emCartaz.id).toBe(antigo.id);
+    });
+
+    it('semanas seguidas atravessa o primeiro ciclo, que é maior que 7 dias', async () => {
+      const { cicloDoDia, cicloAnterior } = await import('../src/arena/cycle');
+      const hoje = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
+      const atual = cicloDoDia(hoje);
+      const anterior = cicloAnterior(hoje);
+      if (!anterior) return;
+
+      // Rodada fechada no ciclo atual e no anterior (que pode ser o primeiro,
+      // com mais de 7 dias — andar de 7 em 7 pularia por cima dele).
+      for (const dia of [hoje, anterior.fim]) {
+        for (let i = 0; i < 12; i++) {
+          await prismaOf(app).arenaAnswer.create({
+            data: {
+              churchId: A.churchId,
+              memberId: A.memberId,
+              day: dia,
+              questionId: `w${dia}-${i}`,
+              choice: 0,
+              correct: true,
+              points: 10,
+            },
+          });
+        }
+      }
+      expect(atual.inicio).toBeTruthy();
+      const p = JSON.parse((await get('progress')).body);
+      expect(p.weeksInARow).toBe(2);
     });
   });
 

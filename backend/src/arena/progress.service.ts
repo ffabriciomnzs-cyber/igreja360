@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { cicloAnterior, cicloDoDia } from './cycle';
+import { cicloAnterior, cicloDoDia, hojeBrt } from './cycle';
 import { PERGUNTAS_POR_DIA } from './config';
-
-function hojeBrt(): string {
-  return new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
-}
 
 function somaDias(day: string, delta: number): string {
   const [y, m, d] = day.split('-').map(Number);
@@ -70,12 +66,21 @@ export class ProgressService {
   private semanasSeguidas(dias: string[]): number {
     if (!dias.length) return 0;
     const semanas = new Set(dias.map((d) => cicloDoDia(d).fim));
-    let fim = cicloDoDia(hojeBrt()).fim;
-    if (!semanas.has(fim)) fim = somaDias(fim, -7);
+    // Anda de ciclo em ciclo pelo cycle.ts, e não de 7 em 7 dias: o primeiro
+    // ciclo da Arena é maior que uma semana, e subtrair 7 pularia por cima
+    // dele, zerando a contagem de quem joga desde o começo.
+    let ciclo = cicloDoDia(hojeBrt());
+    if (!semanas.has(ciclo.fim)) {
+      const anterior = cicloAnterior(ciclo.inicio);
+      if (!anterior) return 0;
+      ciclo = anterior;
+    }
     let total = 0;
-    while (semanas.has(fim)) {
+    while (semanas.has(ciclo.fim)) {
       total++;
-      fim = somaDias(fim, -7);
+      const anterior = cicloAnterior(ciclo.inicio);
+      if (!anterior) break;
+      ciclo = anterior;
     }
     return total;
   }

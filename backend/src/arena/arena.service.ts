@@ -6,7 +6,13 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { PushService } from '../push/push.service';
 import { QUESTIONS, ArenaQuestion } from './questions';
-import { Ciclo, cicloAnterior, cicloDoDia } from './cycle';
+import {
+  Ciclo,
+  cicloAnterior,
+  cicloDoDia,
+  hojeBrt,
+  posicaoNaSemana,
+} from './cycle';
 import { TEMA_LIVRE, perguntasDoTema, porDiaDoTema } from './themes';
 import {
   PERGUNTAS_POR_DIA,
@@ -21,11 +27,6 @@ import { SeasonsService } from './seasons.service';
 export { PERGUNTAS_POR_DIA, SEGUNDOS_POR_PERGUNTA };
 
 /** "AAAA-MM-DD" no fuso de Brasília — o dia vira à meia-noite BRT, não UTC. */
-function hojeBrt(): string {
-  const brt = new Date(Date.now() - 3 * 3600_000);
-  return brt.toISOString().slice(0, 10);
-}
-
 /** Hash determinístico simples (FNV-1a) — não é criptografia, é sorteio. */
 function fnv1a(texto: string): number {
   let h = 0x811c9dc5;
@@ -129,8 +130,7 @@ function sorteioComTema(
     perguntasDoTema(temaId),
     criaPrng(fnv1a(`tema:${temaId}|${ciclo.fim}|${churchId}`)),
   );
-  // 0 = domingo … 6 = sábado: a posição do dia dentro da semana é a fatia.
-  const posicao = new Date(`${day}T00:00:00Z`).getUTCDay();
+  const posicao = posicaoNaSemana(day);
   const doTema = pool.slice(posicao * porDia, posicao * porDia + porDia);
 
   const jaTem = new Set(doTema.map((q) => q.id));
@@ -190,6 +190,10 @@ export class ArenaService {
     const porPergunta = new Map(respondidas.map((r) => [r.questionId, r]));
     const porAbertura = new Map(aberturas.map((a) => [a.questionId, a.openedAt]));
 
+    const idsDoTema = new Set(
+      temporada ? perguntasDoTema(temporada.theme).map((q) => q.id) : [],
+    );
+    const doTema = perguntas.filter((q) => idsDoTema.has(q.id)).length;
     const feitas = respondidas.length;
     const pontosDoDia = respondidas.reduce((soma, r) => soma + r.points, 0);
 
@@ -200,7 +204,12 @@ export class ArenaService {
       // Progresso da rodada. Os pontos do dia só entram no ranking quando as
       // 12 forem enfrentadas, então a tela precisa dizer isso com clareza —
       // ninguém pode descobrir a regra só ao perder os pontos.
-      season: temporada,
+      // Quantas das 12 de hoje são mesmo do tema. A tela promete só isto —
+      // o acervo raramente dá uma semana inteira temática, e anunciar o que
+      // não se entrega é pior do que anunciar menos.
+      season: temporada
+        ? { ...temporada, questionsFromTheme: doTema, questionsTotal: PERGUNTAS_POR_DIA }
+        : null,
       roundTotal: PERGUNTAS_POR_DIA,
       roundAnswered: feitas,
       roundComplete: feitas >= PERGUNTAS_POR_DIA,
