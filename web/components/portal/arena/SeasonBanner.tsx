@@ -22,6 +22,7 @@ export interface Season {
  */
 export function SeasonBanner({ season }: { season: Season | null }): React.ReactElement | null {
   if (!season) return null;
+  // "5 de 12" parecia "pergunta 5 de 12". O número precisa dizer o que é.
   const parcial =
     !!season.questionsFromTheme &&
     !!season.questionsTotal &&
@@ -35,7 +36,8 @@ export function SeasonBanner({ season }: { season: Season | null }): React.React
         <span className="font-semibold text-slate-700 dark:text-slate-300">
           {season.name}
         </span>
-        {parcial && ` · ${season.questionsFromTheme} de ${season.questionsTotal}`}
+        {parcial &&
+          ` · ${season.questionsFromTheme} perguntas temáticas hoje`}
       </span>
     </div>
   );

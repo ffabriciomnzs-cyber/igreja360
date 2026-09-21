@@ -28,9 +28,20 @@ interface Jogador {
   done: boolean;
 }
 
+type Status =
+  | 'INVITED'
+  | 'ACTIVE'
+  | 'WAITING_OPPONENT'
+  | 'COMPLETED'
+  | 'DECLINED'
+  | 'EXPIRED';
+
 interface Estado {
   id: string;
   token: string;
+  status: Status;
+  isRematch: boolean;
+  canDecide: boolean;
   total: number;
   seconds: number;
   side: 'challenger' | 'opponent' | null;
@@ -86,6 +97,21 @@ export default function DueloPage(): React.ReactElement {
   const [enviando, setEnviando] = useState(false);
   const [revelado, setRevelado] = useState<Resultado | null>(null);
   const [minhaEscolha, setMinhaEscolha] = useState<number | null>(null);
+  const [decidindo, setDecidindo] = useState(false);
+
+  async function decide(acao: 'accept' | 'decline'): Promise<void> {
+    if (!estado || decidindo) return;
+    setDecidindo(true);
+    try {
+      await memberApi.post(`/member-auth/arena/duels/${estado.id}/${acao}`);
+      if (acao === 'decline') router.push(`${base}/arena`);
+      else await carrega();
+    } catch {
+      await carrega();
+    } finally {
+      setDecidindo(false);
+    }
+  }
 
   const carrega = useCallback(async (): Promise<void> => {
     try {
@@ -158,12 +184,18 @@ export default function DueloPage(): React.ReactElement {
   }
 
   async function revanche(): Promise<void> {
-    if (!estado) return;
-    const { data } = await memberApi.post<{ token: string }>(
-      '/member-auth/arena/duels',
-      { rematchOf: estado.id },
-    );
-    router.push(`${base}/arena/duelo/${data.token}`);
+    if (!estado || decidindo) return;
+    setDecidindo(true);
+    try {
+      const { data } = await memberApi.post<{ token: string }>(
+        '/member-auth/arena/duels',
+        { rematchOf: estado.id },
+      );
+      // A revanche é um CONVITE: quem pediu espera o aceite do outro.
+      router.push(`${base}/arena/duelo/${data.token}`);
+    } finally {
+      setDecidindo(false);
+    }
   }
 
   if (erro) {
@@ -228,14 +260,16 @@ export default function DueloPage(): React.ReactElement {
 
       {estado.history && (
         <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-          Entre vocês: {souDesafiante ? estado.history.aWins : estado.history.bWins} x{' '}
+          Entre vocês: você {souDesafiante ? estado.history.aWins : estado.history.bWins},{' '}
+          {outro?.name?.split(' ')[0] ?? 'ele'}{' '}
           {souDesafiante ? estado.history.bWins : estado.history.aWins}
-          {estado.history.draws > 0 && ` (${estado.history.draws} empate)`}
+          {estado.history.draws > 0 &&
+            `, ${estado.history.draws} ${estado.history.draws === 1 ? 'empate' : 'empates'}`}
         </p>
       )}
 
       {/* Fim de jogo */}
-      {estado.finished ? (
+      {estado.status === 'COMPLETED' ? (
         <div
           className={cn(
             'rounded-2xl p-6 text-center text-white shadow-lg',
@@ -250,20 +284,71 @@ export default function DueloPage(): React.ReactElement {
             {venci === true ? '🏆' : venci === 'draw' ? '🤝' : '💪'}
           </p>
           <p className="mt-2 text-lg font-bold">
-            {venci === true
-              ? 'Você venceu!'
-              : venci === 'draw'
-                ? 'Empate!'
-                : 'Não foi dessa vez'}
+            {venci === 'draw'
+              ? `Empate! ${eu?.score ?? 0} x ${outro?.score ?? 0}`
+              : venci === true
+                ? `Você venceu! ${eu?.score ?? 0} x ${outro?.score ?? 0}`
+                : `${outro?.name?.split(' ')[0] ?? 'Ele'} venceu ${outro?.score ?? 0} x ${eu?.score ?? 0}`}
           </p>
           <button
             onClick={() => void revanche()}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/20 py-3 text-sm font-semibold"
+            disabled={decidindo}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/20 py-3 text-sm font-semibold disabled:opacity-60"
           >
             <RotateCcw className="h-4 w-4" />
-            Revanche
+            Pedir revanche
           </button>
         </div>
+      ) : estado.status === 'DECLINED' ? (
+        <p className="rounded-2xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+          Este desafio foi recusado.
+        </p>
+      ) : estado.status === 'EXPIRED' ? (
+        <p className="rounded-2xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+          Este convite expirou.
+        </p>
+      ) : estado.status === 'INVITED' ? (
+        estado.canDecide ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center dark:border-rose-900 dark:bg-rose-950/40">
+            <p className="text-sm font-semibold text-rose-900 dark:text-rose-200">
+              {estado.isRematch ? '🔁' : '⚔️'}{' '}
+              {outro?.name?.split(' ')[0] ?? 'Alguém'}{' '}
+              {estado.isRematch ? 'pediu revanche' : 'desafiou você'}
+            </p>
+            <p className="mt-1 text-xs text-rose-700 dark:text-rose-300">
+              {estado.total} perguntas, {estado.seconds} segundos cada.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => void decide('accept')}
+                disabled={decidindo}
+                className="flex-1 rounded-xl bg-rose-600 py-3 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {decidindo ? (
+                  <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+                ) : (
+                  'Aceitar'
+                )}
+              </button>
+              <button
+                onClick={() => void decide('decline')}
+                disabled={decidindo}
+                className="rounded-xl border border-rose-300 px-5 py-3 text-sm font-medium text-rose-700 disabled:opacity-60 dark:border-rose-800 dark:text-rose-300"
+              >
+                Recusar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="rounded-2xl bg-amber-50 px-4 py-6 text-center text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+            Aguardando {outro?.name?.split(' ')[0] ?? 'o adversário'} aceitar...
+          </p>
+        )
+      ) : estado.status === 'WAITING_OPPONENT' ? (
+        <p className="rounded-2xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+          Você terminou! Aguardando {outro?.name?.split(' ')[0] ?? 'o adversário'}{' '}
+          terminar...
+        </p>
       ) : !estado.side ? (
         <p className="rounded-2xl bg-amber-50 px-4 py-4 text-center text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
           Este desafio já tem dois jogadores.

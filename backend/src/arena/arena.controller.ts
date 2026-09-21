@@ -45,6 +45,10 @@ class NovoDueloDto {
   @IsOptional()
   @IsString()
   rematchOf?: string;
+
+  @IsOptional()
+  @IsString()
+  opponentId?: string;
 }
 
 class ArenaAnswerDto {
@@ -105,9 +109,9 @@ export class ArenaController {
     return {
       season: temporada,
       streak: progresso.streak,
-      // "Sua vez": o que de fato pede ação de quem está olhando.
-      myTurnDuels: duelos.filter((d) => d.myAnswered < d.total && !d.pendingInvite)
-        .length,
+      // O que de fato pede ação de quem está olhando: convite para decidir
+      // ou partida esperando a resposta dele.
+      myTurnDuels: duelos.received.length + duelos.playing.filter((d) => d.myTurn).length,
       flashOpen: !!flash && !flash.done,
     };
   }
@@ -177,13 +181,28 @@ export class ArenaController {
   @Post('duels')
   @HttpCode(201)
   criaDuelo(@CurrentMember() m: MemberPrincipal, @Body() dto: NovoDueloDto) {
-    return this.duels.criar(m.churchId, m.id, dto.rematchOf);
+    return this.duels.criar(m.churchId, m.id, {
+      rematchOf: dto.rematchOf,
+      opponentId: dto.opponentId,
+    });
   }
 
   /** Entrada pelo link compartilhado. */
   @Get('duels/token/:token')
   duelPorToken(@CurrentMember() m: MemberPrincipal, @Param('token') token: string) {
     return this.duels.abrirPeloToken(m.churchId, m.id, token);
+  }
+
+  @Post('duels/:id/accept')
+  @HttpCode(200)
+  aceitaDuelo(@CurrentMember() m: MemberPrincipal, @Param('id') id: string) {
+    return this.duels.aceitar(m.churchId, m.id, id);
+  }
+
+  @Post('duels/:id/decline')
+  @HttpCode(200)
+  recusaDuelo(@CurrentMember() m: MemberPrincipal, @Param('id') id: string) {
+    return this.duels.recusar(m.churchId, m.id, id);
   }
 
   @Post('duels/:id/open')

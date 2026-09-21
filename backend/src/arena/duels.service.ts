@@ -19,6 +19,14 @@ const MAX_ABERTOS = 5;
 
 type Lado = 'challenger' | 'opponent';
 
+export type Status =
+  | 'INVITED'
+  | 'ACTIVE'
+  | 'WAITING_OPPONENT'
+  | 'COMPLETED'
+  | 'DECLINED'
+  | 'EXPIRED';
+
 @Injectable()
 export class DuelsService {
   constructor(
@@ -71,32 +79,144 @@ export class DuelsService {
     };
   }
 
-  async criar(churchId: string, memberId: string, rematchOfId?: string) {
-    const abertos = await this.prisma.arenaDuel.count({
-      where: {
-        churchId,
-        challengerId: memberId,
-        opponentId: null,
-        expiresAt: { gt: new Date() },
-      },
-    });
-    if (abertos >= MAX_ABERTOS) {
-      throw new BadRequestException(
-        'Você já tem desafios esperando resposta. Espere alguém aceitar.',
-      );
+  /**
+   * Cria um desafio.
+   *
+   * Dois caminhos: sem `opponentId` o convite viaja por link (quem abrir vira
+   * o adversário, e abrir já é aceitar); com `opponentId` — o caso da revanche
+   * — o convite é NOMINAL, chega por push e pela Arena, e só vale depois que o
+   * convidado aceitar. Sem isso a revanche nascia muda: o token existia só na
+   * tela de quem pediu, e o outro nunca ficava sabendo.
+   */
+  async criar(
+    churchId: string,
+    memberId: string,
+    opts: { rematchOf?: string; opponentId?: string } = {},
+  ) {
+    let opponentId = opts.opponentId ?? null;
+    let anterior: { id: string } | null = null;
+
+    if (opts.rematchOf) {
+      const velho = await this.prisma.arenaDuel.findFirst({
+        where: { id: opts.rematchOf, churchId },
+      });
+      if (!velho || !this.lado(velho, memberId)) {
+        throw new NotFoundException('Desafio não encontrado.');
+      }
+      anterior = { id: velho.id };
+      // A revanche é contra o mesmo adversário, sempre.
+      opponentId =
+        velho.challengerId === memberId ? velho.opponentId : velho.challengerId;
+      if (!opponentId) {
+        throw new BadRequestException('Este desafio ainda não teve adversário.');
+      }
+      const jaPedida = await this.prisma.arenaDuel.findFirst({
+        where: { rematchOfId: velho.id, declinedAt: null },
+        select: { token: true, id: true },
+      });
+      // Pedir revanche duas vezes devolve a mesma, em vez de encher o outro.
+      if (jaPedida) return { token: jaPedida.token, id: jaPedida.id };
+    }
+
+    if (!opponentId) {
+      const abertos = await this.prisma.arenaDuel.count({
+        where: {
+          churchId,
+          challengerId: memberId,
+          opponentId: null,
+          declinedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+      });
+      if (abertos >= MAX_ABERTOS) {
+        throw new BadRequestException(
+          'Você já tem desafios esperando resposta. Espere alguém aceitar.',
+        );
+      }
     }
 
     const duelo = await this.prisma.arenaDuel.create({
       data: {
         churchId,
         challengerId: memberId,
+        opponentId,
+        // Perguntas NOVAS: a revanche não reaproveita a partida anterior.
         questionIds: this.sorteia(),
         token: randomBytes(9).toString('base64url'),
-        rematchOfId: rematchOfId ?? null,
+        rematchOfId: anterior?.id ?? null,
+        // Convite por link: abrir é aceitar, então já nasce aceito.
+        acceptedAt: opponentId ? null : new Date(),
         expiresAt: new Date(Date.now() + VALIDADE_HORAS * 3600_000),
       },
     });
+
+    if (opponentId) void this.avisaConvite(duelo.id).catch(() => undefined);
     return { token: duelo.token, id: duelo.id };
+  }
+
+  /** Aceitar é idempotente: dois toques não criam dois aceites. */
+  async aceitar(churchId: string, memberId: string, duelId: string) {
+    const duelo = await this.carrega(churchId, memberId, duelId);
+    if (duelo.declinedAt) throw new BadRequestException('Este desafio foi recusado.');
+    if (duelo.opponentId !== memberId) {
+      throw new BadRequestException('Só quem foi convidado pode aceitar.');
+    }
+    if (!duelo.acceptedAt) {
+      if (duelo.expiresAt < new Date()) {
+        throw new BadRequestException('Este desafio expirou.');
+      }
+      await this.prisma.arenaDuel.updateMany({
+        where: { id: duelId, acceptedAt: null },
+        data: { acceptedAt: new Date() },
+      });
+    }
+    return this.estado(churchId, memberId, duelId);
+  }
+
+  async recusar(churchId: string, memberId: string, duelId: string) {
+    const duelo = await this.carrega(churchId, memberId, duelId);
+    if (duelo.opponentId !== memberId) {
+      throw new BadRequestException('Só quem foi convidado pode recusar.');
+    }
+    if (duelo.acceptedAt) {
+      throw new BadRequestException('Você já aceitou este desafio.');
+    }
+    await this.prisma.arenaDuel.updateMany({
+      where: { id: duelId, declinedAt: null },
+      data: { declinedAt: new Date() },
+    });
+    return { ok: true };
+  }
+
+  /** Avisa o convidado. Um convite, um push — garantido por inviteSentAt. */
+  private async avisaConvite(duelId: string): Promise<void> {
+    const marcado = await this.prisma.arenaDuel.updateMany({
+      where: { id: duelId, inviteSentAt: null },
+      data: { inviteSentAt: new Date() },
+    });
+    if (marcado.count === 0) return;
+
+    const duelo = await this.prisma.arenaDuel.findUnique({
+      where: { id: duelId },
+      include: { challenger: { select: { name: true } } },
+    });
+    if (!duelo?.opponentId) return;
+    const igreja = await this.prisma.church.findUnique({
+      where: { id: duelo.churchId },
+      select: { slug: true },
+    });
+    const quem = duelo.challenger.name.split(' ')[0];
+    await this.push.notifyMember(duelo.opponentId, {
+      title: duelo.rematchOfId
+        ? `🔁 ${quem} pediu revanche`
+        : `⚔️ ${quem} desafiou você na Arena Bíblica`,
+      body: duelo.rematchOfId
+        ? 'Aceite e jogue novamente.'
+        : 'Aceite o desafio e veja quem vence.',
+      ...(igreja
+        ? { url: `/portal/${igreja.slug}/arena/duelo/${duelo.token}` }
+        : {}),
+    });
   }
 
   /** Abre o duelo pelo link. Quem chega sem ser o autor vira o adversário. */
@@ -110,14 +230,12 @@ export class DuelsService {
       if (duelo.expiresAt < new Date()) {
         throw new BadRequestException('Este desafio expirou.');
       }
-      try {
-        await this.prisma.arenaDuel.update({
-          where: { id: duelo.id, opponentId: null },
-          data: { opponentId: memberId },
-        });
-      } catch {
-        // Dois abriram o link ao mesmo tempo: o primeiro ficou com a vaga.
-      }
+      // Convite por link: abrir É aceitar. O updateMany com opponentId nulo
+      // resolve a corrida de dois abrindo o mesmo link no mesmo instante.
+      await this.prisma.arenaDuel.updateMany({
+        where: { id: duelo.id, opponentId: null },
+        data: { opponentId: memberId, acceptedAt: new Date() },
+      });
     }
     return this.estado(churchId, memberId, duelo.id);
   }
@@ -177,21 +295,24 @@ export class DuelsService {
     if (encerrado) {
       const a = placar(duelo.challengerId);
       const b = placar(duelo.opponentId);
-      if (a !== b) vencedor = a > b ? 'challenger' : 'opponent';
-      else {
-        // Empate no acerto: leva quem respondeu mais rápido no total.
-        const tempo = (quem: string | null) =>
-          duelo.turns
-            .filter((t) => t.memberId === quem && t.answeredAt)
-            .reduce(
-              (soma, t) => soma + (t.answeredAt!.getTime() - t.openedAt.getTime()),
-              0,
-            );
-        const ta = tempo(duelo.challengerId);
-        const tb = tempo(duelo.opponentId);
-        vencedor = ta === tb ? 'draw' : ta < tb ? 'challenger' : 'opponent';
-      }
+      // Mesma pontuação é EMPATE, e ponto. Havia aqui um desempate por tempo
+      // que ninguém combinou: num 1x1 ele elegia um vencedor, e cada lado lia
+      // o mesmo resultado de um jeito — um via vitória, o outro derrota.
+      vencedor = a === b ? 'draw' : a > b ? 'challenger' : 'opponent';
     }
+
+    const agora = Date.now();
+    const status: Status = duelo.declinedAt
+      ? 'DECLINED'
+      : encerrado
+        ? 'COMPLETED'
+        : !duelo.acceptedAt
+          ? duelo.expiresAt.getTime() < agora
+            ? 'EXPIRED'
+            : 'INVITED'
+          : meuLado && respondidas(memberId) >= duelo.questionIds.length
+            ? 'WAITING_OPPONENT'
+            : 'ACTIVE';
 
     const historico =
       duelo.opponentId && encerrado
@@ -201,6 +322,10 @@ export class DuelsService {
     return {
       id: duelo.id,
       token: duelo.token,
+      status,
+      isRematch: !!duelo.rematchOfId,
+      /** Só o convidado decide; quem convidou espera. */
+      canDecide: status === 'INVITED' && !!duelo.opponentId && meuLado === 'opponent',
       total: duelo.questionIds.length,
       seconds: SEGUNDOS_POR_PERGUNTA,
       side: meuLado,
@@ -230,7 +355,7 @@ export class DuelsService {
       expiresAt: duelo.expiresAt,
       // A pergunta da vez, sem gabarito.
       current:
-        proximoId && !encerrado
+        proximoId && !encerrado && status !== 'INVITED' && status !== 'DECLINED'
           ? (() => {
               const q = this.embaralha(duelo.id, this.pergunta(proximoId));
               return {
@@ -274,6 +399,9 @@ export class DuelsService {
     if (!duelo.questionIds.includes(questionId)) {
       throw new BadRequestException('Essa pergunta não é deste desafio.');
     }
+    if (!duelo.acceptedAt || duelo.declinedAt) {
+      throw new BadRequestException('Este desafio ainda não está valendo.');
+    }
     const turno = await this.prisma.arenaRoundTurn.upsert({
       where: {
         duelId_memberId_questionId: { duelId, memberId, questionId },
@@ -298,6 +426,9 @@ export class DuelsService {
     const duelo = await this.carrega(churchId, memberId, duelId);
     if (!duelo.questionIds.includes(questionId)) {
       throw new BadRequestException('Essa pergunta não é deste desafio.');
+    }
+    if (!duelo.acceptedAt || duelo.declinedAt) {
+      throw new BadRequestException('Este desafio ainda não está valendo.');
     }
     const turno = await this.prisma.arenaRoundTurn.findUnique({
       where: { duelId_memberId_questionId: { duelId, memberId, questionId } },
@@ -330,26 +461,58 @@ export class DuelsService {
     return { correct: acertou, timedOut: !noTempo, answer: q.answer, ref: q.ref, state: estado };
   }
 
+  /**
+   * Resultado fechado: avisa quem não estava olhando.
+   *
+   * O placar em si não é "consolidado" numa coluna — ele é a contagem dos
+   * turnos, então duas finalizações simultâneas chegam ao mesmo número e não
+   * há o que duplicar. O que precisa de trava é o AVISO: resultSentAt garante
+   * um push por duelo, mesmo com duas réplicas terminando junto.
+   */
   private async avisaResultado(duelId: string): Promise<void> {
+    const marcado = await this.prisma.arenaDuel.updateMany({
+      where: { id: duelId, resultSentAt: null },
+      data: { resultSentAt: new Date() },
+    });
+    if (marcado.count === 0) return;
+
     const duelo = await this.prisma.arenaDuel.findUnique({
       where: { id: duelId },
       include: {
-        challenger: { select: { name: true } },
-        opponent: { select: { name: true } },
+        challenger: { select: { id: true, name: true } },
+        opponent: { select: { id: true, name: true } },
+        turns: { select: { memberId: true, correct: true } },
       },
     });
-    if (!duelo?.opponentId) return;
+    if (!duelo?.opponentId || !duelo.opponent) return;
     const igreja = await this.prisma.church.findUnique({
       where: { id: duelo.churchId },
       select: { slug: true },
     });
-    await this.push.notifyMember(duelo.challengerId, {
-      title: '⚔️ Seu desafio terminou!',
-      body: `${duelo.opponent?.name ?? 'Alguém'} respondeu ao seu desafio. Veja quem venceu.`,
-      ...(igreja
-        ? { url: `/portal/${igreja.slug}/arena/duelo/${duelo.token}` }
-        : {}),
-    });
+    const url = igreja
+      ? { url: `/portal/${igreja.slug}/arena/duelo/${duelo.token}` }
+      : {};
+    const placar = (quem: string) =>
+      duelo.turns.filter((t) => t.memberId === quem && t.correct).length;
+    const a = placar(duelo.challengerId);
+    const b = placar(duelo.opponentId);
+
+    const paraCada: [string, string, number, number][] = [
+      [duelo.challengerId, duelo.opponent.name.split(' ')[0], a, b],
+      [duelo.opponentId, duelo.challenger.name.split(' ')[0], b, a],
+    ];
+    for (const [quem, outro, meu, dele] of paraCada) {
+      await this.push.notifyMember(quem, {
+        title:
+          meu === dele
+            ? `🤝 Empate! ${meu} x ${dele}`
+            : meu > dele
+              ? `🏆 Você venceu! ${meu} x ${dele}`
+              : `${outro} venceu ${dele} x ${meu}`,
+        body: `Desafio contra ${outro} terminou. Quer a revanche?`,
+        ...url,
+      });
+    }
   }
 
   /** "Lucas 4 x 3 Pedro": vitórias de cada um nos duelos já encerrados. */
@@ -385,16 +548,21 @@ export class DuelsService {
     return { aWins: vitoriasA, bWins: vitoriasB, draws: empates };
   }
 
-  /** Duelos que pedem ação: convites recebidos e os meus esperando resposta. */
+  /**
+   * O que a Arena precisa mostrar. Separado por TIPO, porque "aceite este
+   * convite" e "espere o outro aceitar" pedem coisas diferentes de quem lê —
+   * uma lista só, misturada, empurrava a decisão para o WhatsApp.
+   */
   async meus(churchId: string, memberId: string) {
     const duelos = await this.prisma.arenaDuel.findMany({
       where: {
         churchId,
+        declinedAt: null,
         OR: [{ challengerId: memberId }, { opponentId: memberId }],
-        expiresAt: { gt: new Date(Date.now() - 7 * 86_400_000) },
+        createdAt: { gt: new Date(Date.now() - 7 * 86_400_000) },
       },
       orderBy: { createdAt: 'desc' },
-      take: 10,
+      take: 20,
       include: {
         turns: { select: { memberId: true, answeredAt: true, correct: true } },
         challenger: { select: { id: true, name: true, photo: true } },
@@ -402,12 +570,17 @@ export class DuelsService {
       },
     });
 
-    return duelos.map((d) => {
+    const agora = Date.now();
+    const lista = duelos.map((d) => {
       const feitas = (quem: string | null) =>
         quem ? d.turns.filter((t) => t.memberId === quem && t.answeredAt).length : 0;
       const souDesafiante = d.challengerId === memberId;
       const outro = souDesafiante ? d.opponent : d.challenger;
-      const minhasFeitas = feitas(memberId);
+      const eu = feitas(memberId);
+      const dele = feitas(souDesafiante ? d.opponentId : d.challengerId);
+      const encerrado = eu >= d.questionIds.length && dele >= d.questionIds.length;
+      const expirado = !d.acceptedAt && d.expiresAt.getTime() < agora;
+
       return {
         id: d.id,
         token: d.token,
@@ -415,14 +588,25 @@ export class DuelsService {
         opponentName: outro?.name ?? null,
         opponentPhoto: outro?.photo ?? null,
         iAmChallenger: souDesafiante,
-        myAnswered: minhasFeitas,
-        myTurn: minhasFeitas < d.questionIds.length && (!souDesafiante || !!d.opponentId || true),
-        waitingOther:
-          minhasFeitas >= d.questionIds.length &&
-          (!d.opponentId || feitas(souDesafiante ? d.opponentId : d.challengerId) < d.questionIds.length),
-        pendingInvite: !d.opponentId && souDesafiante,
+        isRematch: !!d.rematchOfId,
+        myAnswered: eu,
+        finished: encerrado,
+        /** Convite nominal esperando a MINHA decisão. */
+        awaitingMyAnswer: !d.acceptedAt && !souDesafiante && !!d.opponentId && !expirado,
+        /** Convite que EU mandei e ainda não foi respondido. */
+        awaitingThem: !d.acceptedAt && souDesafiante && !expirado,
+        myTurn: !!d.acceptedAt && !encerrado && eu < d.questionIds.length,
+        waitingOther: !!d.acceptedAt && eu >= d.questionIds.length && !encerrado,
+        expired: expirado,
         createdAt: d.createdAt,
       };
     });
+
+    return {
+      received: lista.filter((d) => d.awaitingMyAnswer),
+      sent: lista.filter((d) => d.awaitingThem),
+      playing: lista.filter((d) => d.myTurn || d.waitingOther),
+      finished: lista.filter((d) => d.finished).slice(0, 3),
+    };
   }
 }

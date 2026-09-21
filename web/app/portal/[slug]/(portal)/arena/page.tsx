@@ -22,7 +22,7 @@ import { FlashBanner, type Flash } from '@/components/portal/arena/FlashBanner';
 import { MissionBar, type Mission } from '@/components/portal/arena/MissionBar';
 import { ThemePoll, type Poll } from '@/components/portal/arena/ThemePoll';
 import { StreakStrip, type Progress } from '@/components/portal/arena/StreakStrip';
-import { DuelsCard, type Duel } from '@/components/portal/arena/DuelsCard';
+import { DuelsCard, type Duels } from '@/components/portal/arena/DuelsCard';
 import { desafiarAlguem } from '@/lib/arena-duelo';
 import { Highlights, type Highlight } from '@/components/portal/arena/Highlights';
 
@@ -134,7 +134,8 @@ export default function ArenaPage(): React.ReactElement {
   const [poll, setPoll] = useState<Poll | null>(null);
   const [votando, setVotando] = useState<string | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [duels, setDuels] = useState<Duel[]>([]);
+  const VAZIO: Duels = { received: [], sent: [], playing: [], finished: [] };
+  const [duels, setDuels] = useState<Duels>(VAZIO);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [meuNome, setMeuNome] = useState('Alguém');
   const [desafiando, setDesafiando] = useState(false);
@@ -164,7 +165,7 @@ export default function ArenaPage(): React.ReactElement {
     void pega<Mission | null>('mission', setMission);
     void pega<Poll | null>('poll', setPoll);
     void pega<Progress>('progress', setProgress);
-    void pega<Duel[]>('duels', (d) => setDuels(d ?? []));
+    void pega<Duels>('duels', (d) => setDuels(d ?? VAZIO));
     void pega<Highlight[]>('highlights', (h) => setHighlights(h ?? []));
   }, []);
 

@@ -864,6 +864,14 @@ model ArenaDuel {
   /// ser imprevisível: quem adivinhasse entraria no duelo dos outros.
   token        String           @unique
   rematchOfId  String?
+  /// Convite direto (revanche): quem foi convidado precisa ACEITAR. Convite
+  /// por link nao tem convidado ate alguem abrir — ai abrir E aceitar.
+  acceptedAt   DateTime?
+  declinedAt   DateTime?
+  /// Um convite, um push. Guardas de "ja avisei" para o aviso nao repetir
+  /// quando a API reinicia ou roda em duas replicas.
+  inviteSentAt DateTime?
+  resultSentAt DateTime?
   expiresAt    DateTime
   createdAt    DateTime         @default(now())
   turns        ArenaRoundTurn[]
