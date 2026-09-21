@@ -12,31 +12,31 @@ export interface Season {
 }
 
 /**
- * A faixa do tema da semana. Discreta: é contexto, não é o jogo.
+ * O tema, como LINHA dentro do card do jogo — não como faixa própria.
  *
- * Diz "tema em destaque", e não "semana de X", porque é isso que acontece: o
- * acervo raramente dá uma semana inteira de um tema só, e a faixa mostra
- * quantas das perguntas de hoje são dele. Prometer uma semana 100% temática
- * e entregar quatro perguntas seria pior do que não prometer nada.
+ * Era um gradiente violeta ocupando a largura inteira acima da Arena do dia, e
+ * competia com o botão de jogar sendo apenas contexto. Aqui ele informa sem
+ * disputar. Diz "tema em destaque" e mostra quantas das perguntas de hoje são
+ * dele: o acervo raramente dá uma semana inteira de um tema só, e prometer
+ * isso para entregar quatro perguntas seria pior do que não prometer nada.
  */
 export function SeasonBanner({ season }: { season: Season | null }): React.ReactElement | null {
   if (!season) return null;
+  const parcial =
+    !!season.questionsFromTheme &&
+    !!season.questionsTotal &&
+    season.questionsFromTheme < season.questionsTotal;
+
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-white">
-      <span className="text-2xl">{season.emoji}</span>
-      <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-indigo-200">
-          Tema em destaque
-        </p>
-        <p className="truncate text-sm font-bold">{season.name}</p>
-        {!!season.questionsFromTheme && !!season.questionsTotal && (
-          <p className="text-[11px] text-indigo-200">
-            {season.questionsFromTheme === season.questionsTotal
-              ? `As ${season.questionsTotal} perguntas de hoje são do tema`
-              : `${season.questionsFromTheme} das ${season.questionsTotal} perguntas de hoje`}
-          </p>
-        )}
-      </div>
+    <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
+      <span className="text-base">{season.emoji}</span>
+      <span className="min-w-0 flex-1 truncate text-xs text-slate-500 dark:text-slate-400">
+        Tema em destaque:{' '}
+        <span className="font-semibold text-slate-700 dark:text-slate-300">
+          {season.name}
+        </span>
+        {parcial && ` · ${season.questionsFromTheme} de ${season.questionsTotal}`}
+      </span>
     </div>
   );
 }

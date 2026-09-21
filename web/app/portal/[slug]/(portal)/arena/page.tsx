@@ -23,6 +23,7 @@ import { MissionBar, type Mission } from '@/components/portal/arena/MissionBar';
 import { ThemePoll, type Poll } from '@/components/portal/arena/ThemePoll';
 import { StreakStrip, type Progress } from '@/components/portal/arena/StreakStrip';
 import { DuelsCard, type Duel } from '@/components/portal/arena/DuelsCard';
+import { desafiarAlguem } from '@/lib/arena-duelo';
 import { Highlights, type Highlight } from '@/components/portal/arena/Highlights';
 
 interface Answered {
@@ -136,6 +137,21 @@ export default function ArenaPage(): React.ReactElement {
   const [duels, setDuels] = useState<Duel[]>([]);
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [meuNome, setMeuNome] = useState('Alguém');
+  const [desafiando, setDesafiando] = useState(false);
+
+  /** O mesmo gesto do card de duelos, também no fim da rodada. */
+  async function desafiar(): Promise<void> {
+    if (desafiando) return;
+    setDesafiando(true);
+    try {
+      await desafiarAlguem(base, meuNome);
+    } catch {
+      /* cancelou o compartilhamento: não é erro */
+    } finally {
+      setDesafiando(false);
+      carregaExtras();
+    }
+  }
 
   /** Tudo o que é "em volta" do jogo carrega em paralelo e sem travar a tela. */
   const carregaExtras = useCallback(() => {
@@ -209,6 +225,11 @@ export default function ArenaPage(): React.ReactElement {
   );
 
   const segundos = today?.secondsPerQuestion ?? 20;
+  /** Tempo de leitura somado ao cronômetro, arredondado para cima. */
+  const minutos = Math.max(
+    1,
+    Math.ceil(((today?.questions.length ?? 12) * (segundos + 8)) / 60),
+  );
 
   /** O tempo acabou: registra o zero e revela o gabarito. */
   const estourou = useCallback(
@@ -337,16 +358,12 @@ export default function ArenaPage(): React.ReactElement {
           <Swords className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
           Arena Bíblica
         </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          12 perguntas por dia · {segundos} segundos cada · termine a rodada para
-          pontuar
-        </p>
+
       </div>
 
       <FlashBanner flash={flash} entrando={entrandoFlash} onEntrar={() => void entraNoFlash()} />
-      <SeasonBanner season={today?.season ?? null} />
 
-      {/* Desafio do dia */}
+      {/* Arena do dia — o herói da página */}
       {!today ? (
         <div className="h-64 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
       ) : terminou ? (
@@ -360,12 +377,27 @@ export default function ArenaPage(): React.ReactElement {
           <p className="mx-auto mt-3 max-w-xs rounded-xl bg-white/10 px-3 py-2 text-xs leading-relaxed text-indigo-100">
             Rodada fechada, então os pontos já entraram no ranking da semana.
           </p>
+          <button
+            onClick={() => void desafiar()}
+            disabled={desafiando}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/20 py-3 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {desafiando ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Swords className="h-4 w-4" />
+                Desafiar alguém agora
+              </>
+            )}
+          </button>
           <p className="mt-3 text-xs text-indigo-200">
             Volte amanhã — tem desafio novo todo dia. 🔥
           </p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <SeasonBanner season={today.season} />
           {/* progresso */}
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
             <div className="flex gap-1.5">
@@ -437,31 +469,31 @@ export default function ArenaPage(): React.ReactElement {
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
                   <Timer className="h-7 w-7" />
                 </div>
-                <p className="mt-4 text-base font-bold text-slate-900 dark:text-slate-100">
-                  Pergunta {respondidas.length + 1} de {today.questions.length}
-                </p>
-                <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                  Você tem {segundos} segundos para responder. O relógio começa
-                  quando você tocar no botão — não antes.
-                </p>
-
-                <p className="mx-auto mt-3 max-w-xs rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                <p className="mt-4 text-lg font-bold text-slate-900 dark:text-slate-100">
                   {respondidas.length === 0
-                    ? `Responda as ${today.questions.length} perguntas para os seus pontos entrarem no ranking. Rodada pela metade não pontua.`
-                    : `Faltam ${today.questions.length - respondidas.length} para fechar a rodada e valer os ${pontosHoje} pontos que você já fez hoje.`}
+                    ? 'Arena de hoje'
+                    : `Pergunta ${respondidas.length + 1} de ${today.questions.length}`}
+                </p>
+                <p className="mx-auto mt-1 max-w-xs text-sm text-slate-500 dark:text-slate-400">
+                  {respondidas.length === 0
+                    ? `${today.questions.length} perguntas · ${segundos}s cada · cerca de ${minutos} min`
+                    : `Faltam ${today.questions.length - respondidas.length} para valer os ${pontosHoje} pontos de hoje`}
+                </p>
+                <p className="mx-auto mt-2 max-w-xs text-xs text-slate-400">
+                  O relógio começa quando você tocar — não antes.
                 </p>
 
                 <button
                   onClick={() => atual && void iniciar(atual.id)}
                   disabled={abrindo || !atual}
-                  className="mt-5 w-full rounded-xl bg-indigo-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
+                  className="mt-5 w-full rounded-xl bg-indigo-600 py-4 text-base font-bold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
                 >
                   {abrindo ? (
                     <Loader2 className="mx-auto h-4 w-4 animate-spin" />
                   ) : respondidas.length === 0 ? (
-                    'Começar a rodada'
+                    'Jogar agora'
                   ) : (
-                    'Continuar'
+                    `Continuar (${respondidas.length}/${today.questions.length})`
                   )}
                 </button>
               </div>
@@ -560,14 +592,18 @@ export default function ArenaPage(): React.ReactElement {
         </div>
       )}
 
-      <StreakStrip progress={progress} />
-      <MissionBar mission={mission} />
+      <StreakStrip
+        progress={progress}
+        position={ranking?.me.position ?? null}
+        points={ranking?.me.points ?? 0}
+      />
       <DuelsCard
         duels={duels}
         base={base}
         meuNome={meuNome}
         onCriou={carregaExtras}
       />
+      <MissionBar mission={mission} />
       <ThemePoll poll={poll} votando={votando} onVotar={(t) => void vota(t)} />
 
       {/* Ranking */}

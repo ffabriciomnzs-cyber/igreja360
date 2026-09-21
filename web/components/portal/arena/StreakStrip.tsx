@@ -20,57 +20,57 @@ export interface Progress {
 }
 
 /**
- * Sequência e conquistas em UMA faixa.
+ * Progresso pessoal em TRÊS números: sequência, posição e pontos.
  *
- * A tentação aqui é uma tela de troféus; o efeito seria mais um lugar para
- * navegar e menos gente jogando. Fica o que cabe de relance: a sequência e as
- * medalhas já ganhas, com a próxima a caminho.
+ * Estavam em lugares diferentes — a sequência num card, a posição e os pontos
+ * só no rodapé do ranking. Quem abre a Arena quer saber "como eu estou" de
+ * relance, e isso não é três olhadas em três lugares. A conquista mais recente
+ * entra como rodapé, não como vitrine: medalha é consequência, não objetivo.
  */
-export function StreakStrip({ progress }: { progress: Progress | null }): React.ReactElement | null {
+export function StreakStrip({
+  progress,
+  position,
+  points,
+}: {
+  progress: Progress | null;
+  position?: number | null;
+  points?: number;
+}): React.ReactElement | null {
   if (!progress) return null;
   const ganhas = progress.achievements.filter((c) => c.conquistada);
-  const proxima = progress.achievements.find((c) => !c.conquistada);
+  const ultima = ganhas[ganhas.length - 1];
+
+  const numero = (valor: string, rotulo: string, destaque = false) => (
+    <div className="flex-1 text-center">
+      <p
+        className={`text-xl font-bold tabular-nums ${
+          destaque
+            ? 'text-orange-600 dark:text-orange-400'
+            : 'text-slate-900 dark:text-slate-100'
+        }`}
+      >
+        {valor}
+      </p>
+      <p className="text-[11px] text-slate-500 dark:text-slate-400">{rotulo}</p>
+    </div>
+  );
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-950/40">
-          <Flame
-            className={`h-5 w-5 ${progress.streak > 0 ? 'text-orange-500' : 'text-slate-300 dark:text-slate-600'}`}
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-            {progress.streak > 0
-              ? `${progress.streak} ${progress.streak === 1 ? 'dia seguido' : 'dias seguidos'}`
-              : 'Comece sua sequência hoje'}
-          </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {progress.streak > 0
-              ? 'Termine a Arena de hoje para não perder.'
-              : 'Cada dia com a rodada fechada soma um.'}
-          </p>
-        </div>
+      <div className="flex items-center divide-x divide-slate-100 dark:divide-slate-800">
+        {numero(
+          progress.streak > 0 ? `🔥 ${progress.streak}` : '—',
+          progress.streak === 1 ? 'dia seguido' : 'dias seguidos',
+          progress.streak > 0,
+        )}
+        {numero(position ? `${position}º` : '—', 'na semana')}
+        {numero(String(points ?? 0), 'pontos')}
       </div>
 
-      {ganhas.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {ganhas.map((c) => (
-            <span
-              key={c.id}
-              title={c.descricao}
-              className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            >
-              {c.emoji} {c.nome}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {proxima && (
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          Próxima: {proxima.emoji} <span className="font-medium">{proxima.nome}</span> —{' '}
-          {proxima.descricao} ({proxima.progresso}/{proxima.alvo})
+      {ultima && (
+        <p className="mt-3 border-t border-slate-100 pt-2.5 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          {ultima.emoji} <span className="font-medium">{ultima.nome}</span> —{' '}
+          {ultima.descricao}
         </p>
       )}
     </section>

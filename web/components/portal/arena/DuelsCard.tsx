@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Swords, Loader2, Share2, ChevronRight } from 'lucide-react';
-import { memberApi } from '@/lib/member-api';
+import { desafiarAlguem } from '@/lib/arena-duelo';
 
 export interface Duel {
   id: string;
@@ -36,27 +36,22 @@ export function DuelsCard({
     if (criando) return;
     setCriando(true);
     try {
-      const { data } = await memberApi.post<{ token: string }>(
-        '/member-auth/arena/duels',
-      );
-      const link = `${window.location.origin}${base}/arena/duelo/${data.token}`;
-      const texto = `⚔️ ${meuNome} te desafiou na Arena Bíblica! 5 perguntas, 20 segundos cada. Aceita? ${link}`;
-      // No celular, a folha de compartilhamento leva direto ao WhatsApp.
-      if (navigator.share) {
-        await navigator.share({ text: texto });
-      } else {
-        await navigator.clipboard.writeText(texto);
-      }
-      onCriou();
+      await desafiarAlguem(base, meuNome);
     } catch {
       /* cancelar o compartilhamento cai aqui e não é erro */
-      onCriou();
     } finally {
       setCriando(false);
+      onCriou();
     }
   }
 
-  const emAndamento = duels.filter((d) => !d.pendingInvite);
+  // Só o que pede ação, e no máximo dois: a Arena não é uma lista de duelos.
+  const minhaVez = duels.filter((d) => !d.pendingInvite && d.myAnswered < d.total);
+  const prontos = duels.filter(
+    (d) => !d.pendingInvite && d.myAnswered >= d.total && !d.waitingOther,
+  );
+  const mostrar = [...minhaVez, ...prontos].slice(0, 2);
+  const esperando = duels.filter((d) => d.pendingInvite).length;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
@@ -67,8 +62,9 @@ export function DuelsCard({
         </h2>
       </div>
       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-        5 perguntas, mesmas para os dois. Não conta para o ranking da semana — é
-        só pela honra.
+        {esperando > 0
+          ? `${esperando} convite(s) esperando alguém aceitar.`
+          : '5 perguntas, mesmas para os dois. Não conta para o ranking.'}
       </p>
 
       <button
@@ -86,9 +82,9 @@ export function DuelsCard({
         )}
       </button>
 
-      {emAndamento.length > 0 && (
+      {mostrar.length > 0 && (
         <div className="mt-3 space-y-1.5">
-          {emAndamento.slice(0, 4).map((d) => (
+          {mostrar.map((d) => (
             <Link
               key={d.id}
               href={`${base}/arena/duelo/${d.token}`}
