@@ -6,11 +6,27 @@ import { BirthdaysService } from './birthdays.service';
 import { MemberAuthController } from './member-auth.controller';
 import { ArenaController } from '../arena/arena.controller';
 import { ArenaService } from '../arena/arena.service';
+import { ArenaAdminController } from '../arena/arena-admin.controller';
+import { SeasonsService } from '../arena/seasons.service';
+import { DuelsService } from '../arena/duels.service';
+import { FlashService } from '../arena/flash.service';
+import { MissionsService } from '../arena/missions.service';
+import { ProgressService } from '../arena/progress.service';
 
 @Module({
   imports: [JwtModule.register({})],
   // ArenaController mora aqui para reusar o MemberJwtGuard (JwtModule).
-  controllers: [MemberAuthController, ArenaController],
-  providers: [MemberAuthService, PortalService, ArenaService, BirthdaysService],
+  controllers: [MemberAuthController, ArenaController, ArenaAdminController],
+  providers: [
+    MemberAuthService,
+    PortalService,
+    ArenaService,
+    BirthdaysService,
+    SeasonsService,
+    DuelsService,
+    FlashService,
+    MissionsService,
+    ProgressService,
+  ],
 })
 export class MemberAuthModule {}

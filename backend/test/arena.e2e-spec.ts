@@ -43,13 +43,23 @@ describe('Arena Bíblica', () => {
     A = await criarIgreja(app, 'Igreja A');
   });
 
+  /**
+   * Tema da temporada em curso. O sorteio do dia depende dele, então o gabarito
+   * calculado pelo teste tem que usar o MESMO tema que o servidor usou — senão
+   * o teste confere a resposta de outro sorteio.
+   */
+  let temaDeHoje: string | null = null;
+
   async function hoje(token = A.memberToken) {
     const res = await req(app, 'GET', '/v1/member-auth/arena/today', token);
     expect(res.statusCode).toBe(200);
-    return JSON.parse(res.body) as {
+    const corpo = JSON.parse(res.body) as {
       day: string;
+      season: { theme: string } | null;
       questions: TodayQuestion[];
     };
+    temaDeHoje = corpo.season?.theme ?? null;
+    return corpo;
   }
 
   /**
@@ -58,7 +68,9 @@ describe('Arena Bíblica', () => {
    */
   function gabarito(questionId: string): number {
     const day = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
-    const q = perguntasDoDia(day, A.churchId).find((x) => x.id === questionId);
+    const q = perguntasDoDia(day, A.churchId, temaDeHoje).find(
+      (x) => x.id === questionId,
+    );
     if (!q) throw new Error(`pergunta ${questionId} não está no dia de hoje`);
     return q.answer;
   }
@@ -683,9 +695,13 @@ describe('Push de novo líder do mês', () => {
     });
   }
 
+  let temaDoPush: string | null = null;
+
   function gabaritoDe(questionId: string): number {
     const day = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
-    const q = perguntasDoDia(day, A.churchId).find((x) => x.id === questionId);
+    const q = perguntasDoDia(day, A.churchId, temaDoPush).find(
+      (x) => x.id === questionId,
+    );
     if (!q) throw new Error('pergunta fora do dia');
     return q.answer;
   }
@@ -706,6 +722,7 @@ describe('Push de novo líder do mês', () => {
       '/v1/member-auth/arena/today',
       A.memberToken,
     );
+    temaDoPush = JSON.parse(res.body).season?.theme ?? null;
     const questions = JSON.parse(res.body).questions as { id: string }[];
 
     // Acertos ao longo da rodada NÃO avisam nada: os pontos ainda não valem.
@@ -742,6 +759,7 @@ describe('Push de novo líder do mês', () => {
       '/v1/member-auth/arena/today',
       A.memberToken,
     );
+    temaDoPush = JSON.parse(res.body).season?.theme ?? null;
     const q = (JSON.parse(res.body).questions as { id: string }[])[0];
     const errada = (gabaritoDe(q.id) + 1) % 4;
     await abreEResponde(q.id, errada);

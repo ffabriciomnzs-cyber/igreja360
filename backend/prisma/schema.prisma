@@ -43,6 +43,10 @@ model Church {
   attendances       Attendance[]
   teams             MinistryTeam[]
   schoolClasses     SchoolClass[]
+  arenaSeasons      ArenaSeason[]
+  arenaThemePolls   ArenaThemePoll[]
+  arenaFlashes      ArenaFlash[]
+  arenaMissions     ArenaMission[]
 }
 
 // Escola Bíblica: turma, professor e sala.
@@ -502,37 +506,41 @@ enum UserRole {
 }
 
 model Member {
-  id            String                 @id @default(cuid())
-  churchId      String
-  church        Church                 @relation(fields: [churchId], references: [id], onDelete: Cascade)
-  name          String
-  email         String?
-  phone         String?
-  cpf           String?
-  gender        Gender?
-  birthDate     DateTime?
-  baptismDate   DateTime?
-  address       String?
-  city          String?
-  rg            String?
-  maritalStatus String?
-  profession    String?
-  photo         String?
-  passwordHash  String?
-  portalStatus  PortalStatus           @default(NONE)
+  id                  String                 @id @default(cuid())
+  churchId            String
+  church              Church                 @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  name                String
+  email               String?
+  phone               String?
+  cpf                 String?
+  gender              Gender?
+  birthDate           DateTime?
+  baptismDate         DateTime?
+  address             String?
+  city                String?
+  rg                  String?
+  maritalStatus       String?
+  profession          String?
+  photo               String?
+  passwordHash        String?
+  portalStatus        PortalStatus           @default(NONE)
   // Quais notificações o membro quer receber. NULL = recebe tudo (padrão).
   // Formato: { "worship": true, "events": false, ... } — ver push.service.ts.
-  notifyPrefs   Json?
-  status        MemberStatus           @default(ACTIVE)
-  role          MemberRole?
-  cellId        String?
-  cell          Cell?                  @relation(fields: [cellId], references: [id], onDelete: SetNull)
-  joinedAt      DateTime?
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @updatedAt
-  arenaAnswers  ArenaAnswer[]
-  arenaOpens    ArenaQuestionOpen[]
-  resetRequests PasswordResetRequest[]
+  notifyPrefs         Json?
+  status              MemberStatus           @default(ACTIVE)
+  role                MemberRole?
+  cellId              String?
+  cell                Cell?                  @relation(fields: [cellId], references: [id], onDelete: SetNull)
+  joinedAt            DateTime?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  arenaAnswers        ArenaAnswer[]
+  arenaOpens          ArenaQuestionOpen[]
+  arenaDuelsFeitos    ArenaDuel[]            @relation("desafiante")
+  arenaDuelsRecebidos ArenaDuel[]            @relation("desafiado")
+  arenaTurnos         ArenaRoundTurn[]
+  arenaVotos          ArenaThemeVote[]
+  resetRequests       PasswordResetRequest[]
 
   @@index([churchId])
   @@index([cellId])
@@ -786,6 +794,141 @@ enum WorshipStatus {
 model SystemFlag {
   key       String   @id
   createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Arena: temporadas, duelos, desafio surpresa e missão coletiva.
+//
+// O que NÃO virou tabela, de propósito: sequência de dias, conquistas e os
+// destaques da semana. Tudo isso se calcula a partir de ArenaAnswer, que já
+// guarda quem respondeu o quê e quando. Tabela de troféu só teria como ganho
+// evitar uma soma barata, em troca de dois lugares para a verdade morar.
+// ---------------------------------------------------------------------------
+
+/// O tema da semana. Uma linha por ciclo (domingo a sábado) por igreja.
+model ArenaSeason {
+  id        String   @id @default(cuid())
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  startDay  String // domingo, "AAAA-MM-DD"
+  endDay    String // sábado
+  theme     String // identificador do tema (ver themes.ts)
+  createdAt DateTime @default(now())
+
+  @@unique([churchId, startDay])
+  @@index([churchId])
+}
+
+/// A votação que decide o tema da PRÓXIMA semana.
+model ArenaThemePoll {
+  id        String           @id @default(cuid())
+  churchId  String
+  church    Church           @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  startDay  String // ciclo em que a votação corre
+  endDay    String
+  options   String[] // temas em disputa
+  closed    Boolean          @default(false)
+  winner    String? // preenchido ao apurar
+  createdAt DateTime         @default(now())
+  votes     ArenaThemeVote[]
+
+  @@unique([churchId, startDay])
+  @@index([churchId])
+}
+
+model ArenaThemeVote {
+  id        String         @id @default(cuid())
+  churchId  String
+  pollId    String
+  poll      ArenaThemePoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Member         @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  theme     String
+  createdAt DateTime       @default(now())
+
+  // Um voto por pessoa por votação.
+  @@unique([pollId, memberId])
+  @@index([churchId])
+}
+
+/// Duelo 1x1. As MESMAS perguntas para os dois, para a disputa ser justa.
+model ArenaDuel {
+  id           String           @id @default(cuid())
+  churchId     String
+  challengerId String
+  challenger   Member           @relation("desafiante", fields: [challengerId], references: [id], onDelete: Cascade)
+  opponentId   String? // só existe depois que alguém aceita o convite
+  opponent     Member?          @relation("desafiado", fields: [opponentId], references: [id], onDelete: Cascade)
+  questionIds  String[]
+  /// Token do link. É por ele que o convite viaja no WhatsApp, então precisa
+  /// ser imprevisível: quem adivinhasse entraria no duelo dos outros.
+  token        String           @unique
+  rematchOfId  String?
+  expiresAt    DateTime
+  createdAt    DateTime         @default(now())
+  turns        ArenaRoundTurn[]
+
+  @@index([churchId])
+  @@index([challengerId])
+  @@index([opponentId])
+}
+
+/// Uma pergunta entregue dentro de um duelo ou de um desafio surpresa.
+///
+/// Serve aos dois porque o mecanismo é o mesmo: o servidor marca a hora da
+/// entrega (openedAt) e confere a resposta contra ela — a mesma defesa da
+/// Arena do dia, que não pode viver só no relógio do navegador.
+model ArenaRoundTurn {
+  id         String      @id @default(cuid())
+  churchId   String
+  kind       String // "DUEL" | "FLASH"
+  duelId     String?
+  duel       ArenaDuel?  @relation(fields: [duelId], references: [id], onDelete: Cascade)
+  flashId    String?
+  flash      ArenaFlash? @relation(fields: [flashId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  questionId String
+  openedAt   DateTime    @default(now())
+  choice     Int?
+  correct    Boolean?
+  answeredAt DateTime?
+
+  @@unique([duelId, memberId, questionId])
+  @@unique([flashId, memberId, questionId])
+  @@index([churchId])
+}
+
+/// Desafio surpresa: abre de repente e fecha em poucos minutos.
+model ArenaFlash {
+  id         String           @id @default(cuid())
+  churchId   String
+  church     Church           @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  startsAt   DateTime // quando libera (dá para agendar)
+  windowMin  Int              @default(10) // minutos para ENTRAR
+  questions  Int              @default(5)
+  bonus      Int              @default(5) // pontos por acerto
+  notifiedAt DateTime? // push já disparado
+  createdAt  DateTime         @default(now())
+  turns      ArenaRoundTurn[]
+
+  @@index([churchId, startsAt])
+}
+
+/// Meta da igreja inteira na semana. O progresso sai de ArenaAnswer.
+model ArenaMission {
+  id        String   @id @default(cuid())
+  churchId  String
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  title     String
+  kind      String // "CORRECT" (acertos) | "ROUNDS" (rodadas concluídas)
+  target    Int
+  startDay  String
+  endDay    String
+  reward    String?
+  createdAt DateTime @default(now())
+
+  @@index([churchId, startDay])
 }
 
 model ArenaQuestionOpen {

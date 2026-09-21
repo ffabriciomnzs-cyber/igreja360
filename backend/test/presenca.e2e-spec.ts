@@ -61,6 +61,35 @@ describe('Presença no culto', () => {
     req(app, 'POST', '/v1/member-auth/attendance', token, {});
 
   describe('Janela do culto', () => {
+    /**
+     * Relógio preso às 14h.
+     *
+     * Os casos daqui montam horários RELATIVOS a agora ("culto daqui a 3
+     * horas"). Rodando de noite, 3 horas depois já é o dia seguinte e o teste
+     * falhava sozinho, sem ninguém ter mexido no código. Só a data é falsa —
+     * timers de verdade continuam valendo, senão o Prisma não responderia.
+     */
+    beforeEach(() => {
+      jest.useFakeTimers({
+        doNotFake: [
+          'nextTick',
+          'setImmediate',
+          'setInterval',
+          'setTimeout',
+          'clearInterval',
+          'clearTimeout',
+          'queueMicrotask',
+          'performance',
+        ],
+      });
+      const meioDia = new Date();
+      meioDia.setUTCHours(17, 0, 0, 0); // 14h em Brasília
+      jest.setSystemTime(meioDia);
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it('sem culto hoje: botão fechado e presença recusada', async () => {
       const s = JSON.parse((await status()).body);
       expect(s.window.aberto).toBe(false);

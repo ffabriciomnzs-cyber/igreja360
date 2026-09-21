@@ -14,8 +14,16 @@ import {
   Timer,
   TimerOff,
 } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { memberApi } from '@/lib/member-api';
 import { cn } from '@/lib/utils';
+import { SeasonBanner, type Season } from '@/components/portal/arena/SeasonBanner';
+import { FlashBanner, type Flash } from '@/components/portal/arena/FlashBanner';
+import { MissionBar, type Mission } from '@/components/portal/arena/MissionBar';
+import { ThemePoll, type Poll } from '@/components/portal/arena/ThemePoll';
+import { StreakStrip, type Progress } from '@/components/portal/arena/StreakStrip';
+import { DuelsCard, type Duel } from '@/components/portal/arena/DuelsCard';
+import { Highlights, type Highlight } from '@/components/portal/arena/Highlights';
 
 interface Answered {
   choice: number;
@@ -38,6 +46,7 @@ interface TodayQuestion {
 
 interface Today {
   day: string;
+  season: Season | null;
   pointsPerHit: number;
   secondsPerQuestion: number;
   /** Progresso da rodada: os pontos só valem quando as 12 forem enfrentadas. */
@@ -115,6 +124,69 @@ export default function ArenaPage(): React.ReactElement {
   const [restam, setRestam] = useState<number | null>(null);
   const [abrindo, setAbrindo] = useState(false);
   const perguntaAberta = useRef<string | null>(null);
+
+  const { slug } = useParams<{ slug: string }>();
+  const base = `/portal/${slug}`;
+  const [flash, setFlash] = useState<Flash | null>(null);
+  const [entrandoFlash, setEntrandoFlash] = useState(false);
+  const [mission, setMission] = useState<Mission | null>(null);
+  const [poll, setPoll] = useState<Poll | null>(null);
+  const [votando, setVotando] = useState<string | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [duels, setDuels] = useState<Duel[]>([]);
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [meuNome, setMeuNome] = useState('Alguém');
+
+  /** Tudo o que é "em volta" do jogo carrega em paralelo e sem travar a tela. */
+  const carregaExtras = useCallback(() => {
+    const pega = <T,>(rota: string, set: (v: T) => void) =>
+      memberApi
+        .get<T>(`/member-auth/arena/${rota}`)
+        .then((r) => set(r.data))
+        .catch(() => undefined);
+    void pega<Flash | null>('flash', setFlash);
+    void pega<Mission | null>('mission', setMission);
+    void pega<Poll | null>('poll', setPoll);
+    void pega<Progress>('progress', setProgress);
+    void pega<Duel[]>('duels', (d) => setDuels(d ?? []));
+    void pega<Highlight[]>('highlights', (h) => setHighlights(h ?? []));
+  }, []);
+
+  useEffect(() => {
+    carregaExtras();
+    memberApi
+      .get<{ member: { name: string } | null }>('/member-auth/me')
+      .then((r) => setMeuNome(r.data.member?.name ?? 'Alguém'))
+      .catch(() => undefined);
+  }, [carregaExtras]);
+
+  async function entraNoFlash(): Promise<void> {
+    if (!flash || entrandoFlash) return;
+    setEntrandoFlash(true);
+    try {
+      await memberApi.post(`/member-auth/arena/flash/${flash.id}/join`);
+      window.location.href = `${base}/arena/surpresa/${flash.id}`;
+    } catch {
+      carregaExtras();
+    } finally {
+      setEntrandoFlash(false);
+    }
+  }
+
+  async function vota(theme: string): Promise<void> {
+    if (votando) return;
+    setVotando(theme);
+    try {
+      const { data } = await memberApi.post<Poll>('/member-auth/arena/poll/vote', {
+        theme,
+      });
+      setPoll(data);
+    } catch {
+      /* silêncio: o voto ou vale, ou a tela continua como está */
+    } finally {
+      setVotando(null);
+    }
+  }
 
   useEffect(() => {
     memberApi
@@ -249,6 +321,8 @@ export default function ArenaPage(): React.ReactElement {
       (q) => !q.answered && q.id !== atual.id,
     );
     if (proximaPergunta) void iniciar(proximaPergunta.id);
+    // Fechar a rodada mexe na sequência e na missão coletiva.
+    if (respondidas.length + 1 >= today.questions.length) carregaExtras();
     // Ranking muda quando pontua.
     memberApi
       .get<Ranking>('/member-auth/arena/ranking', { params: { period } })
@@ -268,6 +342,9 @@ export default function ArenaPage(): React.ReactElement {
           pontuar
         </p>
       </div>
+
+      <FlashBanner flash={flash} entrando={entrandoFlash} onEntrar={() => void entraNoFlash()} />
+      <SeasonBanner season={today?.season ?? null} />
 
       {/* Desafio do dia */}
       {!today ? (
@@ -483,6 +560,16 @@ export default function ArenaPage(): React.ReactElement {
         </div>
       )}
 
+      <StreakStrip progress={progress} />
+      <MissionBar mission={mission} />
+      <DuelsCard
+        duels={duels}
+        base={base}
+        meuNome={meuNome}
+        onCriou={carregaExtras}
+      />
+      <ThemePoll poll={poll} votando={votando} onVotar={(t) => void vota(t)} />
+
       {/* Ranking */}
       <section>
         <div className="mb-2 flex items-center justify-between">
@@ -584,6 +671,8 @@ export default function ArenaPage(): React.ReactElement {
           </p>
         )}
       </section>
+
+      <Highlights items={highlights} />
     </div>
   );
 }

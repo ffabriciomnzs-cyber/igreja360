@@ -7,32 +7,18 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PushService } from '../push/push.service';
 import { QUESTIONS, ArenaQuestion } from './questions';
 import { Ciclo, cicloAnterior, cicloDoDia } from './cycle';
+import { TEMA_LIVRE, perguntasDoTema, porDiaDoTema } from './themes';
+import {
+  PERGUNTAS_POR_DIA,
+  PONTOS_POR_ACERTO,
+  RODADA_COMPLETA_A_PARTIR_DE,
+  SEGUNDOS_POR_PERGUNTA,
+  TOLERANCIA_MS,
+} from './config';
+import { SeasonsService } from './seasons.service';
 
-const PERGUNTAS_POR_DIA = 12;
-const PONTOS_POR_ACERTO = 10;
-
-/**
- * Cronômetro: 20 segundos por pergunta.
- *
- * O relógio é do SERVIDOR. Um contador de navegador é enfeite — basta pausar
- * o JavaScript para responder com calma. Aqui a hora de abertura é gravada
- * quando a pergunta é entregue, e a resposta é conferida contra ela.
- *
- * A tolerância cobre o trajeto da rede: sem ela, quem está no 4G da igreja
- * perderia pontos por causa de meio segundo de latência, e não por não saber.
- */
-export const SEGUNDOS_POR_PERGUNTA = 20;
-const TOLERANCIA_MS = 3_000;
-
-/**
- * A partir de quando a rodada precisa estar completa para pontuar.
- *
- * A regra é nova; os dias anteriores foram jogados sob a regra antiga, em que
- * cada acerto valia na hora. Aplicá-la para trás tiraria pontos que as pessoas
- * já viram no placar — e derrubaria a coroa de quem foi campeão no domingo de
- * manhã, antes de a regra existir. Ninguém perde nada retroativamente.
- */
-const RODADA_COMPLETA_A_PARTIR_DE = '2026-09-06';
+// Os testes (e as temporadas) importam daqui desde antes de config.ts existir.
+export { PERGUNTAS_POR_DIA, SEGUNDOS_POR_PERGUNTA };
 
 /** "AAAA-MM-DD" no fuso de Brasília — o dia vira à meia-noite BRT, não UTC. */
 function hojeBrt(): string {
@@ -103,7 +89,7 @@ function comOpcoesEmbaralhadas(
  * da MESMA igreja vê as MESMAS perguntas no dia — é o que gera a conversa
  * ("acertou a 3?") — e igrejas diferentes veem sorteios diferentes.
  */
-export function perguntasDoDia(day: string, churchId: string): ArenaQuestion[] {
+function sorteioGeral(day: string, churchId: string): ArenaQuestion[] {
   const total = QUESTIONS.length;
   const diasPorCiclo = Math.floor(total / PERGUNTAS_POR_DIA);
   const dia = numeroDoDia(day);
@@ -118,7 +104,57 @@ export function perguntasDoDia(day: string, churchId: string): ArenaQuestion[] {
   const inicio = posicaoNoCiclo * PERGUNTAS_POR_DIA;
   return indices
     .slice(inicio, inicio + PERGUNTAS_POR_DIA)
-    .map((i) => comOpcoesEmbaralhadas(QUESTIONS[i], day, churchId));
+    .map((i) => QUESTIONS[i]);
+}
+
+/**
+ * O tema TEMPERA o dia em vez de tomá-lo inteiro.
+ *
+ * Uma semana come 84 perguntas e quase nenhum tema tem tudo isso: "Cartas de
+ * Paulo" são 29 no acervo. Então entram quantas o tema aguenta sem ninguém ver
+ * a mesma duas vezes na semana (aqui, 4 por dia) e o resto vem do sorteio
+ * geral. A semana tem cara de tema e continua sem repetição.
+ */
+function sorteioComTema(
+  day: string,
+  churchId: string,
+  temaId: string,
+): ArenaQuestion[] {
+  const geral = sorteioGeral(day, churchId);
+  const porDia = porDiaDoTema(temaId, PERGUNTAS_POR_DIA);
+  if (porDia < 1) return geral;
+
+  const ciclo = cicloDoDia(day);
+  const pool = embaralhado(
+    perguntasDoTema(temaId),
+    criaPrng(fnv1a(`tema:${temaId}|${ciclo.fim}|${churchId}`)),
+  );
+  // 0 = domingo … 6 = sábado: a posição do dia dentro da semana é a fatia.
+  const posicao = new Date(`${day}T00:00:00Z`).getUTCDay();
+  const doTema = pool.slice(posicao * porDia, posicao * porDia + porDia);
+
+  const jaTem = new Set(doTema.map((q) => q.id));
+  const completa = geral
+    .filter((q) => !jaTem.has(q.id))
+    .slice(0, PERGUNTAS_POR_DIA - doTema.length);
+
+  // Mistura para as do tema não caírem sempre nas primeiras posições.
+  return embaralhado(
+    [...doTema, ...completa],
+    criaPrng(fnv1a(`mistura|${day}|${churchId}`)),
+  );
+}
+
+export function perguntasDoDia(
+  day: string,
+  churchId: string,
+  temaId?: string | null,
+): ArenaQuestion[] {
+  const cruas =
+    temaId && temaId !== TEMA_LIVRE
+      ? sorteioComTema(day, churchId, temaId)
+      : sorteioGeral(day, churchId);
+  return cruas.map((q) => comOpcoesEmbaralhadas(q, day, churchId));
 }
 
 @Injectable()
@@ -126,12 +162,14 @@ export class ArenaService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly push: PushService,
+    private readonly seasons: SeasonsService,
   ) {}
 
   /** Desafio de hoje: perguntas SEM a resposta + o que o membro já respondeu. */
   async today(churchId: string, memberId: string) {
     const day = hojeBrt();
-    const perguntas = perguntasDoDia(day, churchId);
+    const temporada = await this.seasons.temporadaAtual(churchId);
+    const perguntas = perguntasDoDia(day, churchId, temporada?.theme);
 
     const [respondidas, aberturas] = await Promise.all([
       this.prisma.arenaAnswer.findMany({
@@ -162,6 +200,7 @@ export class ArenaService {
       // Progresso da rodada. Os pontos do dia só entram no ranking quando as
       // 12 forem enfrentadas, então a tela precisa dizer isso com clareza —
       // ninguém pode descobrir a regra só ao perder os pontos.
+      season: temporada,
       roundTotal: PERGUNTAS_POR_DIA,
       roundAnswered: feitas,
       roundComplete: feitas >= PERGUNTAS_POR_DIA,
@@ -256,9 +295,20 @@ export class ArenaService {
     return Math.max(0, Math.ceil(SEGUNDOS_POR_PERGUNTA - decorrido));
   }
 
-  /** A pergunta pedida, se ela for mesmo do desafio de hoje. */
-  private perguntaDeHoje(churchId: string, day: string, questionId: string) {
-    const pergunta = perguntasDoDia(day, churchId).find(
+  /**
+   * A pergunta pedida, se ela for mesmo do desafio de hoje.
+   *
+   * Recebe o tema em vez de buscá-lo: os quatro caminhos (abrir, responder,
+   * estourar e listar) precisam sortear o MESMO dia, e um deles buscando o
+   * tema por conta própria seria a forma mais discreta de discordarem.
+   */
+  private perguntaDeHoje(
+    churchId: string,
+    day: string,
+    questionId: string,
+    temaId?: string | null,
+  ) {
+    const pergunta = perguntasDoDia(day, churchId, temaId).find(
       (q) => q.id === questionId,
     );
     // Pergunta fora do sorteio de hoje = tentativa de burlar (ou app velho).
@@ -277,7 +327,8 @@ export class ArenaService {
    */
   async open(churchId: string, memberId: string, questionId: string) {
     const day = hojeBrt();
-    this.perguntaDeHoje(churchId, day, questionId);
+    const tema = await this.seasons.temaDeHoje(churchId);
+    this.perguntaDeHoje(churchId, day, questionId, tema);
 
     const jaRespondeu = await this.prisma.arenaAnswer.findUnique({
       where: { memberId_day_questionId: { memberId, day, questionId } },
@@ -307,7 +358,8 @@ export class ArenaService {
    */
   async timeout(churchId: string, memberId: string, questionId: string) {
     const day = hojeBrt();
-    const pergunta = this.perguntaDeHoje(churchId, day, questionId);
+    const tema = await this.seasons.temaDeHoje(churchId);
+    const pergunta = this.perguntaDeHoje(churchId, day, questionId, tema);
 
     const abertura = await this.prisma.arenaQuestionOpen.findUnique({
       where: { memberId_day_questionId: { memberId, day, questionId } },
@@ -367,7 +419,8 @@ export class ArenaService {
     choice: number,
   ) {
     const day = hojeBrt();
-    const pergunta = this.perguntaDeHoje(churchId, day, questionId);
+    const tema = await this.seasons.temaDeHoje(churchId);
+    const pergunta = this.perguntaDeHoje(churchId, day, questionId, tema);
     if (!Number.isInteger(choice) || choice < 0 || choice > 3) {
       throw new BadRequestException('Alternativa inválida.');
     }
