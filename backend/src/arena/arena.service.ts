@@ -277,7 +277,59 @@ export class ArenaService {
       atual.rounds += 1;
       total.set(dia.memberId, atual);
     }
+    await this.somaDoSurpresa(churchId, total, dias);
     return total;
+  }
+
+  /**
+   * Junta ao ranking os pontos do desafio surpresa.
+   *
+   * O surpresa vive em outra tabela (ArenaRoundTurn), separada para o duelo
+   * 1x1 não contaminar a disputa — e o surpresa tinha ido junto no mesmo
+   * balde, o que deixava o "bônus configurável" do painel sem destino: o
+   * número aparecia na tela do desafio e morria ali.
+   *
+   * Aqui ele entra no placar, mas por fora da regra da rodada completa: o
+   * surpresa é uma corrida de poucos minutos, não uma rodada do dia, e exigir
+   * que estivesse "inteiro" puniria quem entrou correndo — que é justamente
+   * quem atendeu ao chamado.
+   */
+  private async somaDoSurpresa(
+    churchId: string,
+    total: Map<string, { points: number; answers: number; rounds: number }>,
+    dias?: { gte: string; lte: string },
+  ): Promise<void> {
+    // O dia da igreja vai das 03:00 UTC de um dia às 02:59 do seguinte.
+    const janela = dias
+      ? {
+          startsAt: {
+            gte: new Date(`${dias.gte}T03:00:00.000Z`),
+            lt: new Date(
+              new Date(`${dias.lte}T03:00:00.000Z`).getTime() + 86_400_000,
+            ),
+          },
+        }
+      : {};
+
+    const surpresas = await this.prisma.arenaFlash.findMany({
+      where: { churchId, ...janela },
+      select: {
+        bonus: true,
+        turns: { where: { correct: true }, select: { memberId: true } },
+      },
+    });
+
+    for (const flash of surpresas) {
+      for (const turno of flash.turns) {
+        const atual = total.get(turno.memberId) ?? {
+          points: 0,
+          answers: 0,
+          rounds: 0,
+        };
+        atual.points += flash.bonus;
+        total.set(turno.memberId, atual);
+      }
+    }
   }
 
   /** Quantas perguntas de hoje o membro já enfrentou, e quanto somou nelas. */

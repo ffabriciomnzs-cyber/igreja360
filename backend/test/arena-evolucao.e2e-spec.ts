@@ -300,14 +300,49 @@ describe('Arena — temporadas, duelos e missões', () => {
       expect(JSON.parse(res.body).correct).toBe(true);
     });
 
-    it('NÃO encosta no ranking semanal', async () => {
+    it('o bônus SOMA no ranking, sem virar resposta da Arena do dia', async () => {
       const flash = await criaFlash(1);
       const entrou = JSON.parse((await post(`flash/${flash.id}/join`)).body);
       const q = entrou.current;
       await post(`flash/${flash.id}/open`, { questionId: q.id });
       const original = QUESTIONS.find((x) => x.id === q.id)!;
       await post(`flash/${flash.id}/answer`, { questionId: q.id, choice: original.answer });
+
+      // O bônus configurado no painel precisa ter destino: 1 acerto × 5.
+      const r = JSON.parse((await get('ranking?period=week')).body);
+      expect(r.me.points).toBe(5);
+      // Mas não é resposta da Arena diária: a rodada do dia segue intocada.
       expect(await prismaOf(app).arenaAnswer.count()).toBe(0);
+    });
+
+    it('errar no surpresa não soma bônus', async () => {
+      const flash = await criaFlash(1);
+      const entrou = JSON.parse((await post(`flash/${flash.id}/join`)).body);
+      const q = entrou.current;
+      await post(`flash/${flash.id}/open`, { questionId: q.id });
+      const original = QUESTIONS.find((x) => x.id === q.id)!;
+      await post(`flash/${flash.id}/answer`, {
+        questionId: q.id,
+        choice: (original.answer + 1) % 4,
+      });
+      expect(JSON.parse((await get('ranking?period=week')).body).me.points).toBe(0);
+    });
+
+    it('rodada do surpresa pela metade ainda vale o que acertou', async () => {
+      const flash = await criaFlash(1); // 3 perguntas
+      let estado = JSON.parse((await post(`flash/${flash.id}/join`)).body);
+      for (let i = 0; i < 2; i++) {
+        const q = estado.current;
+        await post(`flash/${flash.id}/open`, { questionId: q.id });
+        const orig = QUESTIONS.find((x) => x.id === q.id)!;
+        estado = JSON.parse(
+          (await post(`flash/${flash.id}/answer`, { questionId: q.id, choice: orig.answer }))
+            .body,
+        ).state;
+      }
+      // Parou na 2ª de 3: leva os 10 que fez. Exigir o surpresa "inteiro"
+      // puniria justamente quem entrou correndo.
+      expect(JSON.parse((await get('ranking?period=week')).body).me.points).toBe(10);
     });
   });
 
