@@ -140,6 +140,21 @@ export default function ArenaPage(): React.ReactElement {
   const [meuNome, setMeuNome] = useState('Alguém');
   const [desafiando, setDesafiando] = useState(false);
 
+  // O desafio do dia e o ranking: sem estes dois, a tela monta sem o jogo.
+  useEffect(() => {
+    memberApi
+      .get<Today>('/member-auth/arena/today')
+      .then((r) => setToday(r.data))
+      .catch(() => setToday(null));
+  }, []);
+
+  useEffect(() => {
+    memberApi
+      .get<Ranking>('/member-auth/arena/ranking', { params: { period } })
+      .then((r) => setRanking(r.data))
+      .catch(() => undefined);
+  }, [period]);
+
   /** Tudo o que é "em volta" do jogo carrega em paralelo e sem travar a tela. */
   const carregaExtras = useCallback(() => {
     const pega = <T,>(rota: string, set: (v: T) => void) =>
