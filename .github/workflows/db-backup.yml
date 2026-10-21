@@ -18,12 +18,21 @@ on:
 jobs:
   backup:
     runs-on: ubuntu-latest
-    container: postgres:16 # traz o pg_dump 16 (mesma versão do banco)
+    # O pg_dump precisa ser >= ao servidor. O Railway subiu o Postgres para 18
+    # e este container ficou no 16: o dump passou a abortar por incompatibilidade
+    # de versão, e o backup virou um arquivo vazio de 190 bytes por 30 dias
+    # seguidos — com o workflow reportando sucesso. Ao atualizar o servidor,
+    # atualize aqui também; o passo de conferência abaixo avisa se esquecer.
+    container: postgres:18
     steps:
       - name: Gerar dump
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          # pipefail é o que faltava: sem ele, o erro do pg_dump sumia porque
+          # quem decidia o resultado era o gzip, que gravava o vazio com êxito.
+          set -euo pipefail
+
           if [ -z "$DATABASE_URL" ]; then
             echo "❌ Secret DATABASE_URL não configurado. Veja instruções no topo do arquivo."
             exit 1
@@ -32,6 +41,29 @@ jobs:
           echo "Gerando backup igreja360-$ts.sql.gz ..."
           pg_dump "$DATABASE_URL" --no-owner --no-privileges | gzip > "igreja360-$ts.sql.gz"
           ls -lh igreja360-*.sql.gz
+
+      - name: Conferir que o backup tem conteúdo
+        run: |
+          set -euo pipefail
+          arquivo=$(ls igreja360-*.sql.gz)
+          bytes=$(stat -c%s "$arquivo")
+          echo "Arquivo: $arquivo ($bytes bytes)"
+
+          # Um backup verde e vazio é pior do que backup nenhum: dá a sensação
+          # de estar protegido. Estes dois testes quebram o workflow em vez de
+          # deixar passar — é para alguém ser avisado no mesmo dia.
+          if [ "$bytes" -lt 20000 ]; then
+            echo "❌ Backup pequeno demais ($bytes bytes). O dump falhou."
+            exit 1
+          fi
+
+          tabelas=$(gzip -dc "$arquivo" | grep -c '^CREATE TABLE' || true)
+          echo "Tabelas no dump: $tabelas"
+          if [ "$tabelas" -lt 20 ]; then
+            echo "❌ Só $tabelas tabelas no dump — o banco tem dezenas. Incompleto."
+            exit 1
+          fi
+          echo "✅ Backup íntegro."
 
       - name: Enviar backup (artifact)
         uses: actions/upload-artifact@v4
