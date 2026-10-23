@@ -22,6 +22,7 @@ import { EnableNotifications } from '@/components/portal/EnableNotifications';
 import { MuralOracao } from '@/components/portal/MuralOracao';
 import { ArenaCampeao, type ArenaChampion } from '@/components/portal/ArenaCampeao';
 import { ArenaResumo } from '@/components/portal/arena/ArenaResumo';
+import { CursoResumo } from '@/components/portal/CursoResumo';
 import { ArenaRegras } from '@/components/portal/ArenaRegras';
 import { Aniversarios } from '@/components/portal/Aniversarios';
 import { AoVivo, type LiveState } from '@/components/portal/AoVivo';
@@ -267,6 +268,7 @@ export default function PortalInicioPage(): React.ReactElement {
       {/* Campeão da semana: coroa, foto e nome na abertura */}
       <ArenaCampeao champion={data.arenaChampion ?? null} base={base} />
       <ArenaResumo base={base} />
+      <CursoResumo base={base} />
 
       {/* Aniversariantes de hoje e da semana */}
       <Aniversarios />

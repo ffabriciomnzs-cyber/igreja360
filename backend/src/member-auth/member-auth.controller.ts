@@ -29,6 +29,8 @@ import { BirthdaysService } from './birthdays.service';
 import { AttendanceService } from '../attendance/attendance.service';
 import { TeamsService } from '../teams/teams.service';
 import { SchoolService } from '../school/school.service';
+import { CoursesService } from '../courses/courses.service';
+import { LicaoFeitaDto } from '../courses/courses.controller';
 
 @Controller('member-auth')
 export class MemberAuthController {
@@ -40,6 +42,7 @@ export class MemberAuthController {
     private readonly attendance: AttendanceService,
     private readonly teams: TeamsService,
     private readonly school: SchoolService,
+    private readonly courses: CoursesService,
   ) {}
 
   // Chave pública VAPID p/ o membro se inscrever nas notificações (null se off).
@@ -200,6 +203,36 @@ export class MemberAuthController {
   }
 
   // Minha turma na Escola Bíblica.
+  @Get('courses')
+  @UseGuards(MemberJwtGuard)
+  cursos(@CurrentMember() m: MemberPrincipal) {
+    return this.courses.meus(m.churchId, m.id);
+  }
+
+  @Get('courses/:id')
+  @UseGuards(MemberJwtGuard)
+  curso(@CurrentMember() m: MemberPrincipal, @Param('id') id: string) {
+    return this.courses.detalhe(m.churchId, m.id, id);
+  }
+
+  @Post('courses/:id/enroll')
+  @UseGuards(MemberJwtGuard)
+  @HttpCode(200)
+  inscrever(@CurrentMember() m: MemberPrincipal, @Param('id') id: string) {
+    return this.courses.inscrever(m.churchId, m.id, id);
+  }
+
+  @Post('courses/lessons/:lessonId/done')
+  @UseGuards(MemberJwtGuard)
+  @HttpCode(200)
+  concluirLicao(
+    @CurrentMember() m: MemberPrincipal,
+    @Param('lessonId') lessonId: string,
+    @Body() dto: LicaoFeitaDto,
+  ) {
+    return this.courses.concluirLicao(m.churchId, m.id, lessonId, dto.reflection);
+  }
+
   @Get('school')
   @UseGuards(MemberJwtGuard)
   mySchool(@CurrentMember() member: MemberPrincipal) {

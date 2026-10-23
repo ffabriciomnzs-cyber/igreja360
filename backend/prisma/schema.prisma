@@ -47,6 +47,7 @@ model Church {
   arenaThemePolls   ArenaThemePoll[]
   arenaFlashes      ArenaFlash[]
   arenaMissions     ArenaMission[]
+  courses           Course[]
 }
 
 // Escola Bíblica: turma, professor e sala.
@@ -540,6 +541,9 @@ model Member {
   arenaDuelsRecebidos ArenaDuel[]            @relation("desafiado")
   arenaTurnos         ArenaRoundTurn[]
   arenaVotos          ArenaThemeVote[]
+  cursosInscrito      CourseEnrollment[]     @relation("cursoAluno")
+  cursosComoParceiro  CourseEnrollment[]     @relation("cursoParceiro")
+  cursosProgresso     CourseProgress[]       @relation("cursoProgresso")
   resetRequests       PasswordResetRequest[]
 
   @@index([churchId])
@@ -806,6 +810,93 @@ model SystemFlag {
 // ---------------------------------------------------------------------------
 
 /// O tema da semana. Uma linha por ciclo (domingo a sábado) por igreja.
+// ---------------------------------------------------------------------------
+// Cursos do app (batismo, noivos, e o que mais a igreja quiser).
+//
+// NÃO reaproveita a Escola Bíblica de propósito: lá a lição é uma folha de
+// chamada por domingo, marcada pelo professor; aqui é um texto numerado, lido
+// e marcado pelo próprio aluno. Forçar as duas na mesma estrutura deixaria as
+// duas confusas.
+// ---------------------------------------------------------------------------
+
+model Course {
+  id          String             @id @default(cuid())
+  churchId    String
+  church      Church             @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  kind        String             @default("OTHER") // BAPTISM | MARRIAGE | OTHER
+  /// Curso de casal: a inscrição vale para os dois noivos.
+  couple      Boolean            @default(false)
+  /// O app prepara, não substitui o pastor: a conclusão exige a conversa.
+  needsPastor Boolean            @default(true)
+  published   Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  lessons     CourseLesson[]
+  enrollments CourseEnrollment[]
+
+  @@index([churchId, published])
+}
+
+model CourseLesson {
+  id        String           @id @default(cuid())
+  churchId  String
+  courseId  String
+  course    Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  position  Int
+  title     String
+  content   String
+  /// Passagens que sustentam a lição; abrem na Bíblia do próprio app.
+  bibleRefs String[]
+  question  String?
+  createdAt DateTime         @default(now())
+  progress  CourseProgress[]
+
+  @@unique([courseId, position])
+  @@index([churchId])
+}
+
+model CourseEnrollment {
+  id           String           @id @default(cuid())
+  churchId     String
+  courseId     String
+  course       Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  memberId     String
+  member       Member           @relation("cursoAluno", fields: [memberId], references: [id], onDelete: Cascade)
+  /// O outro noivo. Só nos cursos de casal.
+  partnerId    String?
+  partner      Member?          @relation("cursoParceiro", fields: [partnerId], references: [id], onDelete: SetNull)
+  completedAt  DateTime?
+  /// Marcado pela liderança depois da conversa presencial.
+  pastorTalkAt DateTime?
+  /// Data do batismo, quando houver. Preenche o baptismDate do membro.
+  baptizedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  progress     CourseProgress[]
+
+  @@unique([courseId, memberId])
+  @@index([churchId, courseId])
+}
+
+model CourseProgress {
+  id           String           @id @default(cuid())
+  churchId     String
+  enrollmentId String
+  enrollment   CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lessonId     String
+  lesson       CourseLesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  /// Quem concluiu. Num curso de casal os dois marcam, e é assim que o pastor
+  /// enxerga o caso de um fazer e o outro não.
+  memberId     String
+  member       Member           @relation("cursoProgresso", fields: [memberId], references: [id], onDelete: Cascade)
+  /// O que a pessoa escreveu. Material de aconselhamento: só a liderança lê.
+  reflection   String?
+  doneAt       DateTime         @default(now())
+
+  @@unique([enrollmentId, lessonId, memberId])
+  @@index([churchId])
+}
+
 model ArenaSeason {
   id        String   @id @default(cuid())
   churchId  String

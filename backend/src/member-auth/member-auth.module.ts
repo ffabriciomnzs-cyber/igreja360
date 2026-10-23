@@ -12,11 +12,18 @@ import { DuelsService } from '../arena/duels.service';
 import { FlashService } from '../arena/flash.service';
 import { MissionsService } from '../arena/missions.service';
 import { ProgressService } from '../arena/progress.service';
+import { CoursesService } from '../courses/courses.service';
+import { CoursesAdminController } from '../courses/courses.controller';
 
 @Module({
   imports: [JwtModule.register({})],
   // ArenaController mora aqui para reusar o MemberJwtGuard (JwtModule).
-  controllers: [MemberAuthController, ArenaController, ArenaAdminController],
+  controllers: [
+    MemberAuthController,
+    ArenaController,
+    ArenaAdminController,
+    CoursesAdminController,
+  ],
   providers: [
     MemberAuthService,
     PortalService,
@@ -27,6 +34,7 @@ import { ProgressService } from '../arena/progress.service';
     FlashService,
     MissionsService,
     ProgressService,
+    CoursesService,
   ],
 })
 export class MemberAuthModule {}
