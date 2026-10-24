@@ -9,11 +9,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import {
   GraduationCap, Check, ChevronDown, Loader2, BookOpen, Users, Heart,
 } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
+import { CURSOS_HABILITADO } from '@/lib/features';
 import { cn } from '@/lib/utils';
 
 interface Licao {
@@ -42,6 +43,9 @@ interface Curso {
 
 export default function CursoPage(): React.ReactElement {
   const { slug, id } = useParams<{ slug: string; id: string }>();
+
+  // Em construção: a tela existe, mas ainda não é oferecida.
+  if (!CURSOS_HABILITADO) notFound();
   const base = `/portal/${slug}`;
   const [curso, setCurso] = useState<Curso | null>(null);
   const [aberta, setAberta] = useState<string | null>(null);

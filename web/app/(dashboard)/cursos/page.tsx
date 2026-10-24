@@ -13,7 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ListSkeleton } from '@/components/ui/skeleton';
+import { notFound } from 'next/navigation';
 import { api, extractApiError } from '@/lib/api';
+import { CURSOS_HABILITADO } from '@/lib/features';
 import { toast } from 'sonner';
 
 interface Licao {
@@ -54,6 +56,8 @@ interface Modelo {
 }
 
 export default function CursosAdminPage(): React.ReactElement {
+  if (!CURSOS_HABILITADO) notFound();
+
   const [cursos, setCursos] = useState<Curso[] | null>(null);
   const [modelos, setModelos] = useState<Modelo[]>([]);
   const [ocupado, setOcupado] = useState<string | null>(null);

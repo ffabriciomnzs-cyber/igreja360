@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Put,
+  NotFoundException,
   UseGuards,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
@@ -24,6 +25,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/types/auth.types';
 import { CoursesService } from './courses.service';
+import { CURSOS_HABILITADO } from './feature';
 
 class CursoDto {
   @IsOptional() @IsString() title?: string;
@@ -67,18 +69,26 @@ const GERE = [
 export class CoursesAdminController {
   constructor(private readonly courses: CoursesService) {}
 
+  /** Enquanto a funcionalidade não é liberada, ela não existe para ninguém. */
+  private exigeLigado(): void {
+    if (!CURSOS_HABILITADO) throw new NotFoundException('Cannot GET /courses');
+  }
+
   @Get()
   listar(@CurrentUser() u: AuthUser) {
+    this.exigeLigado();
     return this.courses.listar(u.churchId);
   }
 
   @Get('templates')
   modelos() {
+    this.exigeLigado();
     return this.courses.modelos();
   }
 
   @Post('templates/:id')
   criarDoModelo(@CurrentUser() u: AuthUser, @Param('id') id: string) {
+    this.exigeLigado();
     return this.courses.criarDoModelo(u.churchId, id);
   }
 
@@ -88,6 +98,7 @@ export class CoursesAdminController {
     @Param('id') id: string,
     @Body() dto: CursoDto,
   ) {
+    this.exigeLigado();
     return this.courses.atualizarCurso(u.churchId, id, dto);
   }
 
@@ -97,12 +108,14 @@ export class CoursesAdminController {
     @Param('id') id: string,
     @Body() dto: LicaoDto,
   ) {
+    this.exigeLigado();
     return this.courses.salvarLicao(u.churchId, id, dto);
   }
 
   @Delete('lessons/:lessonId')
   @HttpCode(200)
   removerLicao(@CurrentUser() u: AuthUser, @Param('lessonId') lessonId: string) {
+    this.exigeLigado();
     return this.courses.removerLicao(u.churchId, lessonId);
   }
 
@@ -112,6 +125,7 @@ export class CoursesAdminController {
     @Param('id') id: string,
     @Body() dto: ParDto,
   ) {
+    this.exigeLigado();
     return this.courses.definirPar(u.churchId, id, dto.partnerId ?? null);
   }
 
@@ -121,11 +135,13 @@ export class CoursesAdminController {
     @Param('id') id: string,
     @Body() dto: RegistroDto,
   ) {
+    this.exigeLigado();
     return this.courses.registrar(u.churchId, id, dto);
   }
 
   @Get('enrollments/:id/reflections')
   reflexoes(@CurrentUser() u: AuthUser, @Param('id') id: string) {
+    this.exigeLigado();
     return this.courses.reflexoes(u.churchId, id);
   }
 }

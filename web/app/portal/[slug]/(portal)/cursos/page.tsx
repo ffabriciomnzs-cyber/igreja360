@@ -4,9 +4,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { GraduationCap, ChevronRight, Check, Users } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
+import { CURSOS_HABILITADO } from '@/lib/features';
 
 interface Curso {
   id: string;
@@ -23,6 +24,9 @@ interface Curso {
 
 export default function CursosPage(): React.ReactElement {
   const { slug } = useParams<{ slug: string }>();
+
+  // Em construção: a tela existe, mas ainda não é oferecida.
+  if (!CURSOS_HABILITADO) notFound();
   const base = `/portal/${slug}`;
   const [cursos, setCursos] = useState<Curso[] | null>(null);
 

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { GraduationCap, ChevronRight } from 'lucide-react';
 import { memberApi } from '@/lib/member-api';
+import { CURSOS_HABILITADO } from '@/lib/features';
 
 interface Curso {
   id: string;
@@ -19,15 +20,17 @@ interface Curso {
 
 export function CursoResumo({ base }: { base: string }): React.ReactElement | null {
   const [cursos, setCursos] = useState<Curso[]>([]);
+  const ligado = CURSOS_HABILITADO;
 
   useEffect(() => {
+    if (!ligado) return;
     memberApi
       .get<Curso[]>('/member-auth/courses')
       .then((r) => setCursos(r.data))
       .catch(() => undefined);
-  }, []);
+  }, [ligado]);
 
-  if (!cursos.length) return null;
+  if (!ligado || !cursos.length) return null;
   // Prioriza o que está em andamento; senão, o primeiro disponível.
   const curso =
     cursos.find((c) => c.enrolled && !c.completedAt) ?? cursos[0];

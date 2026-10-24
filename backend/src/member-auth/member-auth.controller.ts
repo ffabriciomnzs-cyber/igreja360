@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  NotFoundException,
   UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -30,6 +31,7 @@ import { AttendanceService } from '../attendance/attendance.service';
 import { TeamsService } from '../teams/teams.service';
 import { SchoolService } from '../school/school.service';
 import { CoursesService } from '../courses/courses.service';
+import { CURSOS_HABILITADO } from '../courses/feature';
 import { LicaoFeitaDto } from '../courses/courses.controller';
 
 @Controller('member-auth')
@@ -206,12 +208,14 @@ export class MemberAuthController {
   @Get('courses')
   @UseGuards(MemberJwtGuard)
   cursos(@CurrentMember() m: MemberPrincipal) {
+    if (!CURSOS_HABILITADO) throw new NotFoundException('Not Found');
     return this.courses.meus(m.churchId, m.id);
   }
 
   @Get('courses/:id')
   @UseGuards(MemberJwtGuard)
   curso(@CurrentMember() m: MemberPrincipal, @Param('id') id: string) {
+    if (!CURSOS_HABILITADO) throw new NotFoundException('Not Found');
     return this.courses.detalhe(m.churchId, m.id, id);
   }
 
@@ -219,6 +223,7 @@ export class MemberAuthController {
   @UseGuards(MemberJwtGuard)
   @HttpCode(200)
   inscrever(@CurrentMember() m: MemberPrincipal, @Param('id') id: string) {
+    if (!CURSOS_HABILITADO) throw new NotFoundException('Not Found');
     return this.courses.inscrever(m.churchId, m.id, id);
   }
 
@@ -230,6 +235,7 @@ export class MemberAuthController {
     @Param('lessonId') lessonId: string,
     @Body() dto: LicaoFeitaDto,
   ) {
+    if (!CURSOS_HABILITADO) throw new NotFoundException('Not Found');
     return this.courses.concluirLicao(m.churchId, m.id, lessonId, dto.reflection);
   }
 

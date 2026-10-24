@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 if [ -n "$TEST_DATABASE_URL" ]; then
   echo "→ Usando banco de teste já configurado."
   npx prisma migrate deploy >/dev/null
-  exec npx jest "$@"
+  CURSOS_FORCE=on exec npx jest "$@"
 fi
 
 # Encontra o Postgres (Homebrew não o coloca no PATH por padrão).
@@ -60,4 +60,5 @@ echo "→ Aplicando migrations..."
 npx prisma migrate deploy >/dev/null
 
 echo "→ Rodando os testes..."
-npx jest "$@"
+# Funcionalidades ainda desligadas para a igreja continuam sendo testadas.
+CURSOS_FORCE=on npx jest "$@"
